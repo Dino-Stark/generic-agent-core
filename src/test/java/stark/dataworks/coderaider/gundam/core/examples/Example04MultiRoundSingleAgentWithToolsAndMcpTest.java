@@ -5,6 +5,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import io.github.cdimascio.dotenv.Dotenv;
 import org.junit.jupiter.api.Test;
 
+import java.time.Duration;
 import java.util.List;
 import java.util.Map;
 
@@ -56,70 +57,78 @@ public class Example04MultiRoundSingleAgentWithToolsAndMcpTest
         String model = "Qwen/Qwen3-4B";
         String apiKey = env.get("MODEL_SCOPE_API_KEY", System.getenv("MODEL_SCOPE_API_KEY"));
         String mcpServerUrl = "http://localhost:8765/sse";
+        Process mcpProcess = McpTestSupport.startPythonScript("src/main/resources/mcp/simple_mcp_server_http.py", "8765");
+        McpTestSupport.waitForHttp(mcpServerUrl, Duration.ofSeconds(10));
 
         if (apiKey == null || apiKey.isBlank())
         {
+            McpTestSupport.stopQuietly(mcpProcess);
             System.err.println("Error: ModelScope API key is required.");
             System.err.println("Set MODEL_SCOPE_API_KEY environment variable or pass as second argument.");
             System.exit(1);
         }
 
-        SseMcpServerClient mcpClient = new SseMcpServerClient();
+        try
+        {
+            SseMcpServerClient mcpClient = new SseMcpServerClient();
+            McpManager mcpManager = new McpManager(mcpClient);
 
-        McpManager mcpManager = new McpManager(mcpClient);
+            McpServerConfiguration mcpServer = new McpServerConfiguration(
+                "policy-mcp",
+                mcpServerUrl,
+                Map.of());
+            mcpManager.registerServer(mcpServer);
 
-        McpServerConfiguration mcpServer = new McpServerConfiguration(
-            "policy-mcp",
-            mcpServerUrl,
-            Map.of());
-        mcpManager.registerServer(mcpServer);
+            List<McpToolDescriptor> mcpTools = mcpClient.listTools(mcpServer);
+            System.out.println("Available MCP tools: " + mcpTools.stream().map(McpToolDescriptor::getName).toList());
 
-        List<McpToolDescriptor> mcpTools = mcpClient.listTools(mcpServer);
-        System.out.println("Available MCP tools: " + mcpTools.stream().map(McpToolDescriptor::getName).toList());
+            AgentDefinition agentDef = new AgentDefinition();
+            agentDef.setId("hybrid-agent");
+            agentDef.setName("Hybrid Agent");
+            agentDef.setModel(model);
+            agentDef.setSystemPrompt("You are a helpful assistant with access to tax calculation and policy lookup tools. Use them when appropriate.");
+            agentDef.setToolNames(List.of("tax_calculator", "policy_lookup"));
 
-        AgentDefinition agentDef = new AgentDefinition();
-        agentDef.setId("hybrid-agent");
-        agentDef.setName("Hybrid Agent");
-        agentDef.setModel(model);
-        agentDef.setSystemPrompt("You are a helpful assistant with access to tax calculation and policy lookup tools. Use them when appropriate.");
-        agentDef.setToolNames(List.of("tax_calculator", "policy_lookup"));
+            AgentRegistry agentRegistry = new AgentRegistry();
+            agentRegistry.register(new Agent(agentDef));
 
-        AgentRegistry agentRegistry = new AgentRegistry();
-        agentRegistry.register(new Agent(agentDef));
+            ToolRegistry toolRegistry = new ToolRegistry();
+            toolRegistry.register(createTaxCalculatorTool());
+            toolRegistry.register(new HostedMcpTool("policy-mcp", "policy_lookup", mcpManager));
 
-        ToolRegistry toolRegistry = new ToolRegistry();
-        toolRegistry.register(createTaxCalculatorTool());
-        toolRegistry.register(new HostedMcpTool("policy-mcp", "policy_lookup", mcpManager));
+            InMemorySessionStore sessionStore = new InMemorySessionStore();
+            RunConfiguration config = RunConfiguration.defaults();
 
-        InMemorySessionStore sessionStore = new InMemorySessionStore();
-        RunConfiguration config = RunConfiguration.defaults();
+            AgentRunner runner = AgentRunner.builder()
+                .llmClient(new ModelScopeLlmClient(apiKey, model))
+                .toolRegistry(toolRegistry)
+                .agentRegistry(agentRegistry)
+                .sessionStore(sessionStore)
+                .eventPublisher(createConsoleStreamingPublisher())
+                .build();
 
-        AgentRunner runner = AgentRunner.builder()
-            .llmClient(new ModelScopeLlmClient(apiKey, model))
-            .toolRegistry(toolRegistry)
-            .agentRegistry(agentRegistry)
-            .sessionStore(sessionStore)
-            .eventPublisher(createConsoleStreamingPublisher())
-            .build();
+            System.out.println("=== Round 1: Tax Estimation ===");
+            System.out.print("Streaming output: ");
+            ContextResult round1 = runner.runStreamed(agentRegistry.get("hybrid-agent").orElseThrow(), "Please estimate tax for amount 100.", config, ExampleSupport.noopHooks());
+            System.out.println();
+            System.out.println("Round 1 output: " + round1.getFinalOutput());
 
-        System.out.println("=== Round 1: Tax Estimation ===");
-        System.out.print("Streaming output: ");
-        ContextResult round1 = runner.runStreamed(agentRegistry.get("hybrid-agent").orElseThrow(), "Please estimate tax for amount 100.", config, ExampleSupport.noopHooks());
-        System.out.println();
-        System.out.println("Round 1 output: " + round1.getFinalOutput());
+            System.out.println("\n=== Round 2: Policy Constraints ===");
+            System.out.print("Streaming output: ");
+            ContextResult round2 = runner.runStreamed(agentRegistry.get("hybrid-agent").orElseThrow(), "What policy constraints should I know about tax?", config, ExampleSupport.noopHooks());
+            System.out.println();
+            System.out.println("Round 2 output: " + round2.getFinalOutput());
 
-        System.out.println("\n=== Round 2: Policy Constraints ===");
-        System.out.print("Streaming output: ");
-        ContextResult round2 = runner.runStreamed(agentRegistry.get("hybrid-agent").orElseThrow(), "What policy constraints should I know about tax?", config, ExampleSupport.noopHooks());
-        System.out.println();
-        System.out.println("Round 2 output: " + round2.getFinalOutput());
-
-        System.out.println("\n=== Round 3: Combined Query ===");
-        System.out.print("Streaming output: ");
-        ContextResult round3 = runner.runStreamed(agentRegistry.get("hybrid-agent").orElseThrow(), "Calculate tax for 500 and check relevant policies.", config, ExampleSupport.noopHooks());
-        System.out.println();
-        System.out.println("Round 3 output: " + round3.getFinalOutput());
-        
+            System.out.println("\n=== Round 3: Combined Query ===");
+            System.out.print("Streaming output: ");
+            ContextResult round3 = runner.runStreamed(agentRegistry.get("hybrid-agent").orElseThrow(), "Calculate tax for 500 and check relevant policies.", config, ExampleSupport.noopHooks());
+            System.out.println();
+            System.out.println("Round 3 output: " + round3.getFinalOutput());
+        }
+        finally
+        {
+            McpTestSupport.stopQuietly(mcpProcess);
+        }
     }
 
     private static RunEventPublisher createConsoleStreamingPublisher()

@@ -4,9 +4,14 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assertions.assertTimeoutPreemptively;
 
+import java.time.Duration;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 import org.junit.jupiter.api.Test;
 import stark.dataworks.coderaider.gundam.core.agent.Agent;
@@ -497,6 +502,97 @@ class AgentRunnerTest
         });
 
         assertEquals("qwen-ok", result.getFinalOutput());
+    }
+
+
+    @Test
+    void executesMultipleToolCallsInParallelUsingVirtualThreads()
+    {
+        AgentDefinition def = baseDef("parallel-tools");
+        def.setToolNames(List.of("slow_a", "slow_b"));
+        def.setMaxSteps(4);
+
+        AgentRegistry agents = new AgentRegistry();
+        agents.register(new Agent(def));
+
+        AtomicBoolean usedVirtualThread = new AtomicBoolean(true);
+        CountDownLatch started = new CountDownLatch(2);
+
+        ToolRegistry tools = new ToolRegistry();
+        tools.register(slowTool("slow_a", started, usedVirtualThread));
+        tools.register(slowTool("slow_b", started, usedVirtualThread));
+
+        AgentRunner runner = new AgentRunner(
+            request ->
+            {
+                if (request.getMessages().stream().noneMatch(message -> message.getRole().name().equals("TOOL")))
+                {
+                    return new LlmResponse("", List.of(
+                        new ToolCall("slow_a", Map.of("delay", 180)),
+                        new ToolCall("slow_b", Map.of("delay", 180))), null, new TokenUsage(1, 1));
+                }
+                return new LlmResponse("done", List.of(), null, new TokenUsage(1, 1));
+            },
+            tools,
+            agents,
+            new DefaultContextBuilder(),
+            new HookManager(),
+            new GuardrailEngine(),
+            new HandoffRouter(),
+            new InMemorySessionStore(),
+            new NoopTraceProvider(),
+            new AllowAllToolApprovalPolicy(),
+            new OutputSchemaRegistry(),
+            new OutputValidator(),
+            new RunEventPublisher());
+
+        assertTimeoutPreemptively(Duration.ofMillis(350), () ->
+        {
+            ContextResult result = runner.run(new Agent(def), "go", RunConfiguration.defaults(), new IRunHooks()
+            {
+            });
+            assertEquals("done", result.getFinalOutput());
+        });
+
+        try
+        {
+            assertTrue(started.await(1, TimeUnit.SECONDS));
+        }
+        catch (InterruptedException ex)
+        {
+            Thread.currentThread().interrupt();
+            throw new IllegalStateException(ex);
+        }
+        assertTrue(usedVirtualThread.get());
+    }
+
+    private static ITool slowTool(String name, CountDownLatch started, AtomicBoolean usedVirtualThread)
+    {
+        return new ITool()
+        {
+            @Override
+            public ToolDefinition definition()
+            {
+                return new ToolDefinition(name, "", List.of());
+            }
+
+            @Override
+            public String execute(Map<String, Object> input)
+            {
+                usedVirtualThread.compareAndSet(true, Thread.currentThread().isVirtual());
+                started.countDown();
+                try
+                {
+                    Thread.sleep(((Number) input.getOrDefault("delay", 180)).longValue());
+                }
+                catch (InterruptedException ex)
+                {
+                    Thread.currentThread().interrupt();
+                    throw new IllegalStateException(ex);
+                }
+                return name + "-ok";
+            }
+        };
     }
 
     private static final class ScoreSummary

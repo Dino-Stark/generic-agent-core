@@ -49,7 +49,7 @@ public class Example03AgentWithMcpTest
         String model = "Qwen/Qwen3-4B";
         String apiKey = env.get("MODEL_SCOPE_API_KEY", System.getenv("MODEL_SCOPE_API_KEY"));
         String query = "Find onboarding policy";
-        String mcpServerCommand = "python src/main/resources/mcp/simple_mcp_server_stdio.py";
+        String mcpServerCommand = McpTestSupport.pythonExecutable() + " src/main/resources/mcp/simple_mcp_server_stdio.py";
 
         if (apiKey == null || apiKey.isBlank())
         {

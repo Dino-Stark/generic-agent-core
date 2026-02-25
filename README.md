@@ -360,8 +360,8 @@ mvn -Dtest=stark.dataworks.coderaider.gundam.core.examples.Example03AgentWithMcp
 
 For Example04 and Example05, start their corresponding MCP servers first:
 ```bash
-python src/main/resources/mcp/simple_mcp_server_http.py 8765
-python src/main/resources/mcp/simple_mcp_server_streamable_http.py 8766
+python3 src/main/resources/mcp/simple_mcp_server_http.py 8765
+python3 src/main/resources/mcp/simple_mcp_server_streamable_http.py 8766
 ```
 
 ## Streaming Output
@@ -394,3 +394,15 @@ OpenAI-compatible adapters are available in `llmspi/adapter`:
 - `SpringAiChatClientLlmClient` - Spring AI bridge
 
 They normalize native responses into `LlmResponse` (`content`, `toolCalls`, `handoffAgentId`) and support both sync and stream invocation.
+
+### Spring AI `@Tool` Compatibility
+
+High-level tool APIs now provide Spring AI compatibility via `SpringAiToolAdapters` and `ToolRegistry` helpers:
+
+```java
+ToolRegistry toolRegistry = new ToolRegistry();
+toolRegistry.registerSpringToolObjects(new WeatherTools());
+// or: toolRegistry.registerSpringToolCallbacks(callback1, callback2)
+```
+
+Any Spring AI tool object using `org.springframework.ai.tool.annotation.Tool` is automatically converted to GUNDAM `ITool` definitions and executable callbacks.

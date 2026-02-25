@@ -4,10 +4,15 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
+import java.util.concurrent.Callable;
+import java.util.concurrent.ExecutorCompletionService;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Future;
+import java.util.concurrent.RejectedExecutionException;
+import java.util.concurrent.locks.ReentrantLock;
 
 import lombok.AllArgsConstructor;
-
-import java.util.Objects;
 import stark.dataworks.coderaider.gundam.core.agent.IAgent;
 import stark.dataworks.coderaider.gundam.core.agent.IAgentRegistry;
 import stark.dataworks.coderaider.gundam.core.approval.ToolApprovalDecision;
@@ -361,39 +366,7 @@ public class AgentRunner
                 if (!effectiveResponse.getToolCalls().isEmpty())
                 {
                     context.getMemory().append(new Message(Role.ASSISTANT, effectiveResponse.getContent(), effectiveResponse.getToolCalls()));
-                    for (ToolCall call : effectiveResponse.getToolCalls())
-                    {
-                        emit(context, runHooks, RunEventType.TOOL_CALL_REQUESTED, Map.of("tool", call.getToolName(), "arguments", call.getArguments()));
-
-                        if (context.getCurrentAgent().definition().isRequireToolApproval())
-                        {
-                            ToolApprovalDecision decision = toolApprovalPolicy.decide(
-                                new ToolApprovalRequest(context.getCurrentAgent().definition().getId(), call.getToolName(), call.getArguments()));
-                            if (!decision.isApproved())
-                            {
-                                context.getItems().add(new ContextItem(ContextItemType.SYSTEM_EVENT,
-                                    "Tool call denied: " + decision.getReason(), Map.of("tool", call.getToolName())));
-                                continue;
-                            }
-                        }
-
-                        ITool tool = toolRegistry.get(call.getToolName())
-                            .orElseThrow(() -> new IllegalStateException("Tool not found: " + call.getToolName()));
-                        try
-                        {
-                            hookManager.beforeTool(call.getToolName(), call.getArguments());
-                            String result = tool.execute(call.getArguments());
-                            hookManager.afterTool(call.getToolName(), result);
-                            context.getMemory().append(new Message(Role.TOOL, result, call.getToolCallId()));
-                            context.getItems().add(new ContextItem(ContextItemType.TOOL_CALL, call.getToolName(), call.getArguments()));
-                            context.getItems().add(new ContextItem(ContextItemType.TOOL_RESULT, result, Map.of("tool", call.getToolName())));
-                            emit(context, runHooks, RunEventType.TOOL_CALL_COMPLETED, Map.of("tool", call.getToolName(), "result", result));
-                        }
-                        catch (RuntimeException ex)
-                        {
-                            throw new ToolExecutionFailureException(call.getToolName(), ex);
-                        }
-                    }
+                    executeToolCallsInParallel(context, runHooks, effectiveResponse.getToolCalls());
                     if (context.getCurrentAgent().definition().isResetInputAfterToolCall())
                     {
                         userInput = null;
@@ -635,6 +608,132 @@ public class AgentRunner
      * @param streamListener The stream listener used by this operation.
      * @return The value produced by this operation.
      */
+
+    private void executeToolCallsInParallel(RunnerContext context, IRunHooks runHooks, List<ToolCall> toolCalls)
+    {
+        List<ToolCall> approvedCalls = new ArrayList<>();
+        for (ToolCall call : toolCalls)
+        {
+            emit(context, runHooks, RunEventType.TOOL_CALL_REQUESTED, Map.of("tool", call.getToolName(), "arguments", call.getArguments()));
+            if (context.getCurrentAgent().definition().isRequireToolApproval())
+            {
+                ToolApprovalDecision decision = toolApprovalPolicy.decide(
+                    new ToolApprovalRequest(context.getCurrentAgent().definition().getId(), call.getToolName(), call.getArguments()));
+                if (!decision.isApproved())
+                {
+                    context.getItems().add(new ContextItem(ContextItemType.SYSTEM_EVENT,
+                        "Tool call denied: " + decision.getReason(), Map.of("tool", call.getToolName())));
+                    continue;
+                }
+            }
+            approvedCalls.add(call);
+        }
+
+        if (approvedCalls.isEmpty())
+        {
+            return;
+        }
+
+        ReentrantLock hookLock = new ReentrantLock();
+        Map<Integer, ToolExecutionOutcome> outcomes = new HashMap<>();
+        try (ExecutorService executor = java.util.concurrent.Executors.newVirtualThreadPerTaskExecutor())
+        {
+            ExecutorCompletionService<ToolExecutionOutcome> completionService = new ExecutorCompletionService<>(executor);
+            List<Future<ToolExecutionOutcome>> futures = new ArrayList<>();
+            for (int i = 0; i < approvedCalls.size(); i++)
+            {
+                ToolCall call = approvedCalls.get(i);
+                futures.add(completionService.submit(runToolCall(i, call, hookLock)));
+            }
+
+            for (int i = 0; i < approvedCalls.size(); i++)
+            {
+                ToolExecutionOutcome outcome = completionService.take().get();
+                outcomes.put(outcome.index(), outcome);
+            }
+
+            for (Future<ToolExecutionOutcome> future : futures)
+            {
+                if (!future.isDone())
+                {
+                    future.cancel(true);
+                }
+            }
+        }
+        catch (RejectedExecutionException ex)
+        {
+            throw new ToolExecutionFailureException("virtual-thread-executor", ex);
+        }
+        catch (InterruptedException ex)
+        {
+            Thread.currentThread().interrupt();
+            throw new ToolExecutionFailureException("interrupted", ex);
+        }
+        catch (Exception ex)
+        {
+            if (ex.getCause() instanceof ToolExecutionFailureException failure)
+            {
+                throw failure;
+            }
+            throw new ToolExecutionFailureException("tool-execution", ex);
+        }
+
+        for (int i = 0; i < approvedCalls.size(); i++)
+        {
+            ToolCall call = approvedCalls.get(i);
+            ToolExecutionOutcome outcome = outcomes.get(i);
+            if (outcome == null)
+            {
+                throw new IllegalStateException("Missing tool result for: " + call.getToolName());
+            }
+            context.getMemory().append(new Message(Role.TOOL, outcome.result(), call.getToolCallId()));
+            context.getItems().add(new ContextItem(ContextItemType.TOOL_CALL, call.getToolName(), call.getArguments()));
+            context.getItems().add(new ContextItem(ContextItemType.TOOL_RESULT, outcome.result(), Map.of("tool", call.getToolName())));
+            emit(context, runHooks, RunEventType.TOOL_CALL_COMPLETED, Map.of("tool", call.getToolName(), "result", outcome.result()));
+        }
+    }
+
+    private Callable<ToolExecutionOutcome> runToolCall(int index, ToolCall call, ReentrantLock hookLock)
+    {
+        return () ->
+        {
+            ITool tool = toolRegistry.get(call.getToolName())
+                .orElseThrow(() -> new IllegalStateException("Tool not found: " + call.getToolName()));
+            try
+            {
+                hookLock.lock();
+                try
+                {
+                    hookManager.beforeTool(call.getToolName(), call.getArguments());
+                }
+                finally
+                {
+                    hookLock.unlock();
+                }
+
+                String result = tool.execute(call.getArguments());
+
+                hookLock.lock();
+                try
+                {
+                    hookManager.afterTool(call.getToolName(), result);
+                }
+                finally
+                {
+                    hookLock.unlock();
+                }
+                return new ToolExecutionOutcome(index, call, result);
+            }
+            catch (RuntimeException ex)
+            {
+                throw new ToolExecutionFailureException(call.getToolName(), ex);
+            }
+        };
+    }
+
+    private record ToolExecutionOutcome(int index, ToolCall call, String result)
+    {
+    }
     private LlmResponse invokeModel(ILlmClient llmClient,
                                     LlmRequest request,
                                     RunConfiguration config,
