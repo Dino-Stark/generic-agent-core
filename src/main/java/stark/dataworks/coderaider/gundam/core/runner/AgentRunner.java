@@ -363,7 +363,7 @@ public class AgentRunner
                     context.getMemory().append(new Message(Role.ASSISTANT, effectiveResponse.getContent(), effectiveResponse.getToolCalls()));
                     for (ToolCall call : effectiveResponse.getToolCalls())
                     {
-                        emit(context, runHooks, RunEventType.TOOL_CALL_REQUESTED, Map.of("tool", call.getToolName()));
+                        emit(context, runHooks, RunEventType.TOOL_CALL_REQUESTED, Map.of("tool", call.getToolName(), "arguments", call.getArguments()));
 
                         if (context.getCurrentAgent().definition().isRequireToolApproval())
                         {

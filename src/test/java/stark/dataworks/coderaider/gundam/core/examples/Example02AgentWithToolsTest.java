@@ -1,5 +1,7 @@
 package stark.dataworks.coderaider.gundam.core.examples;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
+
 import io.github.cdimascio.dotenv.Dotenv;
 import org.junit.jupiter.api.Test;
 
@@ -78,6 +80,7 @@ public class Example02AgentWithToolsTest
     private static RunEventPublisher createConsoleStreamingPublisher()
     {
         RunEventPublisher publisher = new RunEventPublisher();
+        ObjectMapper objectMapper = new ObjectMapper();
         publisher.subscribe(new IRunEventListener()
         {
             @Override
@@ -95,7 +98,17 @@ public class Example02AgentWithToolsTest
                 else if (event.getType() == RunEventType.TOOL_CALL_REQUESTED)
                 {
                     String tool = (String) event.getAttributes().get("tool");
-                    System.out.println("\n[Tool call: " + tool + "]");
+                    Object args = event.getAttributes().get("arguments");
+                    String argsJson;
+                    try
+                    {
+                        argsJson = objectMapper.writeValueAsString(args);
+                    }
+                    catch (Exception e)
+                    {
+                        argsJson = args.toString();
+                    }
+                    System.out.println("\n[Tool call: " + tool + " with arguments: " + argsJson + "]");
                 }
                 else if (event.getType() == RunEventType.TOOL_CALL_COMPLETED)
                 {
