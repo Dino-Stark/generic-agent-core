@@ -60,7 +60,7 @@ public class Example08AgentWithSkillsStreamingTest
                 + "When writing a file, perform a single write_file call with complete final content.";
         }
         String localSkillName = resolveLocalSkillName(env);
-        String skillId = resolveSkillId(env);
+        String skillId = "architecture-analyzer";
         Path workspaceRoot = Path.of("").toAbsolutePath().normalize();
         String skillMarkdown = loadSkillMarkdown(localSkillName);
 
@@ -77,13 +77,10 @@ public class Example08AgentWithSkillsStreamingTest
         def.setToolNames(List.of("list_files", "read_file", "write_file"));
         def.setSystemPrompt(buildSystemPrompt(workspaceRoot, skillMarkdown));
 
-        if (skillId != null && !skillId.isBlank())
-        {
-            def.setModelSkills(List.of(Map.of(
-                "type", "skill_reference",
-                "skill_id", skillId)));
-            System.out.println("Using remote skill reference: " + skillId);
-        }
+        def.setModelSkills(List.of(Map.of(
+            "type", "skill_reference",
+            "skill_id", skillId)));
+        System.out.println("Using remote skill reference: " + skillId);
         AgentRegistry registry = new AgentRegistry();
         registry.register(new Agent(def));
 
@@ -114,16 +111,6 @@ public class Example08AgentWithSkillsStreamingTest
             localSkillName = "architecture-analyzer";
         }
         return localSkillName;
-    }
-
-    private static String resolveSkillId(Dotenv env)
-    {
-        String modelSkillId = env.get("MODEL_SKILL_ID", System.getenv("MODEL_SKILL_ID"));
-        if (modelSkillId != null && !modelSkillId.isBlank())
-        {
-            return modelSkillId;
-        }
-        return env.get("ANTHROPIC_SKILL_ID", System.getenv("ANTHROPIC_SKILL_ID"));
     }
 
     private static String loadSkillMarkdown(String localSkillName)
