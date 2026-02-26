@@ -23,7 +23,7 @@ public class Example08AgentDefinitionLoaderFromJsonTest
 
         String model = "Qwen/Qwen3-4B";
         String apiKey = env.get("MODEL_SCOPE_API_KEY", System.getenv("MODEL_SCOPE_API_KEY"));
-        String prompt = "请简要介绍一下 GUNDAM-core。";
+        String prompt = "请简要介绍一下大模型幻觉。";
 
         if (apiKey == null || apiKey.isBlank())
         {
