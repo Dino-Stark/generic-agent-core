@@ -10,6 +10,8 @@ import stark.dataworks.coderaider.gundam.core.metrics.TokenUsage;
 import stark.dataworks.coderaider.gundam.core.model.Message;
 import stark.dataworks.coderaider.gundam.core.model.Role;
 import stark.dataworks.coderaider.gundam.core.model.ToolCall;
+import stark.dataworks.coderaider.gundam.core.multimodal.MessagePart;
+import stark.dataworks.coderaider.gundam.core.multimodal.MessagePartType;
 import stark.dataworks.coderaider.gundam.core.tool.ToolDefinition;
 import stark.dataworks.coderaider.gundam.core.tool.ToolSchemaJson;
 
@@ -371,10 +373,41 @@ public class OpenAiCompatibleLlmClient implements ILlmClient
         }
         else
         {
-            out.put("content", message.getContent());
+            out.put("content", toMessageContent(message));
         }
 
         return out;
+    }
+
+    private Object toMessageContent(Message message)
+    {
+        List<MessagePart> parts = message.getParts();
+        boolean hasNonTextPart = parts.stream().anyMatch(p -> p.getType() != MessagePartType.TEXT);
+        if (!hasNonTextPart)
+        {
+            return message.getContent();
+        }
+
+        List<Map<String, Object>> content = new ArrayList<>();
+        for (MessagePart part : parts)
+        {
+            if (part.getType() == MessagePartType.TEXT)
+            {
+                content.add(Map.of(
+                    "type", "text",
+                    "text", part.getText()));
+                continue;
+            }
+
+            if (part.getType() == MessagePartType.IMAGE)
+            {
+                content.add(Map.of(
+                    "type", "image_url",
+                    "image_url", Map.of("url", part.getUri())));
+            }
+        }
+
+        return content;
     }
 
     private Map<String, Object> toTool(ToolDefinition tool)
