@@ -282,17 +282,8 @@ public class AgentRunner
         IAgentMemory memory = new InMemoryAgentMemory();
         if (runConfiguration.getSessionId() != null)
         {
-            sessionStore.load(runConfiguration.getSessionId()).ifPresent(s ->
-            {
-                if (memory instanceof InMemoryAgentMemory openAiLikeMemory && !s.getItems().isEmpty())
-                {
-                    s.getItems().forEach(openAiLikeMemory::appendItem);
-                }
-                else
-                {
-                    s.getMessages().forEach(memory::append);
-                }
-            });
+            sessionStore.load(runConfiguration.getSessionId())
+                .ifPresent(s -> s.getMessages().forEach(memory::append));
         }
 
         RunnerContext context = new RunnerContext(startingAgent, memory);
@@ -859,14 +850,7 @@ public class AgentRunner
         hookManager.afterRun(legacyContext);
         if (config.getSessionId() != null)
         {
-            if (context.getMemory() instanceof InMemoryAgentMemory openAiLikeMemory)
-            {
-                sessionStore.save(new Session(config.getSessionId(), context.getMemory().messages(), openAiLikeMemory.items(), null));
-            }
-            else
-            {
-                sessionStore.save(new Session(config.getSessionId(), context.getMemory().messages()));
-            }
+            sessionStore.save(new Session(config.getSessionId(), context.getMemory().messages()));
         }
         Map<String, Object> attrs = new HashMap<>();
         attrs.put("finalAgent", context.getCurrentAgent().definition().getId());
