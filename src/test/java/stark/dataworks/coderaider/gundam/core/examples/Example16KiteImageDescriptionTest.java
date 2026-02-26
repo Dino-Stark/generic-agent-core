@@ -37,7 +37,7 @@ public class Example16KiteImageDescriptionTest
         LlmRequest request = new LlmRequest(
             model,
             List.of(new Message(Role.USER, List.of(
-                MessagePart.text("Describe this image in detail. Focus on the person, the kite, and the surrounding environment."),
+                MessagePart.text("Describe this image in detail."),
                 MessagePart.image(imageDataUrl, "image/webp")))),
             List.of(),
             new LlmOptions(0.4, 1024));
