@@ -11,62 +11,108 @@ This document compares the current capabilities of **OpenAI Agents SDK** (refere
 
 | Capability | OpenAI Agents SDK | GUNDAM-core status | Notes |
 |---|---|---|---|
-| Core agent loop (model -> tools -> continue) | ✅ | ✅ | `AgentRunner` already implements loop, retries, hooks, guardrails, handoff flow. |
-| Streaming token events | ✅ | ✅ | `runStreamed` and run-event publication are available. |
-| Reasoning stream handling | ✅ | ✅ | Reasoning delta events are exposed and consumed in examples. |
+| Core agent loop (model -> tools -> continue) | ✅ | ✅ | `AgentRunner` implements loop, retries, hooks, guardrails, handoff flow. |
+| Streaming token events | ✅ | ✅ | `runStreamed` and run-event publication available. |
+| Reasoning stream handling | ✅ | ✅ | Reasoning delta events exposed and consumed in examples. |
 | Tool calling (local tools) | ✅ | ✅ | Mature in both projects. |
-| MCP tool integration | ✅ | ✅ | GUNDAM-core supports stdio and streamable-http MCP usage in examples. |
-| Handoffs / multi-agent orchestration | ✅ | ✅ | `HandoffRouter` + handoff examples are implemented. |
-| Guardrails | ✅ | ✅ | Input/output guardrail evaluation exists in runner flow. |
-| Structured output | ✅ | ✅ | Prompt and class-schema based structured output are both supported. |
-| Tracing / observability | ✅ | ✅ | Trace provider abstractions and tests exist. |
+| MCP tool integration | ✅ | ✅ | Supports stdio, HTTP, and streamable-http MCP usage. |
+| Handoffs / multi-agent orchestration | ✅ | ✅ | `HandoffRouter` + handoff examples implemented. |
+| Guardrails | ✅ | ✅ | Input/output guardrail evaluation in runner flow. |
+| Structured output | ✅ | ✅ | Prompt and class-schema based structured output supported. |
+| Tracing / observability | ✅ | ✅ | Trace provider abstractions, distributed tracing, and processors exist. |
 | Session persistence | ✅ | ✅ | Session store abstraction and in-memory implementation available. |
-| Memory backend pluggability | ✅ | 🟡 In progress | Now caller-provided `IAgentMemory` is supported per run. |
-| Human-in-the-loop approvals | ✅ | ✅ | Tool approval policy and requests are implemented. |
-| Realtime voice/webhook workflows | ✅ | ⚪ Not implemented | No equivalent realtime transport layer in core yet. |
-| Hosted state / managed context service | ✅ (platform side) | ⚪ Not implemented | Next major integration target. |
+| Memory backend pluggability | ✅ | ✅ | Caller-provided `IAgentMemory` supported per run. |
+| Context-service memory backend | ✅ | ✅ | `ContextServiceAgentMemory` with `IContextServiceMemoryStore` implemented. |
+| Memory lifecycle policies | ✅ | ✅ | `MemoryLifecyclePolicy`, sliding window, summarization, composite policies. |
+| Human-in-the-loop approvals | ✅ | ✅ | Tool approval policy and requests implemented. |
+| Multi-provider handoffs | ✅ | ✅ | `LlmClientRegistry` supports multiple providers in single session. |
+| RAG / Vector store | ✅ | ✅ | `RagService`, `InMemoryVectorStore`, `EmbeddingModel` implemented. |
+| Tool output trimming | ✅ | ✅ | `ToolOutputTrimmer` extension implemented. |
+| Handoff history filters | ✅ | ✅ | `HandoffHistoryFilters` utilities implemented. |
+| Computer tool | ✅ | 🟡 Partial | `ComputerTool` stub exists, full browser automation not implemented. |
+| Voice pipeline | ✅ | 🟡 Partial | `IVoicePipeline` interface exists, full workflow not implemented. |
+| Multimodal generation (audio/image/video) | ✅ | 🟡 Partial | Interfaces exist (`IAudioGenerator`, `IImageGenerator`, `IVideoGenerator`), no providers. |
+| Agent tool state tracking | ✅ | ⚪ Not implemented | OpenAI has `AgentToolUseTracker` for model_settings resets. |
+| Editor (file diff/patch) | ✅ | ⚪ Not implemented | OpenAI has `ApplyPatchEditor` for file operations. |
+| Realtime voice/webhook workflows | ✅ | ⚪ Partial | Interfaces exist (`IRealtimeClient`, `IRealtimeSession`), no full implementation. |
+| Codex/experimental features | ✅ | ⚪ Not implemented | OpenAI has experimental codex module. |
+| Error handling registry | ✅ | ✅ | `RunErrorHandlers`, `IRunErrorHandler`, `RunErrorKind` implemented. |
+| Spring AI compatibility | ⚪ | ✅ | `SpringAiToolAdapters`, `SpringAiChatClientLlmClient` unique to GUNDAM. |
 
 Legend: ✅ implemented, 🟡 partial/in progress, ⚪ not implemented.
 
 ## Progress summary
 
-1. **Memory pluggability moved forward**: `RunConfiguration` now accepts an optional caller-provided `IAgentMemory`; if omitted, `AgentRunner` defaults to `InMemoryAgentMemory`.
-2. **Example streaming hooks were consolidated**: duplicated event listeners in example tests are now centralized via shared helpers for text-only, tool-lifecycle, and reasoning-aware streaming output.
-3. **Existing strengths retained**: lifecycle hooks, retries, guardrails, tracing, handoffs, MCP, and structured output remain aligned with the project design goals.
+1. **Memory pluggability completed**: `RunConfiguration` accepts optional caller-provided `IAgentMemory`; `ContextServiceAgentMemory` with `IContextServiceMemoryStore` implemented.
+2. **Memory lifecycle policies implemented**: `MemoryLifecyclePolicy` interface with `SlidingWindowMemoryPolicy`, `SummarizingMemoryPolicy`, and `CompositeMemoryLifecyclePolicy` for compaction/retention/isolation.
+3. **Example streaming hooks consolidated**: Duplicated event listeners centralized via shared helpers for text-only, tool-lifecycle, and reasoning-aware streaming output.
+4. **Multi-provider handoffs**: `LlmClientRegistry` enables cross-provider handoffs (Example19 demonstrates ModelScope + Seed/Doubao in single session).
+5. **RAG foundation**: `RagService`, `InMemoryVectorStore`, `EmbeddingModel`, and `SimpleHashEmbeddingModel` implemented (Example20 demonstrates retrieval-augmented generation).
+6. **Tool output trimming**: `ToolOutputTrimmer` extension matches OpenAI's `ToolOutputTrimmer` for reducing token usage from large tool outputs.
+7. **Handoff history filters**: `HandoffHistoryFilters` utilities for filtering conversation history during agent handoffs.
+8. **Distributed tracing**: `DistributedTraceProvider`, `DistributedTraceCollector`, and tracing processors (Example13, Example14) provide observability.
+9. **Error handling registry**: `RunErrorHandlers`, `IRunErrorHandler`, and `RunErrorKind` provide typed error classification and handler dispatch.
+10. **Spring AI compatibility**: `SpringAiToolAdapters` and `SpringAiChatClientLlmClient` enable Spring AI `@Tool` annotation compatibility.
+11. **Multimodal interfaces**: `IAudioGenerator`, `IImageGenerator`, `IVideoGenerator`, `IMultimodalLlmClient` interfaces defined for future provider implementations.
+12. **Realtime interfaces**: `IRealtimeClient`, `IRealtimeSession`, `IRealtimeEventListener`, and transport abstractions (SSE, webhook) defined.
+13. **Existing strengths retained**: lifecycle hooks, retries, guardrails, tracing, handoffs, MCP, and structured output remain aligned with design goals.
+
+## New examples demonstrating capabilities
+
+The following examples have been added to demonstrate new features:
+
+- **Example13TracingSingleTurnTest**: Demonstrates distributed tracing with `DistributedTraceProvider` collecting span events.
+- **Example14TracingMultiRoundTest**: Multi-turn distributed tracing with span relationships.
+- **Example15IntegralImageQuestionTest**: Multimodal image understanding with `IMultimodalLlmClient`.
+- **Example16KiteImageDescriptionTest**: Image description generation.
+- **Example17FlyingDragonTextToImageTest**: Text-to-image generation with `IImageGenerator`.
+- **Example18FlyingCatStyleTransferTest**: Style transfer image generation.
+- **Example19MultiRoundMultiProviderHandoffStreamingTest**: Cross-provider handoffs (ModelScope + Seed/Doubao) in single session.
+- **Example20RagVectorStoreStreamingTest**: RAG with `RagService`, `InMemoryVectorStore`, and `SimpleHashEmbeddingModel`.
 
 ## What’s next (recommended roadmap)
 
-### 1) Context-service integration (next immediate milestone)
+### 1) Agent tool state tracking (immediate priority)
 
-- Implement a new `IAgentMemory` backend backed by your context service.
-- Keep memory lookup/update semantics consistent with current `IAgentMemory` contract to avoid runner changes.
-- Add integration tests that run the same scenarios using:
-  - `InMemoryAgentMemory` (baseline)
-  - Context-service memory backend (new)
+- Implement `AgentToolUseTracker` equivalent to track which tools each agent has used.
+- Enable model_settings resets based on tool usage history (OpenAI uses this for gpt-5 reasoning models).
+- Add serialization/hydration for tool state across session persistence.
 
-### 2) Memory lifecycle + retention policies
+### 2) Editor / file operations (high priority)
 
-- Add optional policies for:
-  - summarization/compaction
-  - retention windows
-  - per-agent and per-session namespace isolation
-- Expose policy hooks in runtime configuration where needed.
+- Implement `ApplyPatchEditor` interface for file diff/patch operations.
+- Support create_file, update_file, delete_file operations with diff application.
+- Integrate with tool registry for code editing workflows.
 
-### 3) Observability parity improvements
+### 3) Computer tool completion (medium priority)
 
-- Expand event taxonomy to include context-store read/write timing and cache-hit metadata.
-- Add trace spans around memory backend calls.
+- Complete `ComputerTool` implementation with full browser automation.
+- Implement screenshot, click, double_click, scroll, type, wait, move operations.
+- Support multiple environments (mac, windows, ubuntu, browser).
 
-### 4) Realtime and webhook-oriented orchestration (longer-term)
+### 4) Realtime workflow implementation (medium priority)
 
-- Introduce transport-neutral eventing interfaces (WebSocket/SSE/webhook adapters).
-- Keep `AgentRunner` transport-agnostic; place realtime orchestration in adapter modules.
+- Complete `IRealtimeClient` and `IRealtimeSession` implementations.
+- Implement SSE and webhook transport adapters.
+- Add voice-to-text and text-to-voice pipeline integration.
 
-### 5) Production hardening
+### 5) Multimodal provider implementations (medium priority)
+
+- Implement providers for `IAudioGenerator`, `IImageGenerator`, `IVideoGenerator`.
+- Integrate with `IMultimodalLlmClient` for multimodal message handling.
+- Add examples for audio/image/video generation workflows.
+
+### 6) Codex/experimental features (lower priority)
+
+- Evaluate OpenAI's experimental codex module for relevant patterns.
+- Consider implementing codex tool interfaces if applicable to use cases.
+
+### 7) Production hardening
 
 - Concurrency tests for multi-session + multi-agent runs on non-memory backends.
 - Fault-injection tests for network partitions/timeouts on context-service memory.
 - Idempotency and exactly-once semantics for session persistence APIs.
+- Performance benchmarks for memory lifecycle policies and RAG operations.
 
 ## References used
 
