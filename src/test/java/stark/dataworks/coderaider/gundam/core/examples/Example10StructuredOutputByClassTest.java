@@ -121,32 +121,7 @@ public class Example10StructuredOutputByClassTest
 
     private static RunEventPublisher createConsoleStreamingPublisher()
     {
-        RunEventPublisher publisher = new RunEventPublisher();
-        publisher.subscribe(new IRunEventListener()
-        {
-            @Override
-            public void onEvent(RunEvent event)
-            {
-                if (event.getType() == RunEventType.MODEL_REASONING_DELTA)
-                {
-                    String delta = (String) event.getAttributes().get("delta");
-                    if (delta != null)
-                    {
-                        System.out.print("[reasoning] " + delta + "\n");
-                    }
-                }
-                else if (event.getType() == RunEventType.MODEL_RESPONSE_DELTA)
-                {
-                    String delta = (String) event.getAttributes().get("delta");
-                    if (delta != null)
-                    {
-                        System.out.print(delta);
-                        System.out.flush();
-                    }
-                }
-            }
-        });
-        return publisher;
+        return ExampleStreamingPublishers.reasoningAndText();
     }
 
     private static final class SprintSummary

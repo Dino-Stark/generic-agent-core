@@ -121,57 +121,7 @@ public class Example05MultiRoundSingleAgentWithToolsAndStreamableHttpMcpTest
 
     private static RunEventPublisher createConsoleStreamingPublisher()
     {
-        RunEventPublisher publisher = new RunEventPublisher();
-        ObjectMapper objectMapper = new ObjectMapper();
-        publisher.subscribe(new IRunEventListener()
-        {
-            @Override
-            public void onEvent(RunEvent event)
-            {
-                if (event.getType() == RunEventType.MODEL_RESPONSE_DELTA)
-                {
-                    String delta = (String) event.getAttributes().get("delta");
-                    if (delta != null)
-                    {
-                        System.out.print(delta);
-                        System.out.flush();
-                    }
-                }
-                else if (event.getType() == RunEventType.TOOL_CALL_REQUESTED)
-                {
-                    String tool = (String) event.getAttributes().get("tool");
-                    Object args = event.getAttributes().get("arguments");
-                    String argsJson;
-                    try
-                    {
-                        argsJson = objectMapper.writeValueAsString(args);
-                    }
-                    catch (Exception e)
-                    {
-                        argsJson = args.toString();
-                    }
-                    System.out.println("\n[Tool call: " + tool + " with arguments: " + argsJson + "]");
-                }
-                else if (event.getType() == RunEventType.TOOL_CALL_COMPLETED)
-                {
-                    String tool = (String) event.getAttributes().get("tool");
-                    Object result = event.getAttributes().get("result");
-                    String resultJson;
-                    try
-                    {
-                        Object parsedResult = result instanceof String ? objectMapper.readValue((String) result, Object.class) : result;
-                        resultJson = objectMapper.writeValueAsString(parsedResult);
-                    }
-                    catch (Exception e)
-                    {
-                        resultJson = result.toString();
-                    }
-                    System.out.println("[Tool completed: " + tool + " with result: " + resultJson + "]");
-                    System.out.print("Continuing stream: ");
-                }
-            }
-        });
-        return publisher;
+        return ExampleStreamingPublishers.textWithToolLifecycle("MCP ");
     }
 
     private static ITool createTaxCalculatorTool()

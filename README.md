@@ -406,3 +406,8 @@ toolRegistry.registerSpringToolObjects(new WeatherTools());
 ```
 
 Any Spring AI tool object using `org.springframework.ai.tool.annotation.Tool` is automatically converted to GUNDAM `ITool` definitions and executable callbacks.
+
+## Architecture & planning notes
+
+- `designs/GUNDAM-core-Architecture.md`
+- `designs/OpenAI-AgentSDK-vs-GUNDAM-core.md` (feature comparison + progress + next steps)

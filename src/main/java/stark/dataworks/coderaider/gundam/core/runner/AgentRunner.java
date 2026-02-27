@@ -277,9 +277,9 @@ public class AgentRunner
     {
         ITraceSpan runSpan = traceProvider.startSpan("agent.run");
         runSpan.annotate("agent", startingAgent.definition().getId());
-        // TODO: Make this memory configurable.
-        // Options: in-memory, redis, mysql, context-service (will be implemented somewhere else I suppose).
-        IAgentMemory memory = new InMemoryAgentMemory();
+        IAgentMemory memory = runConfiguration.getAgentMemory() == null
+            ? new InMemoryAgentMemory()
+            : runConfiguration.getAgentMemory();
         if (runConfiguration.getSessionId() != null)
         {
             sessionStore.load(runConfiguration.getSessionId())

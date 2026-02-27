@@ -29,6 +29,10 @@ import stark.dataworks.coderaider.gundam.core.llmspi.LlmClientRegistry;
 import stark.dataworks.coderaider.gundam.core.llmspi.LlmRequest;
 import stark.dataworks.coderaider.gundam.core.llmspi.LlmResponse;
 import stark.dataworks.coderaider.gundam.core.llmspi.ILlmStreamListener;
+import stark.dataworks.coderaider.gundam.core.memory.IAgentMemory;
+import stark.dataworks.coderaider.gundam.core.memory.InMemoryAgentMemory;
+import stark.dataworks.coderaider.gundam.core.model.Message;
+import stark.dataworks.coderaider.gundam.core.model.Role;
 import stark.dataworks.coderaider.gundam.core.metrics.TokenUsage;
 import stark.dataworks.coderaider.gundam.core.model.ToolCall;
 import stark.dataworks.coderaider.gundam.core.output.IOutputSchema;
@@ -136,6 +140,47 @@ class AgentRunnerTest
         assertEquals("done", result.getFinalOutput());
         assertTrue(result.getItems().stream().anyMatch(i -> i.getType() == ContextItemType.TOOL_RESULT));
         assertTrue(sessions.load("s1").isPresent());
+    }
+
+    @Test
+    void usesCallerProvidedMemoryWhenConfigured()
+    {
+        AgentDefinition def = baseDef("memory-agent");
+        AgentRegistry agents = new AgentRegistry();
+        agents.register(new Agent(def));
+
+        InMemorySessionStore sessions = new InMemorySessionStore();
+        sessions.save(new stark.dataworks.coderaider.gundam.core.session.Session("memory-session", List.of(new Message(Role.USER, "session-history"))));
+
+        InMemoryAgentMemory customMemory = new InMemoryAgentMemory();
+        AtomicBoolean sawSessionHistory = new AtomicBoolean(false);
+
+        AgentRunner runner = new AgentRunner(
+            req ->
+            {
+                sawSessionHistory.set(req.getMessages().stream().anyMatch(m -> "session-history".equals(m.getContent())));
+                return new LlmResponse("done", List.of(), null, new TokenUsage(1, 1));
+            },
+            new ToolRegistry(),
+            agents,
+            new DefaultContextBuilder(),
+            new HookManager(),
+            new GuardrailEngine(),
+            new HandoffRouter(),
+            sessions,
+            new NoopTraceProvider(),
+            new AllowAllToolApprovalPolicy(),
+            new OutputSchemaRegistry(),
+            new OutputValidator(),
+            new RunEventPublisher());
+
+        RunConfiguration configuration = new RunConfiguration(8, "memory-session", 0.1, 128, "auto", "text", Map.of(), null, null, customMemory);
+        ContextResult result = runner.run(new Agent(def), "start", configuration, new IRunHooks()
+        {
+        });
+
+        assertEquals("done", result.getFinalOutput());
+        assertTrue(sawSessionHistory.get());
     }
 
     @Test

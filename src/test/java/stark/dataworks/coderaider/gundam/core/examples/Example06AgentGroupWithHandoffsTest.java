@@ -97,30 +97,6 @@ public class Example06AgentGroupWithHandoffsTest
 
     private static RunEventPublisher createConsoleStreamingPublisher()
     {
-        RunEventPublisher publisher = new RunEventPublisher();
-        publisher.subscribe(new IRunEventListener()
-        {
-            @Override
-            public void onEvent(RunEvent event)
-            {
-                if (event.getType() == RunEventType.MODEL_RESPONSE_DELTA)
-                {
-                    String delta = (String) event.getAttributes().get("delta");
-                    if (delta != null)
-                    {
-                        System.out.print(delta);
-                        System.out.flush();
-                    }
-                }
-                else if (event.getType() == RunEventType.HANDOFF_OCCURRED)
-                {
-                    String from = (String) event.getAttributes().get("from");
-                    String to = (String) event.getAttributes().get("to");
-                    System.out.println("\n[Handoff: " + from + " -> " + to + "]");
-                    System.out.print("Continuing stream: ");
-                }
-            }
-        });
-        return publisher;
+        return ExampleStreamingPublishers.textOnly();
     }
 }

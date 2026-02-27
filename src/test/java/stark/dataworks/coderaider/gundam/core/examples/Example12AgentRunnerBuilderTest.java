@@ -71,45 +71,6 @@ public class Example12AgentRunnerBuilderTest
 
     private static RunEventPublisher createConsoleStreamingPublisher()
     {
-        RunEventPublisher publisher = new RunEventPublisher();
-        publisher.subscribe(new IRunEventListener()
-        {
-            private boolean hasReasoning = false;
-            private boolean hasAnswer = false;
-
-            @Override
-            public void onEvent(RunEvent event)
-            {
-                if (event.getType() == RunEventType.MODEL_REASONING_DELTA)
-                {
-                    String delta = (String) event.getAttributes().get("delta");
-                    if (delta != null && !delta.isEmpty())
-                    {
-                        if (!hasReasoning)
-                        {
-                            System.out.println("=== Thinking ===");
-                            hasReasoning = true;
-                        }
-                        System.out.print(delta);
-                        System.out.flush();
-                    }
-                }
-                else if (event.getType() == RunEventType.MODEL_RESPONSE_DELTA)
-                {
-                    String delta = (String) event.getAttributes().get("delta");
-                    if (delta != null && !delta.isEmpty())
-                    {
-                        if (!hasAnswer && hasReasoning)
-                        {
-                            System.out.println("\n\n=== Answer ===");
-                            hasAnswer = true;
-                        }
-                        System.out.print(delta);
-                        System.out.flush();
-                    }
-                }
-            }
-        });
-        return publisher;
+        return ExampleStreamingPublishers.reasoningAndTextWithSections();
     }
 }
