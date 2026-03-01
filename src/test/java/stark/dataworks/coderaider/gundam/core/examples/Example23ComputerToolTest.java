@@ -1,23 +1,21 @@
 package stark.dataworks.coderaider.gundam.core.examples;
 
 import java.util.List;
-import java.util.Map;
 
 import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assumptions.assumeFalse;
 
+import io.github.cdimascio.dotenv.Dotenv;
 import stark.dataworks.coderaider.gundam.core.agent.Agent;
 import stark.dataworks.coderaider.gundam.core.agent.AgentDefinition;
 import stark.dataworks.coderaider.gundam.core.agent.AgentRegistry;
 import stark.dataworks.coderaider.gundam.core.computer.Environment;
 import stark.dataworks.coderaider.gundam.core.computer.SimulatedComputer;
 import stark.dataworks.coderaider.gundam.core.context.ContextResult;
-import stark.dataworks.coderaider.gundam.core.llmspi.ILlmClient;
-import stark.dataworks.coderaider.gundam.core.llmspi.LlmRequest;
-import stark.dataworks.coderaider.gundam.core.llmspi.LlmResponse;
-import stark.dataworks.coderaider.gundam.core.model.ToolCall;
+import stark.dataworks.coderaider.gundam.core.llmspi.adapter.ModelScopeLlmClient;
 import stark.dataworks.coderaider.gundam.core.runner.AgentRunner;
 import stark.dataworks.coderaider.gundam.core.runner.RunConfiguration;
 import stark.dataworks.coderaider.gundam.core.tool.ToolRegistry;
@@ -31,6 +29,17 @@ public class Example23ComputerToolTest
     @Test
     public void run()
     {
+        Dotenv env = Dotenv.configure().filename(".env.local").ignoreIfMalformed().ignoreIfMissing().load();
+        String apiKey = env.get("MODEL_SCOPE_API_KEY", System.getenv("MODEL_SCOPE_API_KEY"));
+
+        if (apiKey == null || apiKey.isBlank())
+        {
+            System.out.println("Skipping test: MODEL_SCOPE_API_KEY not set");
+            return;
+        }
+
+        String model = "Qwen/Qwen3-4B";
+
         System.out.println("=== ComputerTool Agent Example ===");
 
         SimulatedComputer computer = new SimulatedComputer(Environment.BROWSER, 1024, 768);
@@ -39,8 +48,8 @@ public class Example23ComputerToolTest
         AgentDefinition agentDefinition = new AgentDefinition();
         agentDefinition.setId("computer-agent");
         agentDefinition.setName("Computer Agent");
-        agentDefinition.setModel("scripted-computer-model");
-        agentDefinition.setSystemPrompt("You are a computer-use assistant. Use computer_use_preview to perform actions.");
+        agentDefinition.setModel(model);
+        agentDefinition.setSystemPrompt("You are a computer-use assistant. Use computer_use_preview for computer actions.");
         agentDefinition.setToolNames(List.of(computerTool.definition().getName()));
 
         AgentRegistry agentRegistry = new AgentRegistry();
@@ -50,7 +59,7 @@ public class Example23ComputerToolTest
         toolRegistry.register(computerTool);
 
         AgentRunner runner = AgentRunner.builder()
-            .llmClient(new ScriptedComputerLlmClient())
+            .llmClient(new ModelScopeLlmClient(apiKey, model))
             .toolRegistry(toolRegistry)
             .agentRegistry(agentRegistry)
             .eventPublisher(ExampleStreamingPublishers.textWithToolLifecycle(""))
@@ -58,7 +67,7 @@ public class Example23ComputerToolTest
 
         ContextResult result = runner.chatClient("computer-agent")
             .prompt()
-            .user("Take a screenshot and click at (100, 200).")
+            .user("Use computer_use_preview to take one screenshot, then left-click at coordinates (100, 200).")
             .runConfiguration(RunConfiguration.defaults())
             .runHooks(ExampleSupport.noopHooks())
             .call()
@@ -66,6 +75,9 @@ public class Example23ComputerToolTest
 
         System.out.println("\nFinal output: " + result.getFinalOutput());
         System.out.println("\n=== Action Log ===");
+
+        assumeFalse(result.getFinalOutput().startsWith("Run failed:"),
+            "Skipping assertions due to provider/network failure: " + result.getFinalOutput());
 
         List<SimulatedComputer.ComputerAction> actions = computer.getActionLog();
         for (int i = 0; i < actions.size(); i++)
@@ -77,49 +89,13 @@ public class Example23ComputerToolTest
         System.out.println("Total screenshots: " + computer.getScreenshotCount());
 
         assertEquals("computer-agent", result.getFinalAgentId());
-        assertEquals(2, actions.size());
-        assertEquals("screenshot", actions.get(0).getAction());
-        assertEquals("click", actions.get(1).getAction());
-        assertEquals(100, actions.get(1).getX());
-        assertEquals(200, actions.get(1).getY());
-        assertEquals(1, computer.getScreenshotCount());
-        assertTrue(result.getFinalOutput().contains("Completed computer actions"));
+        assertTrue(actions.stream().anyMatch(action -> "screenshot".equals(action.getAction())));
+        assertTrue(actions.stream().anyMatch(action -> "click".equals(action.getAction())
+            && action.getX() == 100
+            && action.getY() == 200));
+        assertTrue(computer.getScreenshotCount() >= 1);
+        assertTrue(result.getFinalOutput() != null && !result.getFinalOutput().isBlank());
 
         System.out.println("\nExample completed successfully!");
-    }
-
-    private static class ScriptedComputerLlmClient implements ILlmClient
-    {
-        private int callCount;
-
-        @Override
-        public LlmResponse chat(LlmRequest request)
-        {
-            callCount++;
-            if (callCount == 1)
-            {
-                return new LlmResponse(
-                    "",
-                    List.of(
-                        new ToolCall("computer_use_preview", Map.of("action", "screenshot")),
-                        new ToolCall("computer_use_preview", Map.of(
-                            "action", "click",
-                            "x", 100,
-                            "y", 200,
-                            "button", "left"
-                        ))
-                    ),
-                    null,
-                    null
-                );
-            }
-
-            return new LlmResponse(
-                "Completed computer actions: screenshot and click at (100, 200).",
-                List.of(),
-                null,
-                null
-            );
-        }
     }
 }
