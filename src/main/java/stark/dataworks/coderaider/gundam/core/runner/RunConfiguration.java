@@ -194,6 +194,6 @@ public class RunConfiguration
      */
     public static RunConfiguration defaults()
     {
-        return new RunConfiguration(12, null, 0.2, 512, "auto", "text", Map.of());
+        return new RunConfiguration(12, null, 0.2, 4096, "auto", "text", Map.of());
     }
 }
