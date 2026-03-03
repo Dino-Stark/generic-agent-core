@@ -149,27 +149,38 @@ final class OpenAiCompatibleResponseConverter
                 continue;
             }
 
-            Map<String, Object> args = new HashMap<>();
-            if (!argsJson.isBlank())
-            {
-                try
-                {
-                    JsonNode argsNode = mapper.readTree(argsJson);
-                    if (argsNode.isObject())
-                    {
-                        args = mapper.convertValue(argsNode, Map.class);
-                    }
-                }
-                catch (Exception ignored)
-                {
-                    args.put("raw", argsJson);
-                }
-            }
-
+            Map<String, Object> args = parseToolCallArguments(mapper, argsJson);
             toolCalls.add(new ToolCall(name, args, toolCallId));
         }
 
         return toolCalls;
+    }
+
+    private static Map<String, Object> parseToolCallArguments(ObjectMapper mapper, String argsJson)
+    {
+        Map<String, Object> args = new HashMap<>();
+        if (argsJson == null || argsJson.isBlank())
+        {
+            return args;
+        }
+
+        try
+        {
+            JsonNode argsNode = mapper.readTree(argsJson);
+            if (argsNode.isObject())
+            {
+                args = mapper.convertValue(argsNode, Map.class);
+            }
+            else
+            {
+                args.put("raw", argsJson);
+            }
+        }
+        catch (Exception ignored)
+        {
+            args.put("raw", argsJson);
+        }
+        return args;
     }
 
     static String text(JsonNode node)

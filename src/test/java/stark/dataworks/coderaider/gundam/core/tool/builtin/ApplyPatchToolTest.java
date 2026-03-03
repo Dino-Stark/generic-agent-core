@@ -172,6 +172,34 @@ class ApplyPatchToolTest
         assertEquals("line1\nline2", result);
     }
 
+    @Test
+    void testRawFieldWithNestedJson()
+    {
+        TestEditor editor = new TestEditor();
+        ApplyPatchTool tool = new ApplyPatchTool(editor);
+
+        String nestedJson = "{\"operation\": {\"type\": \"update_file\", \"path\": \"/test/file.txt\", \"diff\": \"-old\\n+new\"}}";
+        Map<String, Object> input = Map.of("raw", nestedJson);
+
+        String result = tool.execute(input);
+        assertTrue(result.contains("completed"), "Expected success but got: " + result);
+        assertEquals(1, editor.getUpdateCount());
+    }
+
+    @Test
+    void testRawFieldWithDirectOperation()
+    {
+        TestEditor editor = new TestEditor();
+        ApplyPatchTool tool = new ApplyPatchTool(editor);
+
+        String directJson = "{\"type\": \"update_file\", \"path\": \"/test/file.txt\", \"diff\": \"-old\\n+new\"}";
+        Map<String, Object> input = Map.of("raw", directJson);
+
+        String result = tool.execute(input);
+        assertTrue(result.contains("completed"), "Expected success but got: " + result);
+        assertEquals(1, editor.getUpdateCount());
+    }
+
     private static class TestEditor implements IApplyPatchEditor
     {
         private int createCount = 0;

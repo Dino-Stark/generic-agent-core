@@ -277,7 +277,7 @@ public class ApplyPatchTool implements ITool
             com.fasterxml.jackson.databind.ObjectMapper mapper = new com.fasterxml.jackson.databind.ObjectMapper();
             String jsonToParse = raw.trim();
 
-            for (int attempt = 0; attempt < 3; attempt++)
+            for (int attempt = 0; attempt < 10; attempt++)
             {
                 com.fasterxml.jackson.databind.JsonNode node = mapper.readTree(jsonToParse);
                 Map<String, Object> operation = extractOperationFromNode(mapper, node);
@@ -299,7 +299,7 @@ public class ApplyPatchTool implements ITool
         }
         catch (Exception e)
         {
-            return null;
+            return tryExtractOperationBySubstring(new com.fasterxml.jackson.databind.ObjectMapper(), raw);
         }
     }
 
@@ -338,47 +338,80 @@ public class ApplyPatchTool implements ITool
             return null;
         }
 
-        int operationIndex = raw.indexOf("\"operation\"");
-        if (operationIndex < 0)
+        int searchFrom = 0;
+        while (searchFrom < raw.length())
         {
-            return null;
-        }
-
-        int objectStart = raw.indexOf('{', operationIndex);
-        if (objectStart < 0)
-        {
-            return null;
-        }
-
-        int depth = 0;
-        for (int i = objectStart; i < raw.length(); i++)
-        {
-            char ch = raw.charAt(i);
-            if (ch == '{')
+            int operationIndex = raw.indexOf("\"operation\"", searchFrom);
+            if (operationIndex < 0)
             {
-                depth++;
+                break;
             }
-            else if (ch == '}')
+
+            int objectStart = raw.indexOf('{', operationIndex);
+            if (objectStart < 0)
             {
-                depth--;
-                if (depth == 0)
+                break;
+            }
+
+            int depth = 0;
+            boolean inString = false;
+            boolean escape = false;
+            int objectEnd = -1;
+
+            for (int i = objectStart; i < raw.length(); i++)
+            {
+                char ch = raw.charAt(i);
+                if (escape)
                 {
-                    String candidate = raw.substring(objectStart, i + 1);
-                    try
+                    escape = false;
+                    continue;
+                }
+                if (ch == '\\' && inString)
+                {
+                    escape = true;
+                    continue;
+                }
+                if (ch == '"')
+                {
+                    inString = !inString;
+                    continue;
+                }
+                if (inString)
+                {
+                    continue;
+                }
+                if (ch == '{')
+                {
+                    depth++;
+                }
+                else if (ch == '}')
+                {
+                    depth--;
+                    if (depth == 0)
                     {
-                        com.fasterxml.jackson.databind.JsonNode opNode = mapper.readTree(candidate);
-                        if (opNode.has("type") && opNode.has("path"))
-                        {
-                            return mapper.convertValue(opNode, Map.class);
-                        }
+                        objectEnd = i;
+                        break;
                     }
-                    catch (Exception ignored)
-                    {
-                        return null;
-                    }
-                    return null;
                 }
             }
+
+            if (objectEnd > 0)
+            {
+                String candidate = raw.substring(objectStart, objectEnd + 1);
+                try
+                {
+                    com.fasterxml.jackson.databind.JsonNode opNode = mapper.readTree(candidate);
+                    if (opNode.has("type") && opNode.has("path"))
+                    {
+                        return mapper.convertValue(opNode, Map.class);
+                    }
+                }
+                catch (Exception ignored)
+                {
+                }
+            }
+
+            searchFrom = operationIndex + 10;
         }
 
         return null;

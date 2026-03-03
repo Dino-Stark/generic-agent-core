@@ -239,23 +239,7 @@ public class OpenAiCompatibleLlmClient implements IMultimodalLlmClient
             {
                 continue;
             }
-            Map<String, Object> args = new HashMap<>();
-            if (!d.arguments.isEmpty())
-            {
-                try
-                {
-                    JsonNode argsNode = objectMapper.readTree(d.arguments.toString());
-                    if (argsNode.isObject())
-                    {
-                        args = objectMapper.convertValue(argsNode, Map.class);
-                    }
-                }
-                catch (Exception ex)
-                {
-                    args.put("raw", d.arguments.toString());
-                }
-            }
-
+            Map<String, Object> args = parseToolCallArguments(d.arguments.toString());
             ToolCall call = new ToolCall(d.name, args, d.id);
             calls.add(call);
             if (listener != null)
@@ -450,6 +434,33 @@ public class OpenAiCompatibleLlmClient implements IMultimodalLlmClient
             return;
         }
         throw new IllegalStateException("Provider call failed with status=" + status + ", body=" + body);
+    }
+
+    private Map<String, Object> parseToolCallArguments(String argsJson)
+    {
+        Map<String, Object> args = new HashMap<>();
+        if (argsJson == null || argsJson.isBlank())
+        {
+            return args;
+        }
+
+        try
+        {
+            JsonNode argsNode = objectMapper.readTree(argsJson);
+            if (argsNode.isObject())
+            {
+                args = objectMapper.convertValue(argsNode, Map.class);
+            }
+            else
+            {
+                args.put("raw", argsJson);
+            }
+        }
+        catch (Exception ex)
+        {
+            args.put("raw", argsJson);
+        }
+        return args;
     }
 
     private static class ToolDelta
