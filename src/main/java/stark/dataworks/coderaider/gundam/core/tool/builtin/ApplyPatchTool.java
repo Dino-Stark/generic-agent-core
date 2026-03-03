@@ -271,42 +271,117 @@ public class ApplyPatchTool implements ITool
         {
             return null;
         }
-        
+
         try
         {
             com.fasterxml.jackson.databind.ObjectMapper mapper = new com.fasterxml.jackson.databind.ObjectMapper();
-            
-            String jsonToParse = raw;
-            if (raw.contains("\n") || raw.contains("\r"))
+            String jsonToParse = raw.trim();
+
+            for (int attempt = 0; attempt < 3; attempt++)
             {
-                jsonToParse = raw
-                    .replace("\r\n", "\\r\\n")
-                    .replace("\n", "\\n")
-                    .replace("\r", "\\r");
-            }
-            
-            com.fasterxml.jackson.databind.JsonNode node = mapper.readTree(jsonToParse);
-            
-            if (node.has("operation"))
-            {
-                com.fasterxml.jackson.databind.JsonNode opNode = node.get("operation");
-                if (opNode.has("type") && opNode.has("path"))
+                com.fasterxml.jackson.databind.JsonNode node = mapper.readTree(jsonToParse);
+                Map<String, Object> operation = extractOperationFromNode(mapper, node);
+                if (operation != null)
                 {
-                    return mapper.convertValue(opNode, Map.class);
+                    return operation;
                 }
+
+                if (node.isTextual())
+                {
+                    jsonToParse = node.asText();
+                    continue;
+                }
+
+                break;
             }
-            
-            if (node.has("type") && node.has("path"))
-            {
-                return mapper.convertValue(node, Map.class);
-            }
-            
-            return null;
+
+            return tryExtractOperationBySubstring(mapper, jsonToParse);
         }
         catch (Exception e)
         {
             return null;
         }
+    }
+
+    @SuppressWarnings("unchecked")
+    private Map<String, Object> extractOperationFromNode(com.fasterxml.jackson.databind.ObjectMapper mapper,
+                                                         com.fasterxml.jackson.databind.JsonNode node)
+    {
+        if (node == null || !node.isObject())
+        {
+            return null;
+        }
+
+        if (node.has("operation"))
+        {
+            com.fasterxml.jackson.databind.JsonNode opNode = node.get("operation");
+            if (opNode != null && opNode.has("type") && opNode.has("path"))
+            {
+                return mapper.convertValue(opNode, Map.class);
+            }
+        }
+
+        if (node.has("type") && node.has("path"))
+        {
+            return mapper.convertValue(node, Map.class);
+        }
+
+        return null;
+    }
+
+    @SuppressWarnings("unchecked")
+    private Map<String, Object> tryExtractOperationBySubstring(com.fasterxml.jackson.databind.ObjectMapper mapper,
+                                                                String raw)
+    {
+        if (raw == null)
+        {
+            return null;
+        }
+
+        int operationIndex = raw.indexOf("\"operation\"");
+        if (operationIndex < 0)
+        {
+            return null;
+        }
+
+        int objectStart = raw.indexOf('{', operationIndex);
+        if (objectStart < 0)
+        {
+            return null;
+        }
+
+        int depth = 0;
+        for (int i = objectStart; i < raw.length(); i++)
+        {
+            char ch = raw.charAt(i);
+            if (ch == '{')
+            {
+                depth++;
+            }
+            else if (ch == '}')
+            {
+                depth--;
+                if (depth == 0)
+                {
+                    String candidate = raw.substring(objectStart, i + 1);
+                    try
+                    {
+                        com.fasterxml.jackson.databind.JsonNode opNode = mapper.readTree(candidate);
+                        if (opNode.has("type") && opNode.has("path"))
+                        {
+                            return mapper.convertValue(opNode, Map.class);
+                        }
+                    }
+                    catch (Exception ignored)
+                    {
+                        return null;
+                    }
+                    return null;
+                }
+            }
+        }
+
+        return null;
     }
 
     private String successResult(String message)
