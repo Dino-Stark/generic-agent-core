@@ -19,9 +19,9 @@ public class WorkflowTool extends AbstractBuiltinTool
     private final WorkflowExecutor workflowExecutor;
 
     /**
-     * Performs workflow tool as part of WorkflowTool runtime responsibilities.
-     * @param definition The definition used by this operation.
-     * @param workflowExecutor The workflow executor used by this operation.
+     * Creates a new WorkflowTool instance.
+     * @param definition definition object.
+     * @param workflowExecutor workflow executor.
      */
     public WorkflowTool(ToolDefinition definition, WorkflowExecutor workflowExecutor)
     {
@@ -30,9 +30,10 @@ public class WorkflowTool extends AbstractBuiltinTool
     }
 
     /**
-     * Runs the primary execution flow, coordinating model/tool work and runtime policies.
-     * @param input The input used by this operation.
-     * @return The value produced by this operation.
+     * Executes the operation and returns its output.
+     * @param Map<String map<string.
+     * @param input input payload.
+     * @return Result text returned by this operation.
      */
     @Override
     public String execute(Map<String, Object> input)

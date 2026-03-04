@@ -18,9 +18,11 @@ public class FunctionTool extends AbstractBuiltinTool
     private final Function<Map<String, Object>, String> function;
 
     /**
-     * Performs function tool as part of FunctionTool runtime responsibilities.
-     * @param definition The definition used by this operation.
-     * @param function The function used by this operation.
+     * Creates a new FunctionTool instance.
+     * @param definition definition object.
+     * @param Function<Map<String function<map<string.
+     * @param Object> object>.
+     * @param function function.
      */
     public FunctionTool(ToolDefinition definition, Function<Map<String, Object>, String> function)
     {
@@ -29,9 +31,10 @@ public class FunctionTool extends AbstractBuiltinTool
     }
 
     /**
-     * Runs the primary execution flow, coordinating model/tool work and runtime policies.
-     * @param input The input used by this operation.
-     * @return The value produced by this operation.
+     * Executes the operation and returns its output.
+     * @param Map<String map<string.
+     * @param input input payload.
+     * @return Result text returned by this operation.
      */
     @Override
     public String execute(Map<String, Object> input)

@@ -30,9 +30,10 @@ public class ToolCall
     private final String toolCallId;
 
     /**
-     * Performs tool call as part of ToolCall runtime responsibilities.
-     * @param toolName The tool name used by this operation.
-     * @param arguments The arguments used by this operation.
+     * Creates a new ToolCall instance.
+     * @param toolName tool name.
+     * @param Map<String map<string.
+     * @param arguments arguments.
      */
     public ToolCall(String toolName, Map<String, Object> arguments)
     {
@@ -40,10 +41,11 @@ public class ToolCall
     }
 
     /**
-     * Performs tool call as part of ToolCall runtime responsibilities.
-     * @param toolName The tool name used by this operation.
-     * @param arguments The arguments used by this operation.
-     * @param toolCallId The tool call ID used by this operation.
+     * Creates a new ToolCall instance.
+     * @param toolName tool name.
+     * @param Map<String map<string.
+     * @param arguments arguments.
+     * @param toolCallId tool call identifier.
      */
     public ToolCall(String toolName, Map<String, Object> arguments, String toolCallId)
     {

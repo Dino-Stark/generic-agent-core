@@ -22,9 +22,9 @@ public class ToolApprovalDecision
     private final String reason;
 
     /**
-     * Performs tool approval decision as part of ToolApprovalDecision runtime responsibilities.
-     * @param approved The approved used by this operation.
-     * @param reason The reason used by this operation.
+     * Creates a new ToolApprovalDecision instance.
+     * @param approved approved.
+     * @param reason human-readable reason.
      */
     private ToolApprovalDecision(boolean approved, String reason)
     {
@@ -33,8 +33,8 @@ public class ToolApprovalDecision
     }
 
     /**
-     * Performs approve as part of ToolApprovalDecision runtime responsibilities.
-     * @return The value produced by this operation.
+     * Returns an approval decision.
+     * @return tool approval decision result.
      */
     public static ToolApprovalDecision approve()
     {
@@ -42,9 +42,9 @@ public class ToolApprovalDecision
     }
 
     /**
-     * Performs deny as part of ToolApprovalDecision runtime responsibilities.
-     * @param reason The reason used by this operation.
-     * @return The value produced by this operation.
+     * Returns a deny decision with a reason.
+     * @param reason human-readable reason.
+     * @return tool approval decision result.
      */
     public static ToolApprovalDecision deny(String reason)
     {

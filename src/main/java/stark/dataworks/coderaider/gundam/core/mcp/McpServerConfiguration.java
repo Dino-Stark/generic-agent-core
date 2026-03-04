@@ -28,10 +28,11 @@ public class McpServerConfiguration
     private final Map<String, Object> options;
 
     /**
-     * Performs mcp server config as part of McpServerConfig runtime responsibilities.
-     * @param serverId The server id used by this operation.
-     * @param endpoint The endpoint used by this operation.
-     * @param options The options used by this operation.
+     * Creates a new McpServerConfiguration instance.
+     * @param serverId MCP server identifier.
+     * @param endpoint endpoint.
+     * @param Map<String map<string.
+     * @param options provider options.
      */
     public McpServerConfiguration(String serverId, String endpoint, Map<String, Object> options)
     {

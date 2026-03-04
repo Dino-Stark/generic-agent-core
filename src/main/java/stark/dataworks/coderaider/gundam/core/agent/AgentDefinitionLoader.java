@@ -15,16 +15,16 @@ public final class AgentDefinitionLoader
     private static final ObjectMapper MAPPER = new ObjectMapper();
 
     /**
-     * Performs agent definition loader as part of AgentDefinitionLoader runtime responsibilities.
+     * Creates a new AgentDefinitionLoader instance.
      */
     private AgentDefinitionLoader()
     {
     }
 
     /**
-     * Performs from json as part of AgentDefinitionLoader runtime responsibilities.
-     * @param json The json used by this operation.
-     * @return The value produced by this operation.
+     * Creates json.
+     * @param json json.
+     * @return agent definition result.
      */
     public static AgentDefinition fromJson(String json)
     {

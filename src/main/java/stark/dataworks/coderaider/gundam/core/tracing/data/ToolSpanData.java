@@ -9,8 +9,9 @@ public class ToolSpanData extends SpanData
 {
 
     /**
-     * Performs tool span data as part of ToolSpanData runtime responsibilities.
-     * @param attributes The attributes used by this operation.
+     * Creates a new ToolSpanData instance.
+     * @param Map<String map<string.
+     * @param attributes attribute map.
      */
     public ToolSpanData(Map<String, String> attributes)
     {

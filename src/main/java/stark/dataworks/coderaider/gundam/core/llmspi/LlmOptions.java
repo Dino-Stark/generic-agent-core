@@ -37,9 +37,9 @@ public class LlmOptions
     private final Map<String, Object> providerOptions;
 
     /**
-     * Performs llm options as part of LlmOptions runtime responsibilities.
-     * @param temperature The temperature used by this operation.
-     * @param maxTokens The max tokens used by this operation.
+     * Creates a new LlmOptions instance.
+     * @param temperature sampling temperature.
+     * @param maxTokens maximum token limit.
      */
     public LlmOptions(double temperature, int maxTokens)
     {
@@ -47,12 +47,12 @@ public class LlmOptions
     }
 
     /**
-     * Performs llm options as part of LlmOptions runtime responsibilities.
-     * @param temperature The temperature used by this operation.
-     * @param maxTokens The max tokens used by this operation.
-     * @param toolChoice The tool choice used by this operation.
-     * @param responseFormat The response format used by this operation.
-     * @param providerOptions The provider options used by this operation.
+     * Creates LLM options.
+     * @param temperature sampling temperature.
+     * @param maxTokens maximum token limit.
+     * @param toolChoice tool choice policy.
+     * @param responseFormat response format.
+     * @param providerOptions provider options.
      */
     public LlmOptions(double temperature,
                       int maxTokens,

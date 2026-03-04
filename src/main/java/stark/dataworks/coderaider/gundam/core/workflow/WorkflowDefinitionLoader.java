@@ -14,16 +14,16 @@ public final class WorkflowDefinitionLoader
     private static final ObjectMapper MAPPER = new ObjectMapper();
 
     /**
-     * Performs workflow definition loader as part of WorkflowDefinitionLoader runtime responsibilities.
+     * Creates a new WorkflowDefinitionLoader instance.
      */
     private WorkflowDefinitionLoader()
     {
     }
 
     /**
-     * Performs from json as part of WorkflowDefinitionLoader runtime responsibilities.
-     * @param json The json used by this operation.
-     * @return The value produced by this operation.
+     * Creates json.
+     * @param json json.
+     * @return workflow definition result.
      */
     public static WorkflowDefinition fromJson(String json)
     {

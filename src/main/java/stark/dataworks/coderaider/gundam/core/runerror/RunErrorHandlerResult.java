@@ -20,9 +20,9 @@ public class RunErrorHandlerResult
     private final String finalOutput;
 
     /**
-     * Performs run error handler result as part of RunErrorHandlerResult runtime responsibilities.
-     * @param handled The handled used by this operation.
-     * @param finalOutput The final output used by this operation.
+     * Creates a new RunErrorHandlerResult instance.
+     * @param handled handled.
+     * @param finalOutput final output.
      */
     private RunErrorHandlerResult(boolean handled, String finalOutput)
     {
@@ -31,8 +31,8 @@ public class RunErrorHandlerResult
     }
 
     /**
-     * Performs not handled as part of RunErrorHandlerResult runtime responsibilities.
-     * @return The value produced by this operation.
+     * Returns a result indicating the error was not handled.
+     * @return run error handler result result.
      */
     public static RunErrorHandlerResult notHandled()
     {
@@ -40,9 +40,9 @@ public class RunErrorHandlerResult
     }
 
     /**
-     * Performs handled as part of RunErrorHandlerResult runtime responsibilities.
-     * @param finalOutput The final output used by this operation.
-     * @return The value produced by this operation.
+     * Handles d.
+     * @param finalOutput final output.
+     * @return run error handler result result.
      */
     public static RunErrorHandlerResult handled(String finalOutput)
     {

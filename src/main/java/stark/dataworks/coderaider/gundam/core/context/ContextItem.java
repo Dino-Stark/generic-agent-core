@@ -29,10 +29,11 @@ public class ContextItem
     private final Map<String, Object> metadata;
 
     /**
-     * Performs run item as part of RunItem runtime responsibilities.
-     * @param type The type used by this operation.
-     * @param content The content used by this operation.
-     * @param metadata The metadata used by this operation.
+     * Creates a new ContextItem instance.
+     * @param type type discriminator.
+     * @param content content.
+     * @param Map<String map<string.
+     * @param metadata metadata map.
      */
     public ContextItem(ContextItemType type, String content, Map<String, Object> metadata)
     {

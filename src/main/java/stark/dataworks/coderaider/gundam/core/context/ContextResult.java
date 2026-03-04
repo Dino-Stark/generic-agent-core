@@ -42,12 +42,12 @@ public class ContextResult
     private final List<RunEvent> events;
 
     /**
-     * Performs run result as part of RunResult runtime responsibilities.
-     * @param finalOutput The final output used by this operation.
-     * @param finalAgentId The final agent id used by this operation.
-     * @param usage The usage used by this operation.
-     * @param items The items used by this operation.
-     * @param events The events used by this operation.
+     * Creates a run result object.
+     * @param finalOutput final output.
+     * @param finalAgentId final agent id.
+     * @param usage usage.
+     * @param items items.
+     * @param events run events.
      */
     public ContextResult(String finalOutput,
                          String finalAgentId,

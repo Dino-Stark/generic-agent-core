@@ -43,11 +43,11 @@ public class LlmRequest
     private final List<GeneratedAsset> attachments;
 
     /**
-     * Performs llm request as part of LlmRequest runtime responsibilities.
-     * @param model The model used by this operation.
-     * @param messages The messages used by this operation.
-     * @param tools The tools used by this operation.
-     * @param options The options used by this operation.
+     * Creates a new LlmRequest instance.
+     * @param model model identifier.
+     * @param messages conversation messages.
+     * @param tools tools.
+     * @param options provider options.
      */
     public LlmRequest(String model, List<Message> messages, List<ToolDefinition> tools, LlmOptions options)
     {
@@ -55,12 +55,12 @@ public class LlmRequest
     }
 
     /**
-     * Performs llm request as part of LlmRequest runtime responsibilities.
-     * @param model The model used by this operation.
-     * @param messages The messages used by this operation.
-     * @param tools The tools used by this operation.
-     * @param options The options used by this operation.
-     * @param attachments The attachments used by this operation.
+     * Creates an LLM request.
+     * @param model model identifier.
+     * @param messages conversation messages.
+     * @param tools tools.
+     * @param options options map.
+     * @param attachments attachments.
      */
     public LlmRequest(String model, List<Message> messages, List<ToolDefinition> tools, LlmOptions options,
                       List<GeneratedAsset> attachments)

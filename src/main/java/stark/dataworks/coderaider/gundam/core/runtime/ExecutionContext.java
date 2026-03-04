@@ -38,10 +38,10 @@ public class ExecutionContext
     private int currentStep;
 
     /**
-     * Performs execution context as part of ExecutionContext runtime responsibilities.
-     * @param agent The agent used by this operation.
-     * @param memory The memory used by this operation.
-     * @param tokenUsageTracker The token usage tracker used by this operation.
+     * Creates a new ExecutionContext instance.
+     * @param agent agent instance.
+     * @param memory conversation memory backend.
+     * @param tokenUsageTracker token usage tracker.
      */
     public ExecutionContext(IAgent agent, IAgentMemory memory, TokenUsageTracker tokenUsageTracker)
     {
@@ -51,7 +51,7 @@ public class ExecutionContext
     }
 
     /**
-     * Performs increment step as part of ExecutionContext runtime responsibilities.
+     * Increments the current step counter.
      */
     public void incrementStep()
     {

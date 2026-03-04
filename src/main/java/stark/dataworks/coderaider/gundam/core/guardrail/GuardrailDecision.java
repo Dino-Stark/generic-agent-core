@@ -24,8 +24,8 @@ public class GuardrailDecision
     private final String reason;
 
     /**
-     * Performs allow as part of GuardrailDecision runtime responsibilities.
-     * @return The value produced by this operation.
+     * Returns an allow decision.
+     * @return guardrail decision result.
      */
     public static GuardrailDecision allow()
     {
@@ -33,9 +33,9 @@ public class GuardrailDecision
     }
 
     /**
-     * Performs deny as part of GuardrailDecision runtime responsibilities.
-     * @param reason The reason used by this operation.
-     * @return The value produced by this operation.
+     * Returns a deny decision with a reason.
+     * @param reason human-readable reason.
+     * @return guardrail decision result.
      */
     public static GuardrailDecision deny(String reason)
     {

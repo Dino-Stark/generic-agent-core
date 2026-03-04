@@ -15,8 +15,8 @@ public class HandoffRouter
     private final List<IHandoffFilter> filters = new ArrayList<>();
 
     /**
-     * Adds data to internal state consumed by later runtime steps.
-     * @param filter The filter used by this operation.
+     * Adds filter.
+     * @param filter filter.
      */
     public void addFilter(IHandoffFilter filter)
     {
@@ -24,9 +24,9 @@ public class HandoffRouter
     }
 
     /**
-     * Performs can route as part of HandoffRouter runtime responsibilities.
-     * @param handoff The handoff used by this operation.
-     * @return {@code true} when the condition is satisfied; otherwise {@code false}.
+     * Checks whether the handoff can route to the target agent.
+     * @param handoff handoff.
+     * @return True when the operation succeeds.
      */
     public boolean canRoute(Handoff handoff)
     {

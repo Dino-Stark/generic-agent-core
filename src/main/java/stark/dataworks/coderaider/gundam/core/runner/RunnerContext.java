@@ -50,9 +50,9 @@ public class RunnerContext
     private int turns;
 
     /**
-     * Performs runner context as part of RunnerContext runtime responsibilities.
-     * @param currentAgent The current agent used by this operation.
-     * @param memory The memory used by this operation.
+     * Creates a new RunnerContext instance.
+     * @param currentAgent current agent.
+     * @param memory conversation memory backend.
      */
     public RunnerContext(IAgent currentAgent, IAgentMemory memory)
     {
@@ -61,7 +61,7 @@ public class RunnerContext
     }
 
     /**
-     * Performs increment turns as part of RunnerContext runtime responsibilities.
+     * Increments the executed turn counter.
      */
     public void incrementTurns()
     {

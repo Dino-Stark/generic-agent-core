@@ -29,10 +29,10 @@ public class ToolDefinition
     private final List<ToolParameterSchema> parameters;
 
     /**
-     * Performs tool definition as part of ToolDefinition runtime responsibilities.
-     * @param name The name used by this operation.
-     * @param description The description used by this operation.
-     * @param parameters The parameters used by this operation.
+     * Creates a new ToolDefinition instance.
+     * @param name human-readable name.
+     * @param description description.
+     * @param parameters parameters.
      */
     public ToolDefinition(String name, String description, List<ToolParameterSchema> parameters)
     {

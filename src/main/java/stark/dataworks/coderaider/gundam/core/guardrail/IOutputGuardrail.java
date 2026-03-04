@@ -10,10 +10,10 @@ public interface IOutputGuardrail
 {
 
     /**
-     * Performs evaluate as part of OutputGuardrail runtime responsibilities.
-     * @param context The context used by this operation.
-     * @param response The response used by this operation.
-     * @return The value produced by this operation.
+     * Evaluates this value.
+     * @param context execution context.
+     * @param response response payload.
+     * @return guardrail decision result.
      */
     GuardrailDecision evaluate(ExecutionContext context, LlmResponse response);
 }

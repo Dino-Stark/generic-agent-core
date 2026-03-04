@@ -20,9 +20,9 @@ public class TokenUsage
     private final int outputTokens;
 
     /**
-     * Performs token usage as part of TokenUsage runtime responsibilities.
-     * @param inputTokens The input tokens used by this operation.
-     * @param outputTokens The output tokens used by this operation.
+     * Creates a new TokenUsage instance.
+     * @param inputTokens input tokens.
+     * @param outputTokens output tokens.
      */
     public TokenUsage(int inputTokens, int outputTokens)
     {
@@ -31,8 +31,8 @@ public class TokenUsage
     }
 
     /**
-     * Returns the current total tokens value maintained by this TokenUsage.
-     * @return The value produced by this operation.
+     * Returns total tokens.
+     * @return Computed numeric result.
      */
     public int getTotalTokens()
     {

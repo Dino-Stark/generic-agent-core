@@ -31,9 +31,9 @@ public class WorkflowExecutor
     private final WorkflowProcessorRegistry processorRegistry;
 
     /**
-     * Performs workflow executor as part of WorkflowExecutor runtime responsibilities.
-     * @param definition The definition used by this operation.
-     * @param processorRegistry The processor registry used by this operation.
+     * Creates a new WorkflowExecutor instance.
+     * @param definition definition object.
+     * @param processorRegistry processor registry.
      */
     public WorkflowExecutor(WorkflowDefinition definition, WorkflowProcessorRegistry processorRegistry)
     {
@@ -43,9 +43,10 @@ public class WorkflowExecutor
     }
 
     /**
-     * Runs the primary execution flow, coordinating model/tool work and runtime policies.
-     * @param input The input used by this operation.
-     * @return The value produced by this operation.
+     * Executes the operation and returns its output.
+     * @param Map<String map<string.
+     * @param input input payload.
+     * @return workflow execution result result.
      */
     public WorkflowExecutionResult execute(Map<String, Object> input)
     {

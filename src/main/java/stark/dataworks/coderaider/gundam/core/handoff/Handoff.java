@@ -27,10 +27,10 @@ public class Handoff
     private final String reason;
 
     /**
-     * Performs handoff as part of Handoff runtime responsibilities.
-     * @param fromAgentId The from agent id used by this operation.
-     * @param toAgentId The to agent id used by this operation.
-     * @param reason The reason used by this operation.
+     * Creates a new Handoff instance.
+     * @param fromAgentId from agent id.
+     * @param toAgentId to agent id.
+     * @param reason human-readable reason.
      */
     public Handoff(String fromAgentId, String toAgentId, String reason)
     {

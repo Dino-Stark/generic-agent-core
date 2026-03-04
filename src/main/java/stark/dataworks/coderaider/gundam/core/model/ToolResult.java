@@ -22,9 +22,9 @@ public class ToolResult
     private final String content;
 
     /**
-     * Performs tool result as part of ToolResult runtime responsibilities.
-     * @param toolName The tool name used by this operation.
-     * @param content The content used by this operation.
+     * Creates a new ToolResult instance.
+     * @param toolName tool name.
+     * @param content content.
      */
     public ToolResult(String toolName, String content)
     {

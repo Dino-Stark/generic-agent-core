@@ -38,8 +38,8 @@ public class McpManager
     private final IMcpToolApprovalPolicy approvalPolicy;
 
     /**
-     * Performs mcp manager as part of McpManager runtime responsibilities.
-     * @param client The client used by this operation.
+     * Creates a new McpManager instance.
+     * @param client client implementation.
      */
     public McpManager(IMcpServerClient client)
     {
@@ -47,8 +47,8 @@ public class McpManager
     }
 
     /**
-     * Registers the supplied value so it can be discovered by subsequent runtime lookups.
-     * @param serverConfig The server config used by this operation.
+     * Registers server.
+     * @param serverConfig server config.
      */
     public void registerServer(McpServerConfiguration serverConfig)
     {
@@ -56,9 +56,9 @@ public class McpManager
     }
 
     /**
-     * Performs list tools as part of McpManager runtime responsibilities.
-     * @param serverId The server id used by this operation.
-     * @return The value produced by this operation.
+     * Lists tools.
+     * @param serverId MCP server identifier.
+     * @return List of mcp tool descriptor values.
      */
     public List<McpToolDescriptor> listTools(String serverId)
     {
@@ -67,9 +67,9 @@ public class McpManager
     }
 
     /**
-     * Performs list resources as part of McpManager runtime responsibilities.
-     * @param serverId The server id used by this operation.
-     * @return The value produced by this operation.
+     * Lists resources.
+     * @param serverId MCP server identifier.
+     * @return List of mcp resource values.
      */
     public List<McpResource> listResources(String serverId)
     {
@@ -77,9 +77,9 @@ public class McpManager
     }
 
     /**
-     * Performs list resource templates as part of McpManager runtime responsibilities.
-     * @param serverId The server id used by this operation.
-     * @return The value produced by this operation.
+     * Lists resource templates.
+     * @param serverId MCP server identifier.
+     * @return List of mcp resource template values.
      */
     public List<McpResourceTemplate> listResourceTemplates(String serverId)
     {
@@ -87,10 +87,10 @@ public class McpManager
     }
 
     /**
-     * Performs read resource as part of McpManager runtime responsibilities.
-     * @param serverId The server id used by this operation.
-     * @param uri The uri used by this operation.
-     * @return The value produced by this operation.
+     * Reads resource.
+     * @param serverId MCP server identifier.
+     * @param uri resource URI.
+     * @return mcp resource result.
      */
     public McpResource readResource(String serverId, String uri)
     {
@@ -98,9 +98,9 @@ public class McpManager
     }
 
     /**
-     * Resolves tools as local tools from configured registries before execution continues.
-     * @param serverId The server id used by this operation.
-     * @return The value produced by this operation.
+     * Resolves tools as local tools.
+     * @param serverId MCP server identifier.
+     * @return List of itool values.
      */
     public List<ITool> resolveToolsAsLocalTools(String serverId)
     {
@@ -114,9 +114,9 @@ public class McpManager
     }
 
     /**
-     * Performs require server as part of McpManager runtime responsibilities.
-     * @param serverId The server id used by this operation.
-     * @return The value produced by this operation.
+     * Resolves a registered server configuration or throws.
+     * @param serverId MCP server identifier.
+     * @return mcp server configuration result.
      */
     private McpServerConfiguration requireServer(String serverId)
     {
@@ -155,11 +155,11 @@ public class McpManager
         private final IMcpToolApprovalPolicy approvalPolicy;
 
         /**
-         * Performs mcp proxy tool as part of McpManager runtime responsibilities.
-         * @param config The config used by this operation.
-         * @param descriptor The descriptor used by this operation.
-         * @param client The client used by this operation.
-         * @param approvalPolicy The approval policy used by this operation.
+         * Creates a local proxy wrapper for an MCP tool.
+         * @param config configuration.
+         * @param descriptor descriptor.
+         * @param client client implementation.
+         * @param approvalPolicy approval policy.
          */
         private McpProxyTool(McpServerConfiguration config, McpToolDescriptor descriptor, IMcpServerClient client, IMcpToolApprovalPolicy approvalPolicy)
         {
@@ -170,8 +170,8 @@ public class McpManager
         }
 
         /**
-         * Performs definition as part of McpManager runtime responsibilities.
-         * @return The value produced by this operation.
+         * Returns definition metadata for this component.
+         * @return tool definition result.
          */
         @Override
         public ToolDefinition definition()
@@ -227,9 +227,10 @@ public class McpManager
         }
 
         /**
-         * Runs the primary execution flow, coordinating model/tool work and runtime policies.
-         * @param input The input used by this operation.
-         * @return The value produced by this operation.
+         * Executes the operation and returns its output.
+         * @param Map<String map<string.
+         * @param input input payload.
+         * @return Result text returned by this operation.
          */
         @Override
         public String execute(Map<String, Object> input)

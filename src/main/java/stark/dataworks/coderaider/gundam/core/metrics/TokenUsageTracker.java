@@ -17,8 +17,8 @@ public class TokenUsageTracker
     private int output;
 
     /**
-     * Adds data to internal state consumed by later runtime steps.
-     * @param usage The usage used by this operation.
+     * Adds this value.
+     * @param usage usage.
      */
     public void add(TokenUsage usage)
     {
@@ -27,8 +27,8 @@ public class TokenUsageTracker
     }
 
     /**
-     * Performs snapshot as part of TokenUsageTracker runtime responsibilities.
-     * @return The value produced by this operation.
+     * Returns an immutable snapshot of current token usage.
+     * @return token usage result.
      */
     public TokenUsage snapshot()
     {

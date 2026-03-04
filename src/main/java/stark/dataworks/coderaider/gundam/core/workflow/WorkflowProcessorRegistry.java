@@ -16,9 +16,9 @@ public class WorkflowProcessorRegistry
     private final Map<String, IWorkflowVertexProcessor> processors = new HashMap<>();
 
     /**
-     * Performs register as part of WorkflowProcessorRegistry runtime responsibilities.
-     * @param type The type used by this operation.
-     * @param processor The processor used by this operation.
+     * Registers this value.
+     * @param type type discriminator.
+     * @param processor processor.
      */
     public void register(String type, IWorkflowVertexProcessor processor)
     {
@@ -26,9 +26,9 @@ public class WorkflowProcessorRegistry
     }
 
     /**
-     * Performs get as part of WorkflowProcessorRegistry runtime responsibilities.
-     * @param type The type used by this operation.
-     * @return The value produced by this operation.
+     * Returns this value.
+     * @param type type discriminator.
+     * @return Optional iworkflow vertex processor value.
      */
     public Optional<IWorkflowVertexProcessor> get(String type)
     {

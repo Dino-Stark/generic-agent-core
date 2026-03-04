@@ -27,10 +27,10 @@ public class RunErrorData
     private final Throwable cause;
 
     /**
-     * Performs run error data as part of RunErrorData runtime responsibilities.
-     * @param kind The kind used by this operation.
-     * @param message The message used by this operation.
-     * @param cause The cause used by this operation.
+     * Creates a new RunErrorData instance.
+     * @param kind kind.
+     * @param message conversation message.
+     * @param cause root cause exception.
      */
     public RunErrorData(RunErrorKind kind, String message, Throwable cause)
     {

@@ -24,9 +24,10 @@ public class WorkflowVertexResult
     private final List<String> nextVertexIds;
 
     /**
-     * Performs workflow vertex result as part of WorkflowVertexResult runtime responsibilities.
-     * @param outputs The outputs used by this operation.
-     * @param nextVertexIds The next vertex ids used by this operation.
+     * Creates a new WorkflowVertexResult instance.
+     * @param Map<String map<string.
+     * @param outputs outputs.
+     * @param nextVertexIds next vertex ids.
      */
     public WorkflowVertexResult(Map<String, Object> outputs, List<String> nextVertexIds)
     {
@@ -35,9 +36,10 @@ public class WorkflowVertexResult
     }
 
     /**
-     * Performs of outputs as part of WorkflowVertexResult runtime responsibilities.
-     * @param outputs The outputs used by this operation.
-     * @return The value produced by this operation.
+     * Creates a workflow vertex result from output values.
+     * @param Map<String map<string.
+     * @param outputs outputs.
+     * @return workflow vertex result result.
      */
     public static WorkflowVertexResult ofOutputs(Map<String, Object> outputs)
     {

@@ -16,8 +16,8 @@ public class InMemorySessionStore implements ISessionStore
     private final Map<String, Session> sessions = new ConcurrentHashMap<>();
 
     /**
-     * Performs save as part of InMemorySessionStore runtime responsibilities.
-     * @param session The session used by this operation.
+     * Saves this value.
+     * @param session session.
      */
     @Override
     public void save(Session session)
@@ -26,9 +26,9 @@ public class InMemorySessionStore implements ISessionStore
     }
 
     /**
-     * Performs load as part of InMemorySessionStore runtime responsibilities.
-     * @param sessionId The session id used by this operation.
-     * @return The value produced by this operation.
+     * Loads this value.
+     * @param sessionId session id.
+     * @return Optional session value.
      */
     @Override
     public Optional<Session> load(String sessionId)

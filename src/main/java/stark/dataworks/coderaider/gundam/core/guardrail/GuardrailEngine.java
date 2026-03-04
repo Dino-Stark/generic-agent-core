@@ -23,8 +23,8 @@ public class GuardrailEngine
     private final List<IOutputGuardrail> outputGuardrails = new ArrayList<>();
 
     /**
-     * Registers the supplied value so it can be discovered by subsequent runtime lookups.
-     * @param guardrail The guardrail used by this operation.
+     * Registers input.
+     * @param guardrail guardrail.
      */
     public void registerInput(IInputGuardrail guardrail)
     {
@@ -32,8 +32,8 @@ public class GuardrailEngine
     }
 
     /**
-     * Registers the supplied value so it can be discovered by subsequent runtime lookups.
-     * @param guardrail The guardrail used by this operation.
+     * Registers output.
+     * @param guardrail guardrail.
      */
     public void registerOutput(IOutputGuardrail guardrail)
     {
@@ -41,10 +41,10 @@ public class GuardrailEngine
     }
 
     /**
-     * Performs evaluate input as part of GuardrailEngine runtime responsibilities.
-     * @param context The context used by this operation.
-     * @param input The input used by this operation.
-     * @return The value produced by this operation.
+     * Evaluates input.
+     * @param context execution context.
+     * @param input input payload.
+     * @return guardrail decision result.
      */
     public GuardrailDecision evaluateInput(ExecutionContext context, String input)
     {
@@ -60,10 +60,10 @@ public class GuardrailEngine
     }
 
     /**
-     * Performs evaluate output as part of GuardrailEngine runtime responsibilities.
-     * @param context The context used by this operation.
-     * @param response The response used by this operation.
-     * @return The value produced by this operation.
+     * Evaluates output.
+     * @param context execution context.
+     * @param response model/tool response payload.
+     * @return guardrail decision result.
      */
     public GuardrailDecision evaluateOutput(ExecutionContext context, LlmResponse response)
     {

@@ -18,8 +18,8 @@ public class ProcessorTraceProvider implements ITraceProvider
     private final TracingProcessors processors;
 
     /**
-     * Performs processor trace provider as part of ProcessorTraceProvider runtime responsibilities.
-     * @param processors The processors used by this operation.
+     * Creates a new ProcessorTraceProvider instance.
+     * @param processors processors.
      */
     public ProcessorTraceProvider(TracingProcessors processors)
     {
@@ -27,9 +27,9 @@ public class ProcessorTraceProvider implements ITraceProvider
     }
 
     /**
-     * Performs start span as part of ProcessorTraceProvider runtime responsibilities.
-     * @param name The name used by this operation.
-     * @return The value produced by this operation.
+     * Starts span.
+     * @param name human-readable name.
+     * @return itrace span result.
      */
     @Override
     public ITraceSpan startSpan(String name)
@@ -43,9 +43,9 @@ public class ProcessorTraceProvider implements ITraceProvider
             private final Map<String, String> attrs = new HashMap<>();
 
             /**
-             * Performs annotate as part of ProcessorTraceProvider runtime responsibilities.
-             * @param key The key used by this operation.
-             * @param value The value used by this operation.
+             * Adds an attribute to the current span.
+             * @param key key.
+             * @param value value.
              */
             @Override
             public void annotate(String key, String value)
@@ -54,7 +54,7 @@ public class ProcessorTraceProvider implements ITraceProvider
             }
 
             /**
-             * Performs close as part of ProcessorTraceProvider runtime responsibilities.
+             * Closes this value.
              */
             @Override
             public void close()

@@ -29,11 +29,11 @@ public class AgentTool extends AbstractBuiltinTool
     private final RunConfiguration runConfiguration;
 
     /**
-     * Performs agent tool as part of AgentTool runtime responsibilities.
-     * @param definition The definition used by this operation.
-     * @param runner The runner used by this operation.
-     * @param targetAgentId The target agent id used by this operation.
-     * @param runConfiguration The run configuration used by this operation.
+     * Creates a new AgentTool instance.
+     * @param definition definition object.
+     * @param runner agent runner.
+     * @param targetAgentId target agent id.
+     * @param runConfiguration run configuration.
      */
     public AgentTool(ToolDefinition definition, AgentRunner runner, String targetAgentId, RunConfiguration runConfiguration)
     {
@@ -44,9 +44,10 @@ public class AgentTool extends AbstractBuiltinTool
     }
 
     /**
-     * Runs the primary execution flow, coordinating model/tool work and runtime policies.
-     * @param input The input used by this operation.
-     * @return The value produced by this operation.
+     * Executes the operation and returns its output.
+     * @param Map<String map<string.
+     * @param input input payload.
+     * @return Result text returned by this operation.
      */
     @Override
     public String execute(Map<String, Object> input)

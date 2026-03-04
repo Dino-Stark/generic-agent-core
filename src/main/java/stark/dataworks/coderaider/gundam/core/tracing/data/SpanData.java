@@ -22,9 +22,10 @@ public class SpanData
     private final Map<String, String> attributes;
 
     /**
-     * Performs span data as part of SpanData runtime responsibilities.
-     * @param type The type used by this operation.
-     * @param attributes The attributes used by this operation.
+     * Creates a new SpanData instance.
+     * @param type type discriminator.
+     * @param Map<String map<string.
+     * @param attributes attribute map.
      */
     public SpanData(String type, Map<String, String> attributes)
     {

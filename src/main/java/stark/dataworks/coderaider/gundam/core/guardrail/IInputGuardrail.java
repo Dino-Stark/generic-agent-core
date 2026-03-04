@@ -9,10 +9,10 @@ public interface IInputGuardrail
 {
 
     /**
-     * Performs evaluate as part of InputGuardrail runtime responsibilities.
-     * @param context The context used by this operation.
-     * @param input The input used by this operation.
-     * @return The value produced by this operation.
+     * Evaluates this value.
+     * @param context execution context.
+     * @param input input payload.
+     * @return guardrail decision result.
      */
     GuardrailDecision evaluate(ExecutionContext context, String input);
 }

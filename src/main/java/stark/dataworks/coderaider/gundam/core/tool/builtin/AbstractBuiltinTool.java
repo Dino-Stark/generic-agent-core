@@ -24,9 +24,9 @@ public abstract class AbstractBuiltinTool implements ITool
     private final ToolCategory category;
 
     /**
-     * Performs abstract builtin tool as part of AbstractBuiltinTool runtime responsibilities.
-     * @param definition The definition used by this operation.
-     * @param category The category used by this operation.
+     * Creates a new AbstractBuiltinTool instance.
+     * @param definition definition object.
+     * @param category category.
      */
     protected AbstractBuiltinTool(ToolDefinition definition, ToolCategory category)
     {
@@ -35,8 +35,8 @@ public abstract class AbstractBuiltinTool implements ITool
     }
 
     /**
-     * Performs definition as part of AbstractBuiltinTool runtime responsibilities.
-     * @return The value produced by this operation.
+     * Returns definition metadata for this component.
+     * @return tool definition result.
      */
     @Override
     public ToolDefinition definition()
@@ -45,8 +45,8 @@ public abstract class AbstractBuiltinTool implements ITool
     }
 
     /**
-     * Performs category as part of AbstractBuiltinTool runtime responsibilities.
-     * @return The value produced by this operation.
+     * Returns the tool category used for routing.
+     * @return tool category result.
      */
     public ToolCategory category()
     {
@@ -54,9 +54,10 @@ public abstract class AbstractBuiltinTool implements ITool
     }
 
     /**
-     * Runs the primary execution flow, coordinating model/tool work and runtime policies.
-     * @param input The input used by this operation.
-     * @return The value produced by this operation.
+     * Executes the operation and returns its output.
+     * @param Map<String map<string.
+     * @param input input payload.
+     * @return abstract string result.
      */
     @Override
     public abstract String execute(Map<String, Object> input);

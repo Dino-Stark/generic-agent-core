@@ -54,7 +54,7 @@ public class WorkflowDefinition
     private List<WorkflowVertexDefinition> vertices = new ArrayList<>();
 
     /**
-     * Performs validate as part of WorkflowDefinition runtime responsibilities.
+     * Validates this value.
      */
     public void validate()
     {

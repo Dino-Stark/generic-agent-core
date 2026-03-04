@@ -20,8 +20,8 @@ public class VideoGenerationTool extends AbstractBuiltinTool
     private final IAudioGenerator audioGenerator;
 
     /**
-     * Performs video generation tool as part of VideoGenerationTool runtime responsibilities.
-     * @param definition The definition used by this operation.
+     * Creates a new VideoGenerationTool instance.
+     * @param definition definition object.
      */
     public VideoGenerationTool(ToolDefinition definition)
     {
@@ -29,10 +29,10 @@ public class VideoGenerationTool extends AbstractBuiltinTool
     }
 
     /**
-     * Performs video generation tool as part of VideoGenerationTool runtime responsibilities.
-     * @param definition The definition used by this operation.
-     * @param videoGenerator The video generator used by this operation.
-     * @param audioGenerator The audio generator used by this operation.
+     * Creates a new VideoGenerationTool instance.
+     * @param definition definition object.
+     * @param videoGenerator video generator.
+     * @param audioGenerator audio generator.
      */
     public VideoGenerationTool(ToolDefinition definition, IVideoGenerator videoGenerator, IAudioGenerator audioGenerator)
     {
@@ -42,9 +42,10 @@ public class VideoGenerationTool extends AbstractBuiltinTool
     }
 
     /**
-     * Runs the primary execution flow, coordinating model/tool work and runtime policies.
-     * @param input The input used by this operation.
-     * @return The value produced by this operation.
+     * Executes the operation and returns its output.
+     * @param Map<String map<string.
+     * @param input input payload.
+     * @return Result text returned by this operation.
      */
     @Override
     public String execute(Map<String, Object> input)

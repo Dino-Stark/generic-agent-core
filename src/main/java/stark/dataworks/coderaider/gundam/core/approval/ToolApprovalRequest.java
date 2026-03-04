@@ -29,10 +29,11 @@ public class ToolApprovalRequest
     private final Map<String, Object> arguments;
 
     /**
-     * Performs tool approval request as part of ToolApprovalRequest runtime responsibilities.
-     * @param agentId The agent id used by this operation.
-     * @param toolName The tool name used by this operation.
-     * @param arguments The arguments used by this operation.
+     * Creates a new ToolApprovalRequest instance.
+     * @param agentId agent identifier.
+     * @param toolName tool name.
+     * @param Map<String map<string.
+     * @param arguments arguments.
      */
     public ToolApprovalRequest(String agentId, String toolName, Map<String, Object> arguments)
     {

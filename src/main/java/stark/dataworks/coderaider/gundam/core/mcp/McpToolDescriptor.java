@@ -28,10 +28,11 @@ public class McpToolDescriptor
     private final Map<String, Object> inputSchema;
 
     /**
-     * Performs mcp tool descriptor as part of McpToolDescriptor runtime responsibilities.
-     * @param name The name used by this operation.
-     * @param description The description used by this operation.
-     * @param inputSchema The input schema used by this operation.
+     * Creates a new McpToolDescriptor instance.
+     * @param name human-readable name.
+     * @param description description.
+     * @param Map<String map<string.
+     * @param inputSchema input schema.
      */
     public McpToolDescriptor(String name, String description, Map<String, Object> inputSchema)
     {

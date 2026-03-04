@@ -30,9 +30,10 @@ public class RunEvent
     private final Map<String, Object> attributes;
 
     /**
-     * Performs run event as part of RunEvent runtime responsibilities.
-     * @param type The type used by this operation.
-     * @param attributes The attributes used by this operation.
+     * Creates a new RunEvent instance.
+     * @param type type discriminator.
+     * @param Map<String map<string.
+     * @param attributes attribute map.
      */
     public RunEvent(RunEventType type, Map<String, Object> attributes)
     {
