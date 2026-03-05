@@ -7,7 +7,7 @@ public class ModelInvocationException extends AgentsException
 {
 
     /**
-     * Creates a new ModelInvocationException instance.
+     * Initializes ModelInvocationException with required runtime dependencies and options.
      * @param message conversation message.
      * @param cause root cause exception.
      */

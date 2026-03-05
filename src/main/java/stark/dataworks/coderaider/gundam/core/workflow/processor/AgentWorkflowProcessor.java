@@ -27,7 +27,7 @@ public class AgentWorkflowProcessor implements IWorkflowVertexProcessor
     private final RunConfiguration runConfiguration;
 
     /**
-     * Creates a new AgentWorkflowProcessor instance.
+     * Initializes AgentWorkflowProcessor with required runtime dependencies and options.
      * @param runner agent runner.
      * @param runConfiguration run configuration.
      */
@@ -42,7 +42,7 @@ public class AgentWorkflowProcessor implements IWorkflowVertexProcessor
      * @param vertex vertex.
      * @param Map<String map<string.
      * @param state state.
-     * @return workflow vertex result result.
+     * @return workflow vertex result.
      */
     @Override
     public WorkflowVertexResult process(WorkflowVertexDefinition vertex, Map<String, Object> state)

@@ -22,7 +22,7 @@ public class ToolResult
     private final String content;
 
     /**
-     * Creates a new ToolResult instance.
+     * Initializes ToolResult with required runtime dependencies and options.
      * @param toolName tool name.
      * @param content content.
      */

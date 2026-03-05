@@ -22,7 +22,7 @@ public class ToolExecutionContext
     private final Map<String, Object> runtimeMetadata;
 
     /**
-     * Creates a new ToolExecutionContext instance.
+     * Initializes ToolExecutionContext with required runtime dependencies and options.
      * @param agentId agent identifier.
      * @param Map<String map<string.
      * @param runtimeMetadata runtime metadata.

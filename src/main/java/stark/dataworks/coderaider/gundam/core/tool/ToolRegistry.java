@@ -18,7 +18,7 @@ public class ToolRegistry implements IToolRegistry
     private final Map<String, ITool> tools = new ConcurrentHashMap<>();
 
     /**
-     * Registers this value.
+     * Registers this value for later lookup and execution.
      * @param tool tool instance.
      */
     @Override
@@ -46,7 +46,7 @@ public class ToolRegistry implements IToolRegistry
     }
 
     /**
-     * Returns this value.
+     * Returns the current value for this object.
      * @param toolName tool name.
      * @return Optional itool value.
      */

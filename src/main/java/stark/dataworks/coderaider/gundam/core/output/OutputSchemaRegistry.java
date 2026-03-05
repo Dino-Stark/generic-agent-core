@@ -16,7 +16,7 @@ public class OutputSchemaRegistry
     private final Map<String, IOutputSchema> schemas = new ConcurrentHashMap<>();
 
     /**
-     * Registers this value.
+     * Registers this value for later lookup and execution.
      * @param schema schema definition.
      */
     public void register(IOutputSchema schema)
@@ -25,7 +25,7 @@ public class OutputSchemaRegistry
     }
 
     /**
-     * Returns this value.
+     * Returns the current value for this object.
      * @param name human-readable name.
      * @return Optional ioutput schema value.
      */

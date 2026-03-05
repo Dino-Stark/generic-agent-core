@@ -24,7 +24,7 @@ public abstract class AbstractBuiltinTool implements ITool
     private final ToolCategory category;
 
     /**
-     * Creates a new AbstractBuiltinTool instance.
+     * Initializes AbstractBuiltinTool with required runtime dependencies and options.
      * @param definition definition object.
      * @param category category.
      */
@@ -54,7 +54,7 @@ public abstract class AbstractBuiltinTool implements ITool
     }
 
     /**
-     * Executes the operation and returns its output.
+     * Executes this tool operation and returns the produced output.
      * @param Map<String map<string.
      * @param input input payload.
      * @return abstract string result.

@@ -18,7 +18,7 @@ public class ProcessorTraceProvider implements ITraceProvider
     private final TracingProcessors processors;
 
     /**
-     * Creates a new ProcessorTraceProvider instance.
+     * Initializes ProcessorTraceProvider with required runtime dependencies and options.
      * @param processors processors.
      */
     public ProcessorTraceProvider(TracingProcessors processors)

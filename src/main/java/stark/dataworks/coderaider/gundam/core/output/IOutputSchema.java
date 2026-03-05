@@ -10,7 +10,7 @@ public interface IOutputSchema
 
     /**
      * Returns the schema name.
-     * @return Result text returned by this operation.
+     * @return Tool execution output returned by the MCP server.
      */
     String name();
 

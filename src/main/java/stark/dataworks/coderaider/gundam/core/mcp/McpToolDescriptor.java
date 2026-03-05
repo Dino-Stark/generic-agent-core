@@ -28,7 +28,7 @@ public class McpToolDescriptor
     private final Map<String, Object> inputSchema;
 
     /**
-     * Creates a new McpToolDescriptor instance.
+     * Initializes McpToolDescriptor with required runtime dependencies and options.
      * @param name human-readable name.
      * @param description description.
      * @param Map<String map<string.

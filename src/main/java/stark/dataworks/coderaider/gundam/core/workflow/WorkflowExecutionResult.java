@@ -30,7 +30,7 @@ public class WorkflowExecutionResult
     private final List<String> completedVertexIds;
 
     /**
-     * Creates a new WorkflowExecutionResult instance.
+     * Initializes WorkflowExecutionResult with required runtime dependencies and options.
      * @param finalOutput final output.
      * @param Map<String map<string.
      * @param finalState final state.

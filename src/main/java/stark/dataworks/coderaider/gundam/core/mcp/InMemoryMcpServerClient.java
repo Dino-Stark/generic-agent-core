@@ -32,7 +32,7 @@ public class InMemoryMcpServerClient implements IMcpServerClient
     private final Map<String, List<McpResourceTemplate>> templatesByServer = new ConcurrentHashMap<>();
 
     /**
-     * Registers tools.
+     * Registers MCP tools for a specific server id.
      * @param serverId MCP server identifier.
      * @param tools tools.
      */
@@ -42,7 +42,7 @@ public class InMemoryMcpServerClient implements IMcpServerClient
     }
 
     /**
-     * Registers handler.
+     * Registers a handler that executes a named MCP tool.
      * @param serverId MCP server identifier.
      * @param toolName tool name.
      * @param Function<Map<String function<map<string.
@@ -55,7 +55,7 @@ public class InMemoryMcpServerClient implements IMcpServerClient
     }
 
     /**
-     * Registers resources.
+     * Registers MCP resources for a specific server id.
      * @param serverId MCP server identifier.
      * @param resources resources.
      */
@@ -65,7 +65,7 @@ public class InMemoryMcpServerClient implements IMcpServerClient
     }
 
     /**
-     * Registers resource templates.
+     * Registers MCP resource templates for a specific server id.
      * @param serverId MCP server identifier.
      * @param templates templates.
      */
@@ -75,7 +75,7 @@ public class InMemoryMcpServerClient implements IMcpServerClient
     }
 
     /**
-     * Lists tools.
+     * Returns the tools exposed by the target registry or MCP server.
      * @param config run configuration.
      * @return List of mcp tool descriptor values.
      */
@@ -86,12 +86,12 @@ public class InMemoryMcpServerClient implements IMcpServerClient
     }
 
     /**
-     * Calls tool.
+     * Invokes the named tool and returns its result.
      * @param config run configuration.
      * @param toolName tool name.
      * @param Map<String map<string.
-     * @param args args.
-     * @return Result text returned by this operation.
+     * @param args tool arguments passed to the MCP server.
+     * @return Tool execution output returned by the MCP server.
      */
     @Override
     public String callTool(McpServerConfiguration config, String toolName, Map<String, Object> args)
@@ -105,7 +105,7 @@ public class InMemoryMcpServerClient implements IMcpServerClient
     }
 
     /**
-     * Lists resources.
+     * Returns resources exposed by the target MCP server.
      * @param config run configuration.
      * @return List of mcp resource values.
      */
@@ -116,7 +116,7 @@ public class InMemoryMcpServerClient implements IMcpServerClient
     }
 
     /**
-     * Lists resource templates.
+     * Returns resource templates exposed by the target MCP server.
      * @param config run configuration.
      * @return List of mcp resource template values.
      */
@@ -127,10 +127,10 @@ public class InMemoryMcpServerClient implements IMcpServerClient
     }
 
     /**
-     * Reads resource.
+     * Reads the specified resource content from the MCP server.
      * @param config run configuration.
      * @param uri resource URI.
-     * @return mcp resource result.
+     * @return Resource payload returned by the MCP server.
      */
     @Override
     public McpResource readResource(McpServerConfiguration config, String uri)

@@ -12,7 +12,7 @@ public class CodeInterpreterTool extends AbstractBuiltinTool
 {
 
     /**
-     * Creates a new CodeInterpreterTool instance.
+     * Initializes CodeInterpreterTool with required runtime dependencies and options.
      * @param definition definition object.
      */
     public CodeInterpreterTool(ToolDefinition definition)
@@ -21,10 +21,10 @@ public class CodeInterpreterTool extends AbstractBuiltinTool
     }
 
     /**
-     * Executes the operation and returns its output.
+     * Executes this tool operation and returns the produced output.
      * @param Map<String map<string.
      * @param input input payload.
-     * @return Result text returned by this operation.
+     * @return Tool execution output returned by the MCP server.
      */
     @Override
     public String execute(Map<String, Object> input)

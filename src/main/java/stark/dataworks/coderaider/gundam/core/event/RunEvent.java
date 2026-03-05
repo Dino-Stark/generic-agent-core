@@ -30,7 +30,7 @@ public class RunEvent
     private final Map<String, Object> attributes;
 
     /**
-     * Creates a new RunEvent instance.
+     * Initializes RunEvent with required runtime dependencies and options.
      * @param type type discriminator.
      * @param Map<String map<string.
      * @param attributes attribute map.

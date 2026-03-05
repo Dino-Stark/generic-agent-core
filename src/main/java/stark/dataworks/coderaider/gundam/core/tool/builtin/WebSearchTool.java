@@ -12,7 +12,7 @@ public class WebSearchTool extends AbstractBuiltinTool
 {
 
     /**
-     * Creates a new WebSearchTool instance.
+     * Initializes WebSearchTool with required runtime dependencies and options.
      * @param definition definition object.
      */
     public WebSearchTool(ToolDefinition definition)
@@ -21,10 +21,10 @@ public class WebSearchTool extends AbstractBuiltinTool
     }
 
     /**
-     * Executes the operation and returns its output.
+     * Executes this tool operation and returns the produced output.
      * @param Map<String map<string.
      * @param input input payload.
-     * @return Result text returned by this operation.
+     * @return Tool execution output returned by the MCP server.
      */
     @Override
     public String execute(Map<String, Object> input)

@@ -38,7 +38,7 @@ public class ExecutionContext
     private int currentStep;
 
     /**
-     * Creates a new ExecutionContext instance.
+     * Initializes ExecutionContext with required runtime dependencies and options.
      * @param agent agent instance.
      * @param memory conversation memory backend.
      * @param tokenUsageTracker token usage tracker.

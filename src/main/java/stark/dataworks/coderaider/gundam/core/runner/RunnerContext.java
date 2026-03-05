@@ -50,7 +50,7 @@ public class RunnerContext
     private int turns;
 
     /**
-     * Creates a new RunnerContext instance.
+     * Initializes RunnerContext with required runtime dependencies and options.
      * @param currentAgent current agent.
      * @param memory conversation memory backend.
      */

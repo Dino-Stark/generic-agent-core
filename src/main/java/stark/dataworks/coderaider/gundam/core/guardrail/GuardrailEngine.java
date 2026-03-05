@@ -23,8 +23,8 @@ public class GuardrailEngine
     private final List<IOutputGuardrail> outputGuardrails = new ArrayList<>();
 
     /**
-     * Registers input.
-     * @param guardrail guardrail.
+     * Registers an input guardrail that runs before model invocation.
+     * @param guardrail guardrail implementation to register.
      */
     public void registerInput(IInputGuardrail guardrail)
     {
@@ -32,8 +32,8 @@ public class GuardrailEngine
     }
 
     /**
-     * Registers output.
-     * @param guardrail guardrail.
+     * Registers an output guardrail that runs after model response generation.
+     * @param guardrail guardrail implementation to register.
      */
     public void registerOutput(IOutputGuardrail guardrail)
     {
@@ -41,7 +41,7 @@ public class GuardrailEngine
     }
 
     /**
-     * Evaluates input.
+     * Evaluates the input against configured guardrails to decide whether execution can continue.
      * @param context execution context.
      * @param input input payload.
      * @return guardrail decision result.
@@ -60,7 +60,7 @@ public class GuardrailEngine
     }
 
     /**
-     * Evaluates output.
+     * Evaluates the model output against configured guardrails before downstream processing.
      * @param context execution context.
      * @param response model/tool response payload.
      * @return guardrail decision result.

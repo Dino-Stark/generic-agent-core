@@ -7,7 +7,7 @@ public class GuardrailTripwireException extends AgentsException
 {
 
     /**
-     * Creates a new GuardrailTripwireException instance.
+     * Initializes GuardrailTripwireException with required runtime dependencies and options.
      * @param phase phase.
      * @param reason human-readable reason.
      */

@@ -32,7 +32,7 @@ public class ToolParameterSchema
     private final String description;
 
     /**
-     * Creates a new ToolParameterSchema instance.
+     * Initializes ToolParameterSchema with required runtime dependencies and options.
      * @param name human-readable name.
      * @param type type discriminator.
      * @param required required.

@@ -27,7 +27,7 @@ public class Handoff
     private final String reason;
 
     /**
-     * Creates a new Handoff instance.
+     * Initializes Handoff with required runtime dependencies and options.
      * @param fromAgentId from agent id.
      * @param toAgentId to agent id.
      * @param reason human-readable reason.

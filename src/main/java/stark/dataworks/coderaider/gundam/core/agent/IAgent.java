@@ -7,7 +7,7 @@ public interface IAgent
 {
     /**
      * Returns definition metadata for this component.
-     * @return agent definition result.
+     * @return Agent definition associated with this instance.
      */
     AgentDefinition definition();
 }

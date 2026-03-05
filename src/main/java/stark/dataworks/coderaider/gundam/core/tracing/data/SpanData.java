@@ -22,7 +22,7 @@ public class SpanData
     private final Map<String, String> attributes;
 
     /**
-     * Creates a new SpanData instance.
+     * Initializes SpanData with required runtime dependencies and options.
      * @param type type discriminator.
      * @param Map<String map<string.
      * @param attributes attribute map.

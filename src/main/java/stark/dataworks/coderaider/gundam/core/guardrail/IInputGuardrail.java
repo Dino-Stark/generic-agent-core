@@ -9,7 +9,7 @@ public interface IInputGuardrail
 {
 
     /**
-     * Evaluates this value.
+     * Evaluates the supplied data and returns a decision result.
      * @param context execution context.
      * @param input input payload.
      * @return guardrail decision result.

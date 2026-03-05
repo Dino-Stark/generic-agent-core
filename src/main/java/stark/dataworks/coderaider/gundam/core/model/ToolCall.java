@@ -30,7 +30,7 @@ public class ToolCall
     private final String toolCallId;
 
     /**
-     * Creates a new ToolCall instance.
+     * Initializes ToolCall with required runtime dependencies and options.
      * @param toolName tool name.
      * @param Map<String map<string.
      * @param arguments arguments.
@@ -41,7 +41,7 @@ public class ToolCall
     }
 
     /**
-     * Creates a new ToolCall instance.
+     * Initializes ToolCall with required runtime dependencies and options.
      * @param toolName tool name.
      * @param Map<String map<string.
      * @param arguments arguments.

@@ -9,7 +9,7 @@ public interface IToolRegistry
 {
 
     /**
-     * Registers this value for later lookup and reuse.
+     * Registers this value so it can be resolved in subsequent runtime operations.
      * @param tool tool instance.
      */
     void register(ITool tool);

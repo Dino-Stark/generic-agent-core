@@ -20,7 +20,7 @@ public class TokenUsage
     private final int outputTokens;
 
     /**
-     * Creates a new TokenUsage instance.
+     * Initializes TokenUsage with required runtime dependencies and options.
      * @param inputTokens input tokens.
      * @param outputTokens output tokens.
      */

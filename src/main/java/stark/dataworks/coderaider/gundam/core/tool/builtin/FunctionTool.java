@@ -18,7 +18,7 @@ public class FunctionTool extends AbstractBuiltinTool
     private final Function<Map<String, Object>, String> function;
 
     /**
-     * Creates a new FunctionTool instance.
+     * Initializes FunctionTool with required runtime dependencies and options.
      * @param definition definition object.
      * @param Function<Map<String function<map<string.
      * @param Object> object>.
@@ -31,10 +31,10 @@ public class FunctionTool extends AbstractBuiltinTool
     }
 
     /**
-     * Executes the operation and returns its output.
+     * Executes this tool operation and returns the produced output.
      * @param Map<String map<string.
      * @param input input payload.
-     * @return Result text returned by this operation.
+     * @return Tool execution output returned by the MCP server.
      */
     @Override
     public String execute(Map<String, Object> input)

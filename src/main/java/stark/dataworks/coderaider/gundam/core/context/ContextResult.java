@@ -42,7 +42,7 @@ public class ContextResult
     private final List<RunEvent> events;
 
     /**
-     * Creates a run result object.
+     * Constructs the final run result returned to callers.
      * @param finalOutput final output.
      * @param finalAgentId final agent id.
      * @param usage usage.

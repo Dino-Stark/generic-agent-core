@@ -27,7 +27,7 @@ public class RunErrorData
     private final Throwable cause;
 
     /**
-     * Creates a new RunErrorData instance.
+     * Initializes RunErrorData with required runtime dependencies and options.
      * @param kind kind.
      * @param message conversation message.
      * @param cause root cause exception.

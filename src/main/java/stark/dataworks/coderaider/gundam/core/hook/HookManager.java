@@ -23,7 +23,7 @@ public class HookManager
     private final List<IToolHook> toolHooks = new ArrayList<>();
 
     /**
-     * Registers agent hook.
+     * Registers an agent lifecycle hook.
      * @param hook hook.
      */
     public void registerAgentHook(IAgentHook hook)
@@ -32,7 +32,7 @@ public class HookManager
     }
 
     /**
-     * Registers tool hook.
+     * Registers a tool lifecycle hook.
      * @param hook hook.
      */
     public void registerToolHook(IToolHook hook)
@@ -81,7 +81,7 @@ public class HookManager
      * Invoked before a tool call executes.
      * @param toolName tool name.
      * @param Map<String map<string.
-     * @param args args.
+     * @param args tool arguments passed to the MCP server.
      */
     public void beforeTool(String toolName, Map<String, Object> args)
     {

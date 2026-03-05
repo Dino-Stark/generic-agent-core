@@ -20,7 +20,7 @@ public class RetryPolicy
     private final long backoffMillis;
 
     /**
-     * Creates a new RetryPolicy instance.
+     * Initializes RetryPolicy with required runtime dependencies and options.
      * @param maxAttempts max attempts.
      * @param backoffMillis backoff millis.
      */

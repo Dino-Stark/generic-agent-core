@@ -20,7 +20,7 @@ public class OutputValidationResult
     private final String reason;
 
     /**
-     * Creates a new OutputValidationResult instance.
+     * Initializes OutputValidationResult with required runtime dependencies and options.
      * @param valid valid.
      * @param reason human-readable reason.
      */
@@ -32,7 +32,7 @@ public class OutputValidationResult
 
     /**
      * Returns a successful validation/result object.
-     * @return output validation result result.
+     * @return output validation result.
      */
     public static OutputValidationResult ok()
     {
@@ -42,7 +42,7 @@ public class OutputValidationResult
     /**
      * Returns a failed validation/result object.
      * @param reason human-readable reason.
-     * @return output validation result result.
+     * @return output validation result.
      */
     public static OutputValidationResult fail(String reason)
     {

@@ -9,7 +9,7 @@ public interface IMcpToolApprovalPolicy
     /**
      * Evaluates and returns an approval decision.
      * @param request request payload.
-     * @return mcp tool approval result result.
+     * @return mcp tool approval result.
      */
     McpToolApprovalResult decide(McpToolApprovalRequest request);
 }

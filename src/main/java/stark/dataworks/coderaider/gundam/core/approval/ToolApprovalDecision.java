@@ -22,7 +22,7 @@ public class ToolApprovalDecision
     private final String reason;
 
     /**
-     * Creates a new ToolApprovalDecision instance.
+     * Initializes ToolApprovalDecision with required runtime dependencies and options.
      * @param approved approved.
      * @param reason human-readable reason.
      */

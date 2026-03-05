@@ -16,7 +16,7 @@ public class RunErrorHandlers
     private final Map<RunErrorKind, IRunErrorHandler> handlers = new ConcurrentHashMap<>();
 
     /**
-     * Registers this value.
+     * Registers this value for later lookup and execution.
      * @param kind kind.
      * @param handler handler.
      */
@@ -26,7 +26,7 @@ public class RunErrorHandlers
     }
 
     /**
-     * Returns this value.
+     * Returns the current value for this object.
      * @param kind kind.
      * @return Optional irun error handler value.
      */

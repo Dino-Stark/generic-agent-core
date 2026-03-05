@@ -37,7 +37,7 @@ public class LlmOptions
     private final Map<String, Object> providerOptions;
 
     /**
-     * Creates a new LlmOptions instance.
+     * Initializes LlmOptions with required runtime dependencies and options.
      * @param temperature sampling temperature.
      * @param maxTokens maximum token limit.
      */
@@ -50,9 +50,9 @@ public class LlmOptions
      * Creates LLM options.
      * @param temperature sampling temperature.
      * @param maxTokens maximum token limit.
-     * @param toolChoice tool choice policy.
-     * @param responseFormat response format.
-     * @param providerOptions provider options.
+     * @param toolChoice tool-choice policy passed to the model provider.
+     * @param responseFormat response format requested from the model provider.
+     * @param providerOptions provider-specific model options.
      */
     public LlmOptions(double temperature,
                       int maxTokens,

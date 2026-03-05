@@ -28,7 +28,7 @@ public class McpServerConfiguration
     private final Map<String, Object> options;
 
     /**
-     * Creates a new McpServerConfiguration instance.
+     * Initializes McpServerConfiguration with required runtime dependencies and options.
      * @param serverId MCP server identifier.
      * @param endpoint endpoint.
      * @param Map<String map<string.

@@ -60,7 +60,7 @@ public class LlmResponse
     private final List<GeneratedAsset> generatedAssets;
 
     /**
-     * Creates a new LlmResponse instance.
+     * Initializes LlmResponse with required runtime dependencies and options.
      * @param content content.
      * @param toolCalls tool calls.
      * @param handoffAgentId handoff agent id.

@@ -16,7 +16,7 @@ public class WorkflowProcessorRegistry
     private final Map<String, IWorkflowVertexProcessor> processors = new HashMap<>();
 
     /**
-     * Registers this value.
+     * Registers this value for later lookup and execution.
      * @param type type discriminator.
      * @param processor processor.
      */
@@ -26,7 +26,7 @@ public class WorkflowProcessorRegistry
     }
 
     /**
-     * Returns this value.
+     * Returns the current value for this object.
      * @param type type discriminator.
      * @return Optional iworkflow vertex processor value.
      */

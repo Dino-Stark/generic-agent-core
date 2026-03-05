@@ -29,7 +29,7 @@ public class ToolDefinition
     private final List<ToolParameterSchema> parameters;
 
     /**
-     * Creates a new ToolDefinition instance.
+     * Initializes ToolDefinition with required runtime dependencies and options.
      * @param name human-readable name.
      * @param description description.
      * @param parameters parameters.

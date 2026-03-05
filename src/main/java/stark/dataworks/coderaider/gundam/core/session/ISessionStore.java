@@ -9,14 +9,14 @@ public interface ISessionStore
 {
 
     /**
-     * Saves this value.
+     * Persists the supplied value to storage.
      * @param session session.
      */
     void save(Session session);
 
     /**
-     * Loads this value.
-     * @param sessionId session id.
+     * Loads and returns the requested value from storage.
+     * @param sessionId session identifier used to resume conversation state.
      * @return Optional session value.
      */
 

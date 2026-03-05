@@ -9,7 +9,7 @@ public interface IRunErrorHandler
     /**
      * Handles a classified run error.
      * @param errorData error data.
-     * @return run error handler result result.
+     * @return run error handler result.
      */
     RunErrorHandlerResult onError(RunErrorData errorData);
 }

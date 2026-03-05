@@ -43,7 +43,7 @@ public class LlmRequest
     private final List<GeneratedAsset> attachments;
 
     /**
-     * Creates a new LlmRequest instance.
+     * Initializes LlmRequest with required runtime dependencies and options.
      * @param model model identifier.
      * @param messages conversation messages.
      * @param tools tools.

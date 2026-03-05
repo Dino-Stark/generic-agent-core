@@ -29,7 +29,7 @@ public class AgentTool extends AbstractBuiltinTool
     private final RunConfiguration runConfiguration;
 
     /**
-     * Creates a new AgentTool instance.
+     * Initializes AgentTool with required runtime dependencies and options.
      * @param definition definition object.
      * @param runner agent runner.
      * @param targetAgentId target agent id.
@@ -44,10 +44,10 @@ public class AgentTool extends AbstractBuiltinTool
     }
 
     /**
-     * Executes the operation and returns its output.
+     * Executes this tool operation and returns the produced output.
      * @param Map<String map<string.
      * @param input input payload.
-     * @return Result text returned by this operation.
+     * @return Tool execution output returned by the MCP server.
      */
     @Override
     public String execute(Map<String, Object> input)

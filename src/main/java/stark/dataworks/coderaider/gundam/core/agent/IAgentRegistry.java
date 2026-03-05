@@ -9,7 +9,7 @@ public interface IAgentRegistry
 {
 
     /**
-     * Registers this value for later lookup and reuse.
+     * Registers this value so it can be resolved in subsequent runtime operations.
      * @param agent agent instance.
      */
     void register(IAgent agent);

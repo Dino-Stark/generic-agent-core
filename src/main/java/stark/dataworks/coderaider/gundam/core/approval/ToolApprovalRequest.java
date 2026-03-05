@@ -29,7 +29,7 @@ public class ToolApprovalRequest
     private final Map<String, Object> arguments;
 
     /**
-     * Creates a new ToolApprovalRequest instance.
+     * Initializes ToolApprovalRequest with required runtime dependencies and options.
      * @param agentId agent identifier.
      * @param toolName tool name.
      * @param Map<String map<string.

@@ -19,7 +19,7 @@ public class JoinFieldsWorkflowProcessor implements IWorkflowVertexProcessor
      * @param vertex vertex.
      * @param Map<String map<string.
      * @param state state.
-     * @return workflow vertex result result.
+     * @return workflow vertex result.
      */
     @Override
     public WorkflowVertexResult process(WorkflowVertexDefinition vertex, Map<String, Object> state)

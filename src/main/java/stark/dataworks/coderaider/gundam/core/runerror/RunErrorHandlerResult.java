@@ -20,7 +20,7 @@ public class RunErrorHandlerResult
     private final String finalOutput;
 
     /**
-     * Creates a new RunErrorHandlerResult instance.
+     * Initializes RunErrorHandlerResult with required runtime dependencies and options.
      * @param handled handled.
      * @param finalOutput final output.
      */
@@ -32,7 +32,7 @@ public class RunErrorHandlerResult
 
     /**
      * Returns a result indicating the error was not handled.
-     * @return run error handler result result.
+     * @return run error handler result.
      */
     public static RunErrorHandlerResult notHandled()
     {
@@ -40,9 +40,9 @@ public class RunErrorHandlerResult
     }
 
     /**
-     * Handles d.
+     * Handles a streamed text delta.
      * @param finalOutput final output.
-     * @return run error handler result result.
+     * @return run error handler result.
      */
     public static RunErrorHandlerResult handled(String finalOutput)
     {

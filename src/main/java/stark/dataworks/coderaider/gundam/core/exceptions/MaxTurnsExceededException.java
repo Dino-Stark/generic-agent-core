@@ -7,7 +7,7 @@ public class MaxTurnsExceededException extends AgentsException
 {
 
     /**
-     * Creates a new MaxTurnsExceededException instance.
+     * Initializes MaxTurnsExceededException with required runtime dependencies and options.
      * @param maxTurns maximum turn limit.
      */
     public MaxTurnsExceededException(int maxTurns)

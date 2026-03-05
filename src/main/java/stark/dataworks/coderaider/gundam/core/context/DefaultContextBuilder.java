@@ -16,7 +16,7 @@ public class DefaultContextBuilder implements IContextBuilder
 {
 
     /**
-     * Builds this value.
+     * Builds and returns the requested value.
      * @param agent agent instance.
      * @param memory conversation memory backend.
      * @param userInput user input.

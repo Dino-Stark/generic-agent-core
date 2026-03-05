@@ -29,7 +29,7 @@ public class ContextItem
     private final Map<String, Object> metadata;
 
     /**
-     * Creates a new ContextItem instance.
+     * Initializes ContextItem with required runtime dependencies and options.
      * @param type type discriminator.
      * @param content content.
      * @param Map<String map<string.

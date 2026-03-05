@@ -10,7 +10,7 @@ public interface IOutputGuardrail
 {
 
     /**
-     * Evaluates this value.
+     * Evaluates the supplied data and returns a decision result.
      * @param context execution context.
      * @param response response payload.
      * @return guardrail decision result.

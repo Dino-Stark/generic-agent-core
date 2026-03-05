@@ -11,14 +11,14 @@ public final class ToolSchemaJson
 {
 
     /**
-     * Creates a new ToolSchemaJson instance.
+     * Initializes ToolSchemaJson with required runtime dependencies and options.
      */
     private ToolSchemaJson()
     {
     }
 
     /**
-     * Converts json schema.
+     * Converts a JSON schema definition into internal schema structures.
      * @param definition definition object.
      * @return Map containing operation results.
      */

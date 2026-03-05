@@ -7,7 +7,7 @@ public class ToolExecutionFailureException extends AgentsException
 {
 
     /**
-     * Creates a new ToolExecutionFailureException instance.
+     * Initializes ToolExecutionFailureException with required runtime dependencies and options.
      * @param tool tool instance.
      * @param cause root cause exception.
      */

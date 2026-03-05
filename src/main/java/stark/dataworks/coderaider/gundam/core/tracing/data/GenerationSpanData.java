@@ -9,7 +9,7 @@ public class GenerationSpanData extends SpanData
 {
 
     /**
-     * Creates a new GenerationSpanData instance.
+     * Initializes GenerationSpanData with required runtime dependencies and options.
      * @param Map<String map<string.
      * @param attributes attribute map.
      */

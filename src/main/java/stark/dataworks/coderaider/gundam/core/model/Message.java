@@ -43,7 +43,7 @@ public class Message
     private final List<ToolCall> toolCalls;
 
     /**
-     * Creates a new Message instance.
+     * Initializes Message with required runtime dependencies and options.
      * @param role role.
      * @param content content.
      */
@@ -53,7 +53,7 @@ public class Message
     }
 
     /**
-     * Creates a new Message instance.
+     * Initializes Message with required runtime dependencies and options.
      * @param role role.
      * @param parts parts.
      */
@@ -63,7 +63,7 @@ public class Message
     }
 
     /**
-     * Creates a new Message instance.
+     * Initializes Message with required runtime dependencies and options.
      * @param role role.
      * @param content content.
      * @param toolCallId tool call identifier.
@@ -74,7 +74,7 @@ public class Message
     }
 
     /**
-     * Creates a new Message instance.
+     * Initializes Message with required runtime dependencies and options.
      * @param role role.
      * @param content content.
      * @param toolCalls tool calls.
@@ -85,7 +85,7 @@ public class Message
     }
 
     /**
-     * Creates a new Message instance.
+     * Initializes Message with required runtime dependencies and options.
      * @param role role.
      * @param parts parts.
      * @param toolCallId tool call identifier.

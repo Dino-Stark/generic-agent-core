@@ -558,13 +558,13 @@ public class AgentRunner
     }
 
     /**
-     * Handles error.
+     * Normalizes and routes an execution error through configured handlers.
      * @param context execution context.
      * @param config run configuration.
      * @param error captured error.
      * @param legacyContext legacy context.
      * @param memoryPolicy memory policy.
-     * @return context result result.
+     * @return context result.
      */
     private ContextResult handleError(RunnerContext context, RunConfiguration config, RuntimeException error, ExecutionContext legacyContext, MemoryLifecyclePolicy memoryPolicy)
     {
@@ -889,7 +889,7 @@ public class AgentRunner
     }
 
     /**
-     * Resolves tools.
+     * Resolves tools by name from the active registry.
      * @param toolNames tool names.
      * @return List of tool definition values.
      */
@@ -928,7 +928,7 @@ public class AgentRunner
      * @param config run configuration.
      * @param legacyContext legacy context.
      * @param memoryPolicy memory policy.
-     * @return context result result.
+     * @return context result.
      */
     private ContextResult finalizeResult(RunnerContext context, String finalOutput, RunConfiguration config, ExecutionContext legacyContext, MemoryLifecyclePolicy memoryPolicy)
     {

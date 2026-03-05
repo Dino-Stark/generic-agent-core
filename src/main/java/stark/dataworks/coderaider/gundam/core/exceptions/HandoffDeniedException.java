@@ -7,7 +7,7 @@ public class HandoffDeniedException extends AgentsException
 {
 
     /**
-     * Creates a new HandoffDeniedException instance.
+     * Initializes HandoffDeniedException with required runtime dependencies and options.
      * @param from from.
      * @param to to.
      */

@@ -31,7 +31,7 @@ public class WorkflowExecutor
     private final WorkflowProcessorRegistry processorRegistry;
 
     /**
-     * Creates a new WorkflowExecutor instance.
+     * Initializes WorkflowExecutor with required runtime dependencies and options.
      * @param definition definition object.
      * @param processorRegistry processor registry.
      */
@@ -43,10 +43,10 @@ public class WorkflowExecutor
     }
 
     /**
-     * Executes the operation and returns its output.
+     * Executes this tool operation and returns the produced output.
      * @param Map<String map<string.
      * @param input input payload.
-     * @return workflow execution result result.
+     * @return workflow execution result.
      */
     public WorkflowExecutionResult execute(Map<String, Object> input)
     {
