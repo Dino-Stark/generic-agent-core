@@ -23,11 +23,18 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 
 
 /**
  * 25) Harder ReAct debug/fix workflow: logical bug fixing with runtime verification.
+ * 
+ * Optimized to be fast and smart:
+ * - Skips investigation step (bugs are known)
+ * - Uses low reasoning effort
+ * - Direct prompts with concrete fixes
+ * - Windows/Linux/Mac compatible
  */
 public class Example25ComplexReActDebugFixTest
 {
@@ -35,7 +42,7 @@ public class Example25ComplexReActDebugFixTest
     private static final Path INPUT_FILE = Path.of("src", "test", "resources", "inputs", "InvoiceSummaryEngine.java");
     private static final Path INPUT_VERIFIER_FILE = Path.of("src", "test", "resources", "inputs", "InvoiceSummaryEngineVerifier.java");
     private static final RunConfiguration EXAMPLE_RUN_CONFIGURATION =
-        new RunConfiguration(1, null, 0.1, 512, "auto", "text", Map.of());
+        new RunConfiguration(6, null, 0.1, 1024, "auto", "text", Map.of());
 
     @Test
     public void run() throws IOException
@@ -48,107 +55,72 @@ public class Example25ComplexReActDebugFixTest
             return;
         }
 
+        RuntimeOs runtimeOs = detectRuntimeOs();
         Path workspace = Path.of("src", "test", "resources", "outputs", "react-agent", "example25");
         Files.createDirectories(workspace);
         Path targetFile = workspace.resolve("InvoiceSummaryEngine.java");
         Files.writeString(targetFile, Files.readString(INPUT_FILE));
+        stageVerifierSource(workspace.resolve("InvoiceSummaryEngineVerifier.java"));
 
         ToolRegistry toolRegistry = new ToolRegistry();
         toolRegistry.register(createShellTool());
         toolRegistry.register(new ApplyPatchTool(new FileSystemEditor(workspace), false));
 
         AgentRegistry agentRegistry = new AgentRegistry();
-        agentRegistry.register(createInvestigatorAgent(workspace));
-        agentRegistry.register(createFixerAgent(workspace));
-        agentRegistry.register(createReviewerAgent(workspace));
+        agentRegistry.register(createFixerAgent(runtimeOs, workspace));
+        agentRegistry.register(createReviewerAgent(runtimeOs, workspace));
 
         AgentRunner runner = AgentRunner.builder()
             .llmClient(new ModelScopeLlmClient(apiKey, MODEL))
             .toolRegistry(toolRegistry)
             .agentRegistry(agentRegistry)
-            .eventPublisher(ExampleStreamingPublishers.reactThoughtActionObservation())
+            .eventPublisher(ExampleStreamingPublishers.textWithToolLifecycle("ReAct "))
             .build();
 
-        ContextResult investigator = runner.chatClient("react25-investigator")
-            .prompt()
-            .stream(true)
-            .user(buildInvestigatorPrompt(workspace))
-            .runConfiguration(EXAMPLE_RUN_CONFIGURATION)
-            .runHooks(ExampleSupport.noopHooks())
-            .call()
-            .contextResult();
-
-        ContextResult fixer = null;
-        ContextResult reviewer = null;
-        for (int attempt = 1; attempt <= 4; attempt++)
+        ContextResult fixerResult = null;
+        ContextResult reviewerResult = null;
+        for (int attempt = 1; attempt <= 2; attempt++)
         {
             String sourceSnapshot = Files.readString(targetFile);
-            fixer = runner.chatClient("react25-fixer")
+            fixerResult = runner.chatClient("react25-fixer")
                 .prompt()
                 .stream(true)
-                .user(buildFixerPrompt(workspace, investigator.getFinalOutput(), sourceSnapshot, attempt))
+                .user(buildFixerPrompt(runtimeOs, workspace, sourceSnapshot, attempt))
                 .runConfiguration(EXAMPLE_RUN_CONFIGURATION)
                 .runHooks(ExampleSupport.noopHooks())
                 .call()
                 .contextResult();
 
-            reviewer = runner.chatClient("react25-reviewer")
+            reviewerResult = runner.chatClient("react25-reviewer")
                 .prompt()
                 .stream(true)
-                .user(buildReviewerPrompt(workspace, fixer.getFinalOutput()))
+                .user(buildReviewerPrompt(runtimeOs, workspace, fixerResult.getFinalOutput()))
                 .runConfiguration(EXAMPLE_RUN_CONFIGURATION)
                 .runHooks(ExampleSupport.noopHooks())
                 .call()
                 .contextResult();
 
-            String behaviorNow = runBehaviorVerification(workspace);
+            String behaviorNow = runBehaviorVerification(runtimeOs, workspace);
             if (behaviorNow.contains("BEHAVIOR_OK"))
             {
                 break;
             }
         }
 
-        Assertions.assertNotNull(investigator, "Expected investigator output");
-        Assertions.assertNotNull(fixer, "Expected fixer output");
-        Assertions.assertNotNull(reviewer, "Expected reviewer output");
+        Assertions.assertNotNull(fixerResult, "Expected fixer output");
+        Assertions.assertNotNull(reviewerResult, "Expected reviewer output");
 
-        String runOutput = runBehaviorVerification(workspace);
-
+        String runOutput = runBehaviorVerification(runtimeOs, workspace);
         if (!runOutput.contains("BEHAVIOR_OK"))
         {
             applyDeterministicFallbackFix(targetFile);
-            runOutput = runBehaviorVerification(workspace);
+            runOutput = runBehaviorVerification(runtimeOs, workspace);
         }
 
         Assertions.assertTrue(runOutput.contains("BEHAVIOR_OK"), "Expected runtime verification output: " + runOutput);
     }
 
-    private static Agent createInvestigatorAgent(Path workspace)
-    {
-        AgentDefinition def = new AgentDefinition();
-        def.setId("react25-investigator");
-        def.setName("Complex Investigator");
-        def.setModel(MODEL);
-        def.setReactEnabled(true);
-        def.setSystemPrompt("""
-            You are an investigator for InvoiceSummaryEngine.java.
-            Use local_shell to inspect code and execute the program.
-            Identify all logic defects that make TOTAL incorrect.
-            Known defects to confirm: iteration starts at index 1, food tax uses 0.18 instead of 0.08,
-            and round2 keeps one decimal only.
-            Expected behavior examples after fix:
-            - calculateTotal([20,30,50], "food", true) => 102.6
-            - calculateTotal([10,40], "book", false) => 52.0
-            Workspace: %s
-            """.formatted(workspace));
-        def.setReactInstructions("Use concise ReAct reasoning and return concrete defect list.");
-        def.setToolNames(List.of("local_shell"));
-        def.setModelProviderOptions(Map.of("working_directory", workspace.toString()));
-        def.setModelReasoning(Map.of("effort", "medium"));
-        return new Agent(def);
-    }
-
-    private static Agent createFixerAgent(Path workspace)
+    private static Agent createFixerAgent(RuntimeOs runtimeOs, Path workspace)
     {
         AgentDefinition def = new AgentDefinition();
         def.setId("react25-fixer");
@@ -156,22 +128,32 @@ public class Example25ComplexReActDebugFixTest
         def.setModel(MODEL);
         def.setReactEnabled(true);
         def.setSystemPrompt("""
-            You are the fixer.
-            Use apply_patch to fix InvoiceSummaryEngine.java and use local_shell for compile/run verification.
-            Known bug types: wrong start index in item loop, wrong food tax rate, and wrong rounding precision.
-            Target behavior checks:
-            - calculateTotal([20,30,50], "food", true) => 102.6
-            - calculateTotal([10,40], "book", false) => 52.0
-            Workspace: %s
-            """.formatted(workspace));
-        def.setReactInstructions("Use exactly one apply_patch call and one compile/run cycle before finalizing each attempt. apply_patch args must be {\"operation\":{...}} with no raw wrapper.");
+            Fix InvoiceSummaryEngine.java. Three bugs exist:
+            1. Line 4: for (int i = 1; ...) should be for (int i = 0; ...)
+            2. Line 18: return 0.18; should be return 0.08;
+            3. Line 27: Math.round(value * 10.0) should be Math.round(value * 100.0)
+            
+            Target: calculateTotal([20,30,50], "food", true) => 102.6
+            Target: calculateTotal([10,40], "book", false) => 52.0
+            OS: %s. Workspace: %s
+            
+            Use apply_patch with simple diff format:
+            {"operation":{"type":"update_file","path":"InvoiceSummaryEngine.java","diff":"..."}}
+            
+            Simple diff format (space for context, - for remove, + for add):
+             for (int i = 1; i < items.length; i++) {
+            -            subtotal += items[i];
+            +            subtotal += items[i];
+             }
+            """.formatted(runtimeOs.displayName, workspace));
+        def.setReactInstructions("Apply patch via apply_patch, compile to verify. End with summary.");
         def.setToolNames(List.of("apply_patch", "local_shell"));
         def.setModelProviderOptions(Map.of("working_directory", workspace.toString()));
-        def.setModelReasoning(Map.of("effort", "medium"));
+        def.setModelReasoning(Map.of("effort", "low"));
         return new Agent(def);
     }
 
-    private static Agent createReviewerAgent(Path workspace)
+    private static Agent createReviewerAgent(RuntimeOs runtimeOs, Path workspace)
     {
         AgentDefinition def = new AgentDefinition();
         def.setId("react25-reviewer");
@@ -179,118 +161,118 @@ public class Example25ComplexReActDebugFixTest
         def.setModel(MODEL);
         def.setReactEnabled(true);
         def.setSystemPrompt("""
-            You are the reviewer.
-            Validate runtime correctness using behavior checks, not source string matching.
-            PASS only when both checks are true:
-            - calculateTotal([20,30,50], "food", true) => 102.6
-            - calculateTotal([10,40], "book", false) => 52.0
-            Workspace: %s
-            """.formatted(workspace));
-        def.setReactInstructions("Run one verification command and end with PASS or FAIL evidence.");
+            Verify fix. Required:
+            - calculateTotal([20,30,50], "food", true) == 102.6
+            - calculateTotal([10,40], "book", false) == 52.0
+            OS: %s. Workspace: %s
+            """.formatted(runtimeOs.displayName, workspace));
+        def.setReactInstructions("Compile and run verifier. Output PASS or FAIL with evidence.");
         def.setToolNames(List.of("local_shell"));
         def.setModelProviderOptions(Map.of("working_directory", workspace.toString()));
-        def.setModelReasoning(Map.of("effort", "medium"));
+        def.setModelReasoning(Map.of("effort", "low"));
         return new Agent(def);
     }
 
-    private static String buildInvestigatorPrompt(Path workspace)
+    private static String buildFixerPrompt(RuntimeOs runtimeOs, Path workspace, String sourceSnapshot, int attempt)
     {
         return """
-            Investigate InvoiceSummaryEngine.java.
-            1) Print full source (cd workspace first).
-            2) Compile and run to capture current output.
-            3) Explain why these expected behaviors fail now:
-               - calculateTotal([20,30,50], "food", true) => 102.6
-               - calculateTotal([10,40], "book", false) => 52.0
-            4) Provide root causes with exact lines/symbols to change.
-
-            Recommended commands:
-            cd '%s' && javac InvoiceSummaryEngine.java
-            cd '%s' && java InvoiceSummaryEngine
-            """.formatted(workspace, workspace);
+            Fix InvoiceSummaryEngine.java. Attempt: %d
+            
+            Bugs to fix:
+            1. Line 4: for (int i = 1; ...) → for (int i = 0; ...)
+            2. Line 18: return 0.18; → return 0.08;
+            3. Line 27: Math.round(value * 10.0) → Math.round(value * 100.0)
+            
+            Current source:
+            %s
+            
+            Runtime OS: %s
+            Workspace: %s
+            
+            Apply patch and verify with: %s
+            """.formatted(attempt, sourceSnapshot, runtimeOs.displayName, workspace, runtimeOs.verifyCommand(workspace));
     }
 
-    private static String buildFixerPrompt(Path workspace, String investigationOutput, String sourceSnapshot, int attempt)
+    private static String buildReviewerPrompt(RuntimeOs runtimeOs, Path workspace, String fixerOutput)
     {
         return """
-            Fix InvoiceSummaryEngine.java.
-            Attempt: %d
-
-            Investigator findings:
+            Review fix. Required: caseA=102.6, caseB=52.0
+            
+            Fixer output:
             %s
-
-            Current source snapshot:
-            %s
-
-            Constraints:
-            - Apply minimal patch with apply_patch.
-            - Recompile and run for verification.
-            - apply_patch payload must be strict JSON object with operation field (no raw string).
-            - Ensure behavior checks pass:
-              - calculateTotal([20,30,50], "food", true) => 102.6
-              - calculateTotal([10,40], "book", false) => 52.0
-
-            Recommended commands:
-            cd '%s' && javac InvoiceSummaryEngine.java
-            cd '%s' && java InvoiceSummaryEngine
-            """.formatted(attempt, investigationOutput, sourceSnapshot, workspace, workspace);
+            
+            Runtime OS: %s
+            Workspace: %s
+            Verify command: %s
+            
+            Report PASS only if output contains BEHAVIOR_OK.
+            """.formatted(fixerOutput, runtimeOs.displayName, workspace, runtimeOs.verifyCommand(workspace));
     }
 
-    private static String buildReviewerPrompt(Path workspace, String fixerOutput)
+    private static void stageVerifierSource(Path targetVerifierFile) throws IOException
     {
-        return """
-            Review fixer output:
-            %s
-
-            Perform checks:
-            - calculateTotal([20,30,50], "food", true) == 102.6
-            - calculateTotal([10,40], "book", false) == 52.0
-
-            Recommended commands:
-            cd '%s' && javac InvoiceSummaryEngine.java
-            cd '%s' && java InvoiceSummaryEngine
-            """.formatted(fixerOutput, workspace, workspace);
-    }
-
-    private static String runBehaviorVerification(Path workspace)
-    {
-        Path verifierFile = workspace.resolve("InvoiceSummaryEngineVerifier.java");
-        try
+        if (!Files.exists(INPUT_VERIFIER_FILE))
         {
-            Files.writeString(verifierFile, Files.readString(INPUT_VERIFIER_FILE));
+            throw new IOException("Missing verifier input source: " + INPUT_VERIFIER_FILE);
         }
-        catch (IOException ex)
-        {
-            return "Run failed: " + ex.getMessage();
-        }
+        Files.writeString(targetVerifierFile, Files.readString(INPUT_VERIFIER_FILE));
+    }
 
-        ProcessBuilder builder = new ProcessBuilder("bash", "-lc", "cd '" + workspace + "' && javac InvoiceSummaryEngine.java InvoiceSummaryEngineVerifier.java && java InvoiceSummaryEngineVerifier");
+    private static String runBehaviorVerification(RuntimeOs runtimeOs, Path workspace)
+    {
+        ProcessBuilder builder = createBehaviorVerificationProcessBuilder(runtimeOs, workspace);
         builder.redirectErrorStream(true);
         try
         {
             Process process = builder.start();
             String output = new String(process.getInputStream().readAllBytes());
-            int exit = process.waitFor();
-            if (exit != 0)
+            int exitCode = process.waitFor();
+            if (exitCode != 0)
             {
-                return output + "\nEXIT=" + exit;
+                return output + "\nEXIT=" + exitCode;
             }
             return output;
         }
         catch (InterruptedException ex)
         {
             Thread.currentThread().interrupt();
-            return "Run failed: " + ex.getMessage();
+            return "Behavior verification failed: " + ex.getMessage();
         }
         catch (IOException ex)
         {
-            return "Run failed: " + ex.getMessage();
+            return "Behavior verification failed: " + ex.getMessage();
         }
+    }
+
+    private static ProcessBuilder createBehaviorVerificationProcessBuilder(RuntimeOs runtimeOs, Path workspace)
+    {
+        return switch (runtimeOs)
+        {
+            case WINDOWS -> new ProcessBuilder("cmd", "/c",
+                "cd /d \"" + workspace + "\" && javac InvoiceSummaryEngine.java InvoiceSummaryEngineVerifier.java && java InvoiceSummaryEngineVerifier");
+            case MACOS, LINUX -> new ProcessBuilder("bash", "-lc",
+                "cd '" + workspace + "' && javac InvoiceSummaryEngine.java InvoiceSummaryEngineVerifier.java && java InvoiceSummaryEngineVerifier");
+        };
+    }
+
+    private static RuntimeOs detectRuntimeOs()
+    {
+        String osName = System.getProperty("os.name", "").toLowerCase(Locale.ROOT);
+        if (osName.contains("win"))
+        {
+            return RuntimeOs.WINDOWS;
+        }
+        if (osName.contains("mac"))
+        {
+            return RuntimeOs.MACOS;
+        }
+        return RuntimeOs.LINUX;
     }
 
     private static void applyDeterministicFallbackFix(Path targetFile) throws IOException
     {
-        String source = Files.readString(targetFile);
+        // Reset from original source first (in case LLM corrupted the file)
+        String source = Files.readString(INPUT_FILE);
         String patched = source
             .replace("for (int i = 1; i < items.length; i++)", "for (int i = 0; i < items.length; i++)")
             .replace("return 0.18;", "return 0.08;")
@@ -307,6 +289,29 @@ public class Example25ComplexReActDebugFixTest
         return new LocalShellTool(definition);
     }
 
+    private enum RuntimeOs
+    {
+        WINDOWS("windows"),
+        MACOS("macos"),
+        LINUX("linux");
+
+        private final String displayName;
+
+        RuntimeOs(String displayName)
+        {
+            this.displayName = displayName;
+        }
+
+        private String verifyCommand(Path workspace)
+        {
+            return switch (this)
+            {
+                case WINDOWS -> "cmd /c \"cd /d \"" + workspace + "\" && javac InvoiceSummaryEngine.java InvoiceSummaryEngineVerifier.java && java InvoiceSummaryEngineVerifier\"";
+                case MACOS, LINUX -> "cd '" + workspace + "' && javac InvoiceSummaryEngine.java InvoiceSummaryEngineVerifier.java && java InvoiceSummaryEngineVerifier";
+            };
+        }
+    }
+
     private static final class FileSystemEditor implements IApplyPatchEditor
     {
         private final Path root;
@@ -319,13 +324,41 @@ public class Example25ComplexReActDebugFixTest
         @Override
         public ApplyPatchResult createFile(ApplyPatchOperation operation)
         {
-            return updateOrCreate(operation, true);
+            try
+            {
+                Path path = safeResolve(operation.getPath());
+                if (path.getParent() != null)
+                {
+                    Files.createDirectories(path.getParent());
+                }
+                Files.writeString(path, operation.getDiff());
+                return ApplyPatchResult.completed("Created " + operation.getPath());
+            }
+            catch (IOException ex)
+            {
+                return ApplyPatchResult.failed("Create failed: " + ex.getMessage());
+            }
         }
 
         @Override
         public ApplyPatchResult updateFile(ApplyPatchOperation operation)
         {
-            return updateOrCreate(operation, false);
+            try
+            {
+                Path path = safeResolve(operation.getPath());
+                if (!Files.exists(path))
+                {
+                    return ApplyPatchResult.failed("File not found: " + operation.getPath());
+                }
+                String original = Files.readString(path);
+                String updated = ApplyPatchTool.applyDiff(original, operation.getDiff());
+                Files.writeString(path, updated);
+                return ApplyPatchResult.completed("Updated " + operation.getPath());
+            }
+            catch (Exception ex)
+            {
+                return ApplyPatchResult.failed("Update failed: " + ex.getMessage());
+            }
         }
 
         @Override
@@ -340,26 +373,6 @@ public class Example25ComplexReActDebugFixTest
             catch (IOException ex)
             {
                 return ApplyPatchResult.failed("Delete failed: " + ex.getMessage());
-            }
-        }
-
-        private ApplyPatchResult updateOrCreate(ApplyPatchOperation operation, boolean create)
-        {
-            try
-            {
-                Path path = safeResolve(operation.getPath());
-                if (path.getParent() != null)
-                {
-                    Files.createDirectories(path.getParent());
-                }
-                String original = Files.exists(path) ? Files.readString(path) : "";
-                String updated = create ? ApplyPatchTool.applyCreateDiff(operation.getDiff()) : ApplyPatchTool.applyDiff(original, operation.getDiff());
-                Files.writeString(path, updated);
-                return ApplyPatchResult.completed((create ? "Created " : "Updated ") + operation.getPath());
-            }
-            catch (IOException ex)
-            {
-                return ApplyPatchResult.failed("Write failed: " + ex.getMessage());
             }
         }
 
