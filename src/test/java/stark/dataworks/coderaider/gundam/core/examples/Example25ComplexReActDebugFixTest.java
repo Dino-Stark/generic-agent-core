@@ -29,12 +29,11 @@ import java.util.Map;
 
 /**
  * 25) Harder ReAct debug/fix workflow: logical bug fixing with runtime verification.
- * 
- * Optimized to be fast and smart:
- * - Skips investigation step (bugs are known)
- * - Uses low reasoning effort
- * - Direct prompts with concrete fixes
- * - Windows/Linux/Mac compatible
+ * <p>
+ * Fast-path strategy:
+ * - Single fixer agent with explicit known defects.
+ * - Minimal reasoning/token budget.
+ * - At most two short fixer attempts, then deterministic fallback.
  */
 public class Example25ComplexReActDebugFixTest
 {
@@ -42,7 +41,7 @@ public class Example25ComplexReActDebugFixTest
     private static final Path INPUT_FILE = Path.of("src", "test", "resources", "inputs", "InvoiceSummaryEngine.java");
     private static final Path INPUT_VERIFIER_FILE = Path.of("src", "test", "resources", "inputs", "InvoiceSummaryEngineVerifier.java");
     private static final RunConfiguration EXAMPLE_RUN_CONFIGURATION =
-        new RunConfiguration(6, null, 0.1, 1024, "auto", "text", Map.of());
+        new RunConfiguration(4, null, 0.0, 512, "auto", "text", Map.of());
 
     @Test
     public void run() throws IOException
@@ -68,7 +67,6 @@ public class Example25ComplexReActDebugFixTest
 
         AgentRegistry agentRegistry = new AgentRegistry();
         agentRegistry.register(createFixerAgent(runtimeOs, workspace));
-        agentRegistry.register(createReviewerAgent(runtimeOs, workspace));
 
         AgentRunner runner = AgentRunner.builder()
             .llmClient(new ModelScopeLlmClient(apiKey, MODEL))
@@ -78,46 +76,33 @@ public class Example25ComplexReActDebugFixTest
             .build();
 
         ContextResult fixerResult = null;
-        ContextResult reviewerResult = null;
+        String behaviorOutput = "BEHAVIOR_FAIL not verified yet";
         for (int attempt = 1; attempt <= 2; attempt++)
         {
-            String sourceSnapshot = Files.readString(targetFile);
             fixerResult = runner.chatClient("react25-fixer")
                 .prompt()
                 .stream(true)
-                .user(buildFixerPrompt(runtimeOs, workspace, sourceSnapshot, attempt))
+                .user(buildFixerPrompt(runtimeOs, workspace, targetFile, attempt, behaviorOutput))
                 .runConfiguration(EXAMPLE_RUN_CONFIGURATION)
                 .runHooks(ExampleSupport.noopHooks())
                 .call()
                 .contextResult();
 
-            reviewerResult = runner.chatClient("react25-reviewer")
-                .prompt()
-                .stream(true)
-                .user(buildReviewerPrompt(runtimeOs, workspace, fixerResult.getFinalOutput()))
-                .runConfiguration(EXAMPLE_RUN_CONFIGURATION)
-                .runHooks(ExampleSupport.noopHooks())
-                .call()
-                .contextResult();
-
-            String behaviorNow = runBehaviorVerification(runtimeOs, workspace);
-            if (behaviorNow.contains("BEHAVIOR_OK"))
+            behaviorOutput = runBehaviorVerification(runtimeOs, workspace);
+            if (behaviorOutput.contains("BEHAVIOR_OK"))
             {
                 break;
             }
         }
 
-        Assertions.assertNotNull(fixerResult, "Expected fixer output");
-        Assertions.assertNotNull(reviewerResult, "Expected reviewer output");
-
-        String runOutput = runBehaviorVerification(runtimeOs, workspace);
-        if (!runOutput.contains("BEHAVIOR_OK"))
+        if (!behaviorOutput.contains("BEHAVIOR_OK"))
         {
             applyDeterministicFallbackFix(targetFile);
-            runOutput = runBehaviorVerification(runtimeOs, workspace);
+            behaviorOutput = runBehaviorVerification(runtimeOs, workspace);
         }
 
-        Assertions.assertTrue(runOutput.contains("BEHAVIOR_OK"), "Expected runtime verification output: " + runOutput);
+        Assertions.assertNotNull(fixerResult, "Expected fixer output");
+        Assertions.assertTrue(behaviorOutput.contains("BEHAVIOR_OK"), "Expected runtime verification output: " + behaviorOutput);
     }
 
     private static Agent createFixerAgent(RuntimeOs runtimeOs, Path workspace)
@@ -128,85 +113,57 @@ public class Example25ComplexReActDebugFixTest
         def.setModel(MODEL);
         def.setReactEnabled(true);
         def.setSystemPrompt("""
-            Fix InvoiceSummaryEngine.java. Three bugs exist:
-            1. Line 4: for (int i = 1; ...) should be for (int i = 0; ...)
-            2. Line 18: return 0.18; should be return 0.08;
-            3. Line 27: Math.round(value * 10.0) should be Math.round(value * 100.0)
-            
-            Target: calculateTotal([20,30,50], "food", true) => 102.6
-            Target: calculateTotal([10,40], "book", false) => 52.0
+            Fix InvoiceSummaryEngine.java quickly.
+
+            Known defects:
+            1) for-loop starts at 1, must start at 0.
+            2) food tax returns 0.18, must return 0.08.
+            3) round2 uses *10.0, must use *100.0.
+
+            Required outputs:
+            - calculateTotal([20,30,50], "food", true) == 102.6
+            - calculateTotal([10,40], "book", false) == 52.0
             OS: %s. Workspace: %s
-            
-            Use apply_patch with simple diff format:
+
+            Use apply_patch exactly once, then run verifier command once, then brief summary.
+
+            apply_patch format:
             {"operation":{"type":"update_file","path":"InvoiceSummaryEngine.java","diff":"..."}}
-            
-            Simple diff format (space for context, - for remove, + for add):
-             for (int i = 1; i < items.length; i++) {
-            -            subtotal += items[i];
-            +            subtotal += items[i];
-             }
+
+            Simple diff example:
+            -        for (int i = 1; i < items.length; i++) {
+            +        for (int i = 0; i < items.length; i++) {
+                     subtotal += items[i];
+                 }
+             ...
+            -        return 0.18;
+            +        return 0.08;
+             ...
+            -        return Math.round(value * 10.0) / 10.0;
+            +        return Math.round(value * 100.0) / 100.0;
             """.formatted(runtimeOs.displayName, workspace));
-        def.setReactInstructions("Apply patch via apply_patch, compile to verify. End with summary.");
+        def.setReactInstructions("Keep thoughts short. No explanations beyond one-line summary.");
         def.setToolNames(List.of("apply_patch", "local_shell"));
         def.setModelProviderOptions(Map.of("working_directory", workspace.toString()));
         def.setModelReasoning(Map.of("effort", "low"));
         return new Agent(def);
     }
 
-    private static Agent createReviewerAgent(RuntimeOs runtimeOs, Path workspace)
-    {
-        AgentDefinition def = new AgentDefinition();
-        def.setId("react25-reviewer");
-        def.setName("Complex Reviewer");
-        def.setModel(MODEL);
-        def.setReactEnabled(true);
-        def.setSystemPrompt("""
-            Verify fix. Required:
-            - calculateTotal([20,30,50], "food", true) == 102.6
-            - calculateTotal([10,40], "book", false) == 52.0
-            OS: %s. Workspace: %s
-            """.formatted(runtimeOs.displayName, workspace));
-        def.setReactInstructions("Compile and run verifier. Output PASS or FAIL with evidence.");
-        def.setToolNames(List.of("local_shell"));
-        def.setModelProviderOptions(Map.of("working_directory", workspace.toString()));
-        def.setModelReasoning(Map.of("effort", "low"));
-        return new Agent(def);
-    }
-
-    private static String buildFixerPrompt(RuntimeOs runtimeOs, Path workspace, String sourceSnapshot, int attempt)
+    private static String buildFixerPrompt(RuntimeOs runtimeOs, Path workspace, Path targetFile, int attempt, String behaviorOutput) throws IOException
     {
         return """
-            Fix InvoiceSummaryEngine.java. Attempt: %d
-            
-            Bugs to fix:
-            1. Line 4: for (int i = 1; ...) → for (int i = 0; ...)
-            2. Line 18: return 0.18; → return 0.08;
-            3. Line 27: Math.round(value * 10.0) → Math.round(value * 100.0)
-            
+            Attempt %d/2. Fix InvoiceSummaryEngine.java now.
+
+            Current verifier output:
+            %s
+
             Current source:
             %s
-            
-            Runtime OS: %s
-            Workspace: %s
-            
-            Apply patch and verify with: %s
-            """.formatted(attempt, sourceSnapshot, runtimeOs.displayName, workspace, runtimeOs.verifyCommand(workspace));
-    }
 
-    private static String buildReviewerPrompt(RuntimeOs runtimeOs, Path workspace, String fixerOutput)
-    {
-        return """
-            Review fix. Required: caseA=102.6, caseB=52.0
-            
-            Fixer output:
-            %s
-            
             Runtime OS: %s
             Workspace: %s
             Verify command: %s
-            
-            Report PASS only if output contains BEHAVIOR_OK.
-            """.formatted(fixerOutput, runtimeOs.displayName, workspace, runtimeOs.verifyCommand(workspace));
+            """.formatted(attempt, behaviorOutput, Files.readString(targetFile), runtimeOs.displayName, workspace, runtimeOs.verifyCommand(workspace));
     }
 
     private static void stageVerifierSource(Path targetVerifierFile) throws IOException
@@ -271,7 +228,6 @@ public class Example25ComplexReActDebugFixTest
 
     private static void applyDeterministicFallbackFix(Path targetFile) throws IOException
     {
-        // Reset from original source first (in case LLM corrupted the file)
         String source = Files.readString(INPUT_FILE);
         String patched = source
             .replace("for (int i = 1; i < items.length; i++)", "for (int i = 0; i < items.length; i++)")
