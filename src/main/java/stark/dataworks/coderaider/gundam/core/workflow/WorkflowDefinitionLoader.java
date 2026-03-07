@@ -22,6 +22,7 @@ public final class WorkflowDefinitionLoader
 
     /**
      * Serializes the value to JSON.
+     *
      * @param json JSON document to parse.
      * @return workflow definition result.
      */

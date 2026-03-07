@@ -10,9 +10,10 @@ public class OutputValidator
 
     /**
      * Validates this value.
-     * @param Map<String map<string.
+     *
+     * @param Map<String       map<string.
      * @param structuredOutput structured output.
-     * @param schema schema definition.
+     * @param schema           schema definition.
      * @return output validation result.
      */
     public OutputValidationResult validate(Map<String, Object> structuredOutput, IOutputSchema schema)
@@ -42,8 +43,9 @@ public class OutputValidator
 
     /**
      * Checks whether a runtime value matches the expected schema type.
+     *
      * @param value value.
-     * @param type type discriminator.
+     * @param type  type discriminator.
      * @return True when routing is allowed; false otherwise.
      */
     private boolean isTypeMatch(Object value, String type)

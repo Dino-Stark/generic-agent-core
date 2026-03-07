@@ -8,7 +8,8 @@ public class GuardrailTripwireException extends AgentsException
 
     /**
      * Initializes GuardrailTripwireException with required runtime dependencies and options.
-     * @param phase phase.
+     *
+     * @param phase  phase.
      * @param reason human-readable reason.
      */
     public GuardrailTripwireException(String phase, String reason)

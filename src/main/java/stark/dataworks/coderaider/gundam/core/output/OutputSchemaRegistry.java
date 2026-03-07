@@ -11,12 +11,13 @@ public class OutputSchemaRegistry
 {
 
     /**
- * Structured-output schemas keyed by schema name.
+     * Structured-output schemas keyed by schema name.
      */
     private final Map<String, IOutputSchema> schemas = new ConcurrentHashMap<>();
 
     /**
      * Registers this value for later lookup and execution.
+     *
      * @param schema schema definition.
      */
     public void register(IOutputSchema schema)
@@ -26,6 +27,7 @@ public class OutputSchemaRegistry
 
     /**
      * Returns the current value for this object.
+     *
      * @param name human-readable name.
      * @return Optional ioutput schema value.
      */

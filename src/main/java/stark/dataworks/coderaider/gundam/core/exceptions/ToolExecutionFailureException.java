@@ -8,7 +8,8 @@ public class ToolExecutionFailureException extends AgentsException
 
     /**
      * Initializes ToolExecutionFailureException with required runtime dependencies and options.
-     * @param tool tool instance.
+     *
+     * @param tool  tool instance.
      * @param cause root cause exception.
      */
     public ToolExecutionFailureException(String tool, Throwable cause)

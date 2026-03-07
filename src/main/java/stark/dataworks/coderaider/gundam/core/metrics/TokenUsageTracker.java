@@ -18,6 +18,7 @@ public class TokenUsageTracker
 
     /**
      * Adds this value.
+     *
      * @param usage usage.
      */
     public void add(TokenUsage usage)
@@ -28,6 +29,7 @@ public class TokenUsageTracker
 
     /**
      * Returns an immutable snapshot of current token usage.
+     *
      * @return token usage result.
      */
     public TokenUsage snapshot()

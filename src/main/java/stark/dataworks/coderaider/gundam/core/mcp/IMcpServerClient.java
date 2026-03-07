@@ -11,6 +11,7 @@ public interface IMcpServerClient
 
     /**
      * Returns the tools exposed by the target registry or MCP server.
+     *
      * @param config MCP server configuration.
      * @return List of mcp tool descriptor values.
      */
@@ -18,9 +19,10 @@ public interface IMcpServerClient
 
     /**
      * Calls the specified tool provided by the MCP server.
-     * @param config MCP server configuration.
+     *
+     * @param config   MCP server configuration.
      * @param toolName tool name.
-     * @param args tool arguments passed to the MCP server.
+     * @param args     tool arguments passed to the MCP server.
      * @return Tool execution output returned by the MCP server.
      */
 
@@ -28,6 +30,7 @@ public interface IMcpServerClient
 
     /**
      * Returns resources exposed by the target MCP server.
+     *
      * @param config MCP server configuration.
      * @return List of mcp resource values.
      */
@@ -36,6 +39,7 @@ public interface IMcpServerClient
 
     /**
      * Returns resource templates exposed by the target MCP server.
+     *
      * @param config MCP server configuration.
      * @return List of mcp resource template values.
      */
@@ -44,8 +48,9 @@ public interface IMcpServerClient
 
     /**
      * Reads the specified resource content from the MCP server.
+     *
      * @param config MCP server configuration.
-     * @param uri resource URI.
+     * @param uri    resource URI.
      * @return Resource payload returned by the MCP server.
      */
 

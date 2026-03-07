@@ -12,12 +12,14 @@ public interface IAgentMemory
 
     /**
      * Returns the message history for this memory backend.
+     *
      * @return List of message values.
      */
     List<Message> messages();
 
     /**
      * Adds data to internal state consumed by later runtime steps.
+     *
      * @param message conversation message.
      */
 
@@ -26,6 +28,7 @@ public interface IAgentMemory
     /**
      * Replaces all messages when lifecycle policies compact/trim memory state.
      * Implementations that do not support mutation can throw {@link UnsupportedOperationException}.
+     *
      * @param messages The full normalized message list.
      */
     default void replaceAll(List<Message> messages)

@@ -8,6 +8,7 @@ public interface IHandoffFilter
 
     /**
      * Returns an allow decision.
+     *
      * @param handoff handoff.
      * @return {@code true} when the condition is satisfied; otherwise {@code false}.
      */

@@ -23,7 +23,7 @@ public class McpManager
 {
 
     /**
- * Registered MCP server configurations keyed by server id.
+     * Registered MCP server configurations keyed by server id.
      */
     private final Map<String, McpServerConfiguration> servers = new ConcurrentHashMap<>();
 
@@ -39,6 +39,7 @@ public class McpManager
 
     /**
      * Initializes McpManager with required runtime dependencies and options.
+     *
      * @param client client implementation.
      */
     public McpManager(IMcpServerClient client)
@@ -48,6 +49,7 @@ public class McpManager
 
     /**
      * Registers an MCP server configuration under its server id.
+     *
      * @param serverConfig server config.
      */
     public void registerServer(McpServerConfiguration serverConfig)
@@ -57,6 +59,7 @@ public class McpManager
 
     /**
      * Returns the tools exposed by the target registry or MCP server.
+     *
      * @param serverId MCP server identifier.
      * @return List of mcp tool descriptor values.
      */
@@ -68,6 +71,7 @@ public class McpManager
 
     /**
      * Returns resources exposed by the target MCP server.
+     *
      * @param serverId MCP server identifier.
      * @return List of mcp resource values.
      */
@@ -78,6 +82,7 @@ public class McpManager
 
     /**
      * Returns resource templates exposed by the target MCP server.
+     *
      * @param serverId MCP server identifier.
      * @return List of mcp resource template values.
      */
@@ -88,8 +93,9 @@ public class McpManager
 
     /**
      * Reads the specified resource content from the MCP server.
+     *
      * @param serverId MCP server identifier.
-     * @param uri resource URI.
+     * @param uri      resource URI.
      * @return Resource payload returned by the MCP server.
      */
     public McpResource readResource(String serverId, String uri)
@@ -99,6 +105,7 @@ public class McpManager
 
     /**
      * Builds local proxy tools from descriptors provided by an MCP server.
+     *
      * @param serverId MCP server identifier.
      * @return List of itool values.
      */
@@ -115,6 +122,7 @@ public class McpManager
 
     /**
      * Resolves a registered server configuration or throws.
+     *
      * @param serverId MCP server identifier.
      * @return mcp server configuration result.
      */
@@ -130,7 +138,8 @@ public class McpManager
 
     /**
      * McpProxyTool implements MCP server integration and tool bridging.
-     *     */
+     *
+     */
     private static class McpProxyTool implements ITool
     {
 
@@ -156,9 +165,10 @@ public class McpManager
 
         /**
          * Creates a local proxy wrapper for an MCP tool.
-         * @param config MCP server configuration.
-         * @param descriptor descriptor.
-         * @param client client implementation.
+         *
+         * @param config         MCP server configuration.
+         * @param descriptor     descriptor.
+         * @param client         client implementation.
          * @param approvalPolicy approval policy.
          */
         private McpProxyTool(McpServerConfiguration config, McpToolDescriptor descriptor, IMcpServerClient client, IMcpToolApprovalPolicy approvalPolicy)
@@ -171,6 +181,7 @@ public class McpManager
 
         /**
          * Returns definition metadata for this component.
+         *
          * @return tool definition result.
          */
         @Override
@@ -181,6 +192,7 @@ public class McpManager
 
         /**
          * Converts MCP input schema to tool parameter schemas.
+         *
          * @param inputSchema The input schema from MCP tool descriptor.
          * @return List of tool parameter schemas.
          */
@@ -228,8 +240,9 @@ public class McpManager
 
         /**
          * Executes this tool operation and returns the produced output.
+         *
          * @param Map<String map<string.
-         * @param input input payload.
+         * @param input      input payload.
          * @return Tool execution output returned by the MCP server.
          */
         @Override

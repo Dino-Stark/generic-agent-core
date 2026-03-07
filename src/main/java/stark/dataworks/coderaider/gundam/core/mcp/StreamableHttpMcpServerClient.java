@@ -58,10 +58,10 @@ public class StreamableHttpMcpServerClient implements IMcpServerClient
         try
         {
             ensureInitialized(config);
-            
+
             ObjectNode request = createRequest("tools/list");
             JsonNode response = sendRequest(config, request);
-            
+
             List<McpToolDescriptor> tools = new ArrayList<>();
             JsonNode toolsNode = response.path("result").path("tools");
             if (toolsNode.isArray())
@@ -93,14 +93,15 @@ public class StreamableHttpMcpServerClient implements IMcpServerClient
         try
         {
             ensureInitialized(config);
-            
+
             ObjectNode request = createRequest("tools/call");
             ObjectNode params = request.putObject("params");
             params.put("name", toolName);
             if (args != null && !args.isEmpty())
             {
                 ObjectNode argsNode = params.putObject("arguments");
-                args.forEach((key, value) -> {
+                args.forEach((key, value) ->
+                {
                     if (value instanceof String)
                     {
                         argsNode.put(key, (String) value);
@@ -127,7 +128,7 @@ public class StreamableHttpMcpServerClient implements IMcpServerClient
                     }
                 });
             }
-            
+
             JsonNode response = sendRequest(config, request);
             JsonNode content = response.path("result").path("content");
             if (content.isArray() && content.size() > 0)
@@ -157,10 +158,10 @@ public class StreamableHttpMcpServerClient implements IMcpServerClient
         try
         {
             ensureInitialized(config);
-            
+
             ObjectNode request = createRequest("resources/list");
             JsonNode response = sendRequest(config, request);
-            
+
             List<McpResource> resources = new ArrayList<>();
             JsonNode resourcesNode = response.path("result").path("resources");
             if (resourcesNode.isArray())
@@ -192,11 +193,11 @@ public class StreamableHttpMcpServerClient implements IMcpServerClient
         try
         {
             ensureInitialized(config);
-            
+
             ObjectNode request = createRequest("resources/read");
             ObjectNode params = request.putObject("params");
             params.put("uri", uri);
-            
+
             JsonNode response = sendRequest(config, request);
             JsonNode contents = response.path("result").path("contents");
             if (contents.isArray() && contents.size() > 0)
@@ -220,7 +221,7 @@ public class StreamableHttpMcpServerClient implements IMcpServerClient
         {
             return;
         }
-        
+
         try
         {
             ObjectNode initRequest = createRequest("initialize");
@@ -242,7 +243,7 @@ public class StreamableHttpMcpServerClient implements IMcpServerClient
             {
                 sessionIds.put(config.getServerId(), serverSessionId);
             }
-            
+
             ObjectNode initializedRequest = createRequest("notifications/initialized");
             sendNotification(config, initializedRequest);
         }
@@ -265,20 +266,20 @@ public class StreamableHttpMcpServerClient implements IMcpServerClient
     private JsonNode sendRequest(McpServerConfiguration config, ObjectNode request) throws Exception
     {
         String body = objectMapper.writeValueAsString(request);
-        
+
         HttpRequest.Builder builder = HttpRequest.newBuilder()
             .uri(URI.create(config.getEndpoint()))
             .header("Content-Type", "application/json")
             .header("Accept", "application/json, text/event-stream")
             .timeout(timeout)
             .POST(HttpRequest.BodyPublishers.ofString(body));
-        
+
         String sessionId = sessionIds.get(config.getServerId());
         if (sessionId != null && !sessionId.isBlank())
         {
             builder.header("mcp-session-id", sessionId);
         }
-        
+
         Map<String, Object> options = config.getOptions();
         if (options.containsKey("headers") && options.get("headers") instanceof Map)
         {
@@ -286,14 +287,14 @@ public class StreamableHttpMcpServerClient implements IMcpServerClient
             Map<String, String> headers = (Map<String, String>) options.get("headers");
             headers.forEach(builder::header);
         }
-        
+
         HttpResponse<String> response = httpClient.send(builder.build(), HttpResponse.BodyHandlers.ofString());
-        
+
         if (response.statusCode() >= 400)
         {
             throw new RuntimeException("MCP server returned status " + response.statusCode() + ": " + response.body());
         }
-        
+
         String responseBody = response.body();
         String newSessionId = response.headers().map().entrySet().stream()
             .filter(entry -> "mcp-session-id".equalsIgnoreCase(entry.getKey()))
@@ -304,31 +305,31 @@ public class StreamableHttpMcpServerClient implements IMcpServerClient
         {
             sessionIds.put(config.getServerId(), newSessionId);
         }
-        
+
         if (responseBody.startsWith("data:") || responseBody.startsWith("event:"))
         {
             return parseSseResponse(responseBody);
         }
-        
+
         return objectMapper.readTree(responseBody);
     }
 
     private void sendNotification(McpServerConfiguration config, ObjectNode notification) throws Exception
     {
         String body = objectMapper.writeValueAsString(notification);
-        
+
         HttpRequest.Builder builder = HttpRequest.newBuilder()
             .uri(URI.create(config.getEndpoint()))
             .header("Content-Type", "application/json")
             .timeout(timeout)
             .POST(HttpRequest.BodyPublishers.ofString(body));
-        
+
         String sessionId = sessionIds.get(config.getServerId());
         if (sessionId != null && !sessionId.isBlank())
         {
             builder.header("mcp-session-id", sessionId);
         }
-        
+
         httpClient.send(builder.build(), HttpResponse.BodyHandlers.discarding());
     }
 

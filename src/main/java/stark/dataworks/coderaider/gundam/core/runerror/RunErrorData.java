@@ -28,9 +28,10 @@ public class RunErrorData
 
     /**
      * Initializes RunErrorData with required runtime dependencies and options.
-     * @param kind kind.
+     *
+     * @param kind    kind.
      * @param message conversation message.
-     * @param cause root cause exception.
+     * @param cause   root cause exception.
      */
     public RunErrorData(RunErrorKind kind, String message, Throwable cause)
     {

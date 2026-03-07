@@ -10,7 +10,7 @@ public final class AgentDefinitionLoader
 {
 
     /**
- * ObjectMapper used for JSON serialization/deserialization.
+     * ObjectMapper used for JSON serialization/deserialization.
      */
     private static final ObjectMapper MAPPER = new ObjectMapper();
 
@@ -23,6 +23,7 @@ public final class AgentDefinitionLoader
 
     /**
      * Serializes the value to JSON.
+     *
      * @param json JSON document to parse.
      * @return Agent definition associated with this instance.
      */

@@ -11,7 +11,8 @@ public interface IOutputGuardrail
 
     /**
      * Evaluates the supplied data and returns a decision result.
-     * @param context execution context.
+     *
+     * @param context  execution context.
      * @param response response payload.
      * @return guardrail decision result.
      */

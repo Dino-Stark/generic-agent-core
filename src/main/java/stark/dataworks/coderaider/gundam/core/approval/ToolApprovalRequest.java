@@ -30,10 +30,11 @@ public class ToolApprovalRequest
 
     /**
      * Initializes ToolApprovalRequest with required runtime dependencies and options.
-     * @param agentId agent identifier.
-     * @param toolName tool name.
+     *
+     * @param agentId    agent identifier.
+     * @param toolName   tool name.
      * @param Map<String map<string.
-     * @param arguments arguments.
+     * @param arguments  arguments.
      */
     public ToolApprovalRequest(String agentId, String toolName, Map<String, Object> arguments)
     {

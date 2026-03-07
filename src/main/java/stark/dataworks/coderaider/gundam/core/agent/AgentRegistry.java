@@ -20,6 +20,7 @@ public class AgentRegistry implements IAgentRegistry
 
     /**
      * Registers an agent by its definition id.
+     *
      * @param agent Agent instance to make discoverable by id-based lookup.
      */
     @Override
@@ -30,6 +31,7 @@ public class AgentRegistry implements IAgentRegistry
 
     /**
      * Looks up an agent by id.
+     *
      * @param agentId Agent definition id.
      * @return Matching agent if present; otherwise {@link Optional#empty()}.
      */

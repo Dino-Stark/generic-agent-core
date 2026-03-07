@@ -8,6 +8,7 @@ public class NoopTraceProvider implements ITraceProvider
 
     /**
      * Starts span.
+     *
      * @param name human-readable name.
      * @return itrace span result.
      */

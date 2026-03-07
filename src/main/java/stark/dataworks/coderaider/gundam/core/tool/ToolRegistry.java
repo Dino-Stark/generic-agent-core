@@ -13,12 +13,13 @@ public class ToolRegistry implements IToolRegistry
 {
 
     /**
- * Registered tools keyed by tool name.
+     * Registered tools keyed by tool name.
      */
     private final Map<String, ITool> tools = new ConcurrentHashMap<>();
 
     /**
      * Registers this value for later lookup and execution.
+     *
      * @param tool tool instance.
      */
     @Override
@@ -29,6 +30,7 @@ public class ToolRegistry implements IToolRegistry
 
     /**
      * Registers Spring AI tool objects that use {@code @Tool} annotations.
+     *
      * @param toolObjects The Spring AI tool objects.
      */
     public void registerSpringToolObjects(Object... toolObjects)
@@ -38,6 +40,7 @@ public class ToolRegistry implements IToolRegistry
 
     /**
      * Registers Spring AI {@link ToolCallback} instances.
+     *
      * @param callbacks The Spring AI callbacks.
      */
     public void registerSpringToolCallbacks(ToolCallback... callbacks)
@@ -47,6 +50,7 @@ public class ToolRegistry implements IToolRegistry
 
     /**
      * Returns the current value for this object.
+     *
      * @param toolName tool name.
      * @return Optional itool value.
      */

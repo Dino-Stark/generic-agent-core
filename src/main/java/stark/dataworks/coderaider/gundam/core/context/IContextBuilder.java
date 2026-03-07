@@ -14,8 +14,9 @@ public interface IContextBuilder
 
     /**
      * Builds and returns the requested value.
-     * @param agent agent instance.
-     * @param memory conversation memory backend.
+     *
+     * @param agent     agent instance.
+     * @param memory    conversation memory backend.
      * @param userInput user input.
      * @return List of message values.
      */

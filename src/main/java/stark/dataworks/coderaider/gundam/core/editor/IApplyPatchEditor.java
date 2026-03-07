@@ -8,6 +8,7 @@ public interface IApplyPatchEditor
 {
     /**
      * Creates a new file with the specified content.
+     *
      * @param operation The operation containing path and diff content.
      * @return The result of the operation.
      */
@@ -15,6 +16,7 @@ public interface IApplyPatchEditor
 
     /**
      * Updates an existing file by applying the diff.
+     *
      * @param operation The operation containing path and diff content.
      * @return The result of the operation.
      */
@@ -22,6 +24,7 @@ public interface IApplyPatchEditor
 
     /**
      * Deletes a file at the specified path.
+     *
      * @param operation The operation containing the path to delete.
      * @return The result of the operation.
      */

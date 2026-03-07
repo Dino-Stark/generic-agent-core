@@ -12,12 +12,13 @@ public class TracingProcessors
 {
 
     /**
- * Registered tracing processors invoked for each run event.
+     * Registered tracing processors invoked for each run event.
      */
     private final List<ITracingProcessor> processors = new CopyOnWriteArrayList<>();
 
     /**
      * Adds this value.
+     *
      * @param processor processor.
      */
     public void add(ITracingProcessor processor)
@@ -27,6 +28,7 @@ public class TracingProcessors
 
     /**
      * Emits a trace event to registered processors.
+     *
      * @param event run event.
      */
     public void emit(TraceEvent event)

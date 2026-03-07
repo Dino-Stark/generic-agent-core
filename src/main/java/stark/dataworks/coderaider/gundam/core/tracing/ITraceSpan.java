@@ -8,7 +8,8 @@ public interface ITraceSpan
 
     /**
      * Adds an attribute to the current span.
-     * @param key key.
+     *
+     * @param key   key.
      * @param value value.
      */
     void annotate(String key, String value);

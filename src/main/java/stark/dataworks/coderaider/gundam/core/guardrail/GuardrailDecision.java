@@ -25,6 +25,7 @@ public class GuardrailDecision
 
     /**
      * Returns an allow decision.
+     *
      * @return guardrail decision result.
      */
     public static GuardrailDecision allow()
@@ -34,6 +35,7 @@ public class GuardrailDecision
 
     /**
      * Returns a deny decision with a reason.
+     *
      * @param reason human-readable reason.
      * @return guardrail decision result.
      */

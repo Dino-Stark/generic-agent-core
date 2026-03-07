@@ -28,9 +28,10 @@ public class Handoff
 
     /**
      * Initializes Handoff with required runtime dependencies and options.
+     *
      * @param fromAgentId from agent id.
-     * @param toAgentId to agent id.
-     * @param reason human-readable reason.
+     * @param toAgentId   to agent id.
+     * @param reason      human-readable reason.
      */
     public Handoff(String fromAgentId, String toAgentId, String reason)
     {

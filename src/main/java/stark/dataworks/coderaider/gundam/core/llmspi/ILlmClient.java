@@ -10,6 +10,7 @@ public interface ILlmClient
 
     /**
      * Runs a non-streaming model call.
+     *
      * @param request request payload.
      * @return llm response result.
      */
@@ -17,7 +18,8 @@ public interface ILlmClient
 
     /**
      * Streams model output for the supplied request.
-     * @param request model/tool request payload.
+     *
+     * @param request  model/tool request payload.
      * @param listener event listener.
      * @return llm response result.
      */

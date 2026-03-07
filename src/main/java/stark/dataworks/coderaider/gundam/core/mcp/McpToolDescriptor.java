@@ -29,9 +29,10 @@ public class McpToolDescriptor
 
     /**
      * Initializes McpToolDescriptor with required runtime dependencies and options.
-     * @param name human-readable name.
+     *
+     * @param name        human-readable name.
      * @param description description.
-     * @param Map<String map<string.
+     * @param Map<String  map<string.
      * @param inputSchema input schema.
      */
     public McpToolDescriptor(String name, String description, Map<String, Object> inputSchema)

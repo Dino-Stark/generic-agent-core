@@ -19,10 +19,11 @@ public class FunctionTool extends AbstractBuiltinTool
 
     /**
      * Initializes FunctionTool with required runtime dependencies and options.
-     * @param definition definition object.
+     *
+     * @param definition          definition object.
      * @param Function<Map<String function<map<string.
-     * @param Object> object>.
-     * @param function function.
+     * @param Object>             object>.
+     * @param function            function.
      */
     public FunctionTool(ToolDefinition definition, Function<Map<String, Object>, String> function)
     {
@@ -32,8 +33,9 @@ public class FunctionTool extends AbstractBuiltinTool
 
     /**
      * Executes this tool operation and returns the produced output.
+     *
      * @param Map<String map<string.
-     * @param input input payload.
+     * @param input      input payload.
      * @return Tool execution output returned by the MCP server.
      */
     @Override

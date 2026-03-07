@@ -10,6 +10,7 @@ public class ToolSpanData extends SpanData
 
     /**
      * Initializes ToolSpanData with required runtime dependencies and options.
+     *
      * @param Map<String map<string.
      * @param attributes attribute map.
      */

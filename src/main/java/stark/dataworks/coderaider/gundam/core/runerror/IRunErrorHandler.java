@@ -8,6 +8,7 @@ public interface IRunErrorHandler
 
     /**
      * Handles a classified run error.
+     *
      * @param errorData error data.
      * @return run error handler result.
      */

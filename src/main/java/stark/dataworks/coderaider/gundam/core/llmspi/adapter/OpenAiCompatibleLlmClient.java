@@ -79,14 +79,14 @@ public class OpenAiCompatibleLlmClient implements IMultimodalLlmClient
             String payload = objectMapper.writeValueAsString(toPayload(request, true));
             HttpRequest httpRequest = buildHttpRequest(payload);
             HttpResponse<InputStream> response = httpClient.send(httpRequest, HttpResponse.BodyHandlers.ofInputStream());
-            
+
             int statusCode = response.statusCode();
             if (statusCode < 200 || statusCode >= 300)
             {
                 String errorBody = new String(response.body().readAllBytes(), StandardCharsets.UTF_8);
                 throw new IllegalStateException("Provider call failed with status=" + statusCode + ", body=" + errorBody);
             }
-            
+
             return consumeSseStream(response.body(), listener);
         }
         catch (Exception ex)

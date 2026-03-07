@@ -10,6 +10,7 @@ public interface ITracingProcessor
 
     /**
      * Processes the supplied workflow/tracing input.
+     *
      * @param event run event.
      */
     void process(TraceEvent event);

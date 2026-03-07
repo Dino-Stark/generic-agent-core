@@ -38,7 +38,7 @@ public final class DiffApplier
         }
 
         List<String> diffLines = splitLines(diff);
-        
+
         if (mode == ApplyDiffMode.CREATE)
         {
             return parseCreateDiff(diffLines);
@@ -46,7 +46,7 @@ public final class DiffApplier
 
         String normalizedInput = normalizeNewlines(input != null ? input : "");
         String newline = detectNewline(input);
-        
+
         if (isGitUnifiedDiff(diffLines))
         {
             try
@@ -68,7 +68,7 @@ public final class DiffApplier
                 return trySimplePatch(normalizedInput, diffLines, newline);
             }
         }
-        
+
         if (isSimpleUnifiedDiff(diffLines))
         {
             try
@@ -90,7 +90,7 @@ public final class DiffApplier
                 return applySimpleDiff(normalizedInput, diffLines, newline);
             }
         }
-        
+
         return applySimpleDiff(normalizedInput, diffLines, newline);
     }
 
@@ -110,7 +110,7 @@ public final class DiffApplier
     {
         boolean hasMinus = false;
         boolean hasPlus = false;
-        
+
         for (String line : lines)
         {
             if (line.startsWith("--- "))
@@ -122,7 +122,7 @@ public final class DiffApplier
                 hasPlus = true;
             }
         }
-        
+
         return hasMinus && hasPlus;
     }
 
@@ -133,12 +133,12 @@ public final class DiffApplier
             String diffText = String.join("\n", diffLines);
             InputStream inputStream = new ByteArrayInputStream(diffText.getBytes(StandardCharsets.UTF_8));
             UnifiedDiff unifiedDiff = UnifiedDiffReader.parseUnifiedDiff(inputStream);
-            
+
             if (unifiedDiff == null || unifiedDiff.getFiles() == null || unifiedDiff.getFiles().isEmpty())
             {
                 return null;
             }
-            
+
             return unifiedDiff.getFiles().get(0).getPatch();
         }
         catch (Exception e)
@@ -157,16 +157,16 @@ public final class DiffApplier
             {
                 sb.append(line).append("\n");
             }
-            
+
             String diffText = sb.toString();
             InputStream inputStream = new ByteArrayInputStream(diffText.getBytes(StandardCharsets.UTF_8));
             UnifiedDiff unifiedDiff = UnifiedDiffReader.parseUnifiedDiff(inputStream);
-            
+
             if (unifiedDiff == null || unifiedDiff.getFiles() == null || unifiedDiff.getFiles().isEmpty())
             {
                 return null;
             }
-            
+
             return unifiedDiff.getFiles().get(0).getPatch();
         }
         catch (Exception e)
@@ -180,7 +180,7 @@ public final class DiffApplier
         String[] inputLines = input.split("\n", -1);
         List<String> result = new ArrayList<>();
         int inputIndex = 0;
-        
+
         String anchor = extractAnchor(diffLines);
         if (anchor != null && !anchor.isEmpty())
         {
@@ -196,9 +196,9 @@ public final class DiffApplier
                 inputIndex++;
             }
         }
-        
+
         List<SimpleDiffLine> parsedDiff = parseSimpleDiff(diffLines);
-        
+
         for (SimpleDiffLine diffLine : parsedDiff)
         {
             switch (diffLine.type)
@@ -226,13 +226,13 @@ public final class DiffApplier
                     break;
             }
         }
-        
+
         while (inputIndex < inputLines.length)
         {
             result.add(inputLines[inputIndex]);
             inputIndex++;
         }
-        
+
         return String.join(newline, result);
     }
 
@@ -256,14 +256,14 @@ public final class DiffApplier
     {
         List<SimpleDiffLine> result = new ArrayList<>();
         int sourceLine = 0;
-        
+
         for (String line : lines)
         {
             if (line.startsWith("@@"))
             {
                 continue;
             }
-            
+
             if (line.startsWith(" "))
             {
                 result.add(new SimpleDiffLine(DiffType.CONTEXT, line.substring(1), sourceLine));
@@ -284,7 +284,7 @@ public final class DiffApplier
                 sourceLine++;
             }
         }
-        
+
         return result;
     }
 
@@ -359,7 +359,7 @@ public final class DiffApplier
     {
         List<String> removed = new ArrayList<>();
         List<String> added = new ArrayList<>();
-        
+
         for (String line : diffLines)
         {
             if (line.startsWith("diff --git") || line.startsWith("index ") ||
@@ -368,7 +368,7 @@ public final class DiffApplier
             {
                 continue;
             }
-            
+
             if (line.startsWith("-") && !line.startsWith("---"))
             {
                 removed.add(line.substring(1));
@@ -378,20 +378,20 @@ public final class DiffApplier
                 added.add(line.substring(1));
             }
         }
-        
+
         if (removed.isEmpty() && added.isEmpty())
         {
             return input;
         }
-        
+
         String[] inputLines = input.split("\n", -1);
         List<String> result = new ArrayList<>();
-        
+
         for (int i = 0; i < inputLines.length; i++)
         {
             String inputLine = inputLines[i];
             boolean matched = false;
-            
+
             for (int j = 0; j < removed.size() && j < added.size(); j++)
             {
                 String oldLine = removed.get(j);
@@ -403,13 +403,13 @@ public final class DiffApplier
                     break;
                 }
             }
-            
+
             if (!matched)
             {
                 result.add(inputLine);
             }
         }
-        
+
         return String.join(newline, result);
     }
 

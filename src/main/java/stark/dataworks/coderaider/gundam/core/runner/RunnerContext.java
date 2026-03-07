@@ -34,7 +34,7 @@ public class RunnerContext
     private final IAgentMemory memory;
 
     /**
- * Accumulator that tracks token usage across the run.
+     * Accumulator that tracks token usage across the run.
      */
     private final TokenUsageTracker usageTracker = new TokenUsageTracker();
 
@@ -51,8 +51,9 @@ public class RunnerContext
 
     /**
      * Initializes RunnerContext with required runtime dependencies and options.
+     *
      * @param currentAgent current agent.
-     * @param memory conversation memory backend.
+     * @param memory       conversation memory backend.
      */
     public RunnerContext(IAgent currentAgent, IAgentMemory memory)
     {

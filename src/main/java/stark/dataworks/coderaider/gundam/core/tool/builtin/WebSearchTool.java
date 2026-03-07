@@ -13,6 +13,7 @@ public class WebSearchTool extends AbstractBuiltinTool
 
     /**
      * Initializes WebSearchTool with required runtime dependencies and options.
+     *
      * @param definition definition object.
      */
     public WebSearchTool(ToolDefinition definition)
@@ -22,8 +23,9 @@ public class WebSearchTool extends AbstractBuiltinTool
 
     /**
      * Executes this tool operation and returns the produced output.
+     *
      * @param Map<String map<string.
-     * @param input input payload.
+     * @param input      input payload.
      * @return Tool execution output returned by the MCP server.
      */
     @Override

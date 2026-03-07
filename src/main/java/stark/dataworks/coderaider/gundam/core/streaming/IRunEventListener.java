@@ -10,6 +10,7 @@ public interface IRunEventListener
 
     /**
      * Handles a published run event.
+     *
      * @param event run event.
      */
     void onEvent(RunEvent event);

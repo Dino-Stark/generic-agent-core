@@ -8,6 +8,7 @@ public interface ITraceProvider
 
     /**
      * Starts span.
+     *
      * @param name name.
      * @return itrace span result.
      */

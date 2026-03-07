@@ -44,7 +44,8 @@ public class Message
 
     /**
      * Initializes Message with required runtime dependencies and options.
-     * @param role role.
+     *
+     * @param role    role.
      * @param content content.
      */
     public Message(Role role, String content)
@@ -54,7 +55,8 @@ public class Message
 
     /**
      * Initializes Message with required runtime dependencies and options.
-     * @param role role.
+     *
+     * @param role  role.
      * @param parts parts.
      */
     public Message(Role role, List<MessagePart> parts)
@@ -64,8 +66,9 @@ public class Message
 
     /**
      * Initializes Message with required runtime dependencies and options.
-     * @param role role.
-     * @param content content.
+     *
+     * @param role       role.
+     * @param content    content.
      * @param toolCallId tool call identifier.
      */
     public Message(Role role, String content, String toolCallId)
@@ -75,8 +78,9 @@ public class Message
 
     /**
      * Initializes Message with required runtime dependencies and options.
-     * @param role role.
-     * @param content content.
+     *
+     * @param role      role.
+     * @param content   content.
      * @param toolCalls tool calls.
      */
     public Message(Role role, String content, List<ToolCall> toolCalls)
@@ -86,10 +90,11 @@ public class Message
 
     /**
      * Initializes Message with required runtime dependencies and options.
-     * @param role role.
-     * @param parts parts.
+     *
+     * @param role       role.
+     * @param parts      parts.
      * @param toolCallId tool call identifier.
-     * @param toolCalls tool calls.
+     * @param toolCalls  tool calls.
      */
     public Message(Role role, List<MessagePart> parts, String toolCallId, List<ToolCall> toolCalls)
     {

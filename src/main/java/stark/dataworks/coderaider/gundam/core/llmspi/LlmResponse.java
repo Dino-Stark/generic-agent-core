@@ -61,10 +61,11 @@ public class LlmResponse
 
     /**
      * Initializes LlmResponse with required runtime dependencies and options.
-     * @param content content.
-     * @param toolCalls tool calls.
+     *
+     * @param content        content.
+     * @param toolCalls      tool calls.
      * @param handoffAgentId handoff agent id.
-     * @param tokenUsage token usage.
+     * @param tokenUsage     token usage.
      */
     public LlmResponse(String content, List<ToolCall> toolCalls, String handoffAgentId, TokenUsage tokenUsage)
     {
@@ -73,11 +74,12 @@ public class LlmResponse
 
     /**
      * Creates an LLM response.
-     * @param content content.
-     * @param toolCalls tool calls.
-     * @param handoffAgentId handoff agent identifier.
-     * @param tokenUsage token-usage data.
-     * @param finishReason finish reason.
+     *
+     * @param content          content.
+     * @param toolCalls        tool calls.
+     * @param handoffAgentId   handoff agent identifier.
+     * @param tokenUsage       token-usage data.
+     * @param finishReason     finish reason.
      * @param structuredOutput structured output payload.
      */
     public LlmResponse(String content, List<ToolCall> toolCalls, String handoffAgentId, TokenUsage tokenUsage,
@@ -88,13 +90,14 @@ public class LlmResponse
 
     /**
      * Creates an LLM response.
-     * @param content content.
-     * @param toolCalls tool calls.
-     * @param handoffAgentId handoff agent identifier.
-     * @param tokenUsage token-usage data.
-     * @param finishReason finish reason.
+     *
+     * @param content          content.
+     * @param toolCalls        tool calls.
+     * @param handoffAgentId   handoff agent identifier.
+     * @param tokenUsage       token-usage data.
+     * @param finishReason     finish reason.
      * @param structuredOutput structured output payload.
-     * @param generatedAssets generated asset metadata.
+     * @param generatedAssets  generated asset metadata.
      */
     public LlmResponse(String content, List<ToolCall> toolCalls, String handoffAgentId, TokenUsage tokenUsage,
                        String finishReason, Map<String, Object> structuredOutput, List<GeneratedAsset> generatedAssets)
@@ -104,14 +107,15 @@ public class LlmResponse
 
     /**
      * Creates an LLM response.
-     * @param content content.
-     * @param toolCalls tool calls.
-     * @param handoffAgentId handoff agent identifier.
-     * @param tokenUsage token-usage data.
-     * @param finishReason finish reason.
+     *
+     * @param content          content.
+     * @param toolCalls        tool calls.
+     * @param handoffAgentId   handoff agent identifier.
+     * @param tokenUsage       token-usage data.
+     * @param finishReason     finish reason.
      * @param reasoningContent reasoning content.
      * @param structuredOutput structured output payload.
-     * @param generatedAssets generated asset metadata.
+     * @param generatedAssets  generated asset metadata.
      */
     public LlmResponse(String content, List<ToolCall> toolCalls, String handoffAgentId, TokenUsage tokenUsage,
                        String finishReason, String reasoningContent, Map<String, Object> structuredOutput,
@@ -129,6 +133,7 @@ public class LlmResponse
 
     /**
      * Returns handoff agent id.
+     *
      * @return Optional string value.
      */
     public Optional<String> getHandoffAgentId()
@@ -138,6 +143,7 @@ public class LlmResponse
 
     /**
      * Reports whether final is currently satisfied.
+     *
      * @return {@code true} when the condition is satisfied; otherwise {@code false}.
      */
     public boolean isFinal()

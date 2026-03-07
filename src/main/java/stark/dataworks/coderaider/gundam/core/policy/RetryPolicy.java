@@ -21,7 +21,8 @@ public class RetryPolicy
 
     /**
      * Initializes RetryPolicy with required runtime dependencies and options.
-     * @param maxAttempts max attempts.
+     *
+     * @param maxAttempts   max attempts.
      * @param backoffMillis backoff millis.
      */
     public RetryPolicy(int maxAttempts, long backoffMillis)
@@ -36,6 +37,7 @@ public class RetryPolicy
 
     /**
      * Returns a retry policy that disables retries.
+     *
      * @return retry policy result.
      */
     public static RetryPolicy none()

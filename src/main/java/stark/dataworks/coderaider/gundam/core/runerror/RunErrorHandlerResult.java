@@ -21,7 +21,8 @@ public class RunErrorHandlerResult
 
     /**
      * Initializes RunErrorHandlerResult with required runtime dependencies and options.
-     * @param handled handled.
+     *
+     * @param handled     handled.
      * @param finalOutput final output.
      */
     private RunErrorHandlerResult(boolean handled, String finalOutput)
@@ -32,6 +33,7 @@ public class RunErrorHandlerResult
 
     /**
      * Returns a result indicating the error was not handled.
+     *
      * @return run error handler result.
      */
     public static RunErrorHandlerResult notHandled()
@@ -41,6 +43,7 @@ public class RunErrorHandlerResult
 
     /**
      * Handles a streamed text delta.
+     *
      * @param finalOutput final output.
      * @return run error handler result.
      */

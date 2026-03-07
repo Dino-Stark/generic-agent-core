@@ -30,9 +30,10 @@ public class AgentTool extends AbstractBuiltinTool
 
     /**
      * Initializes AgentTool with required runtime dependencies and options.
-     * @param definition definition object.
-     * @param runner agent runner.
-     * @param targetAgentId target agent id.
+     *
+     * @param definition       definition object.
+     * @param runner           agent runner.
+     * @param targetAgentId    target agent id.
      * @param runConfiguration run configuration.
      */
     public AgentTool(ToolDefinition definition, AgentRunner runner, String targetAgentId, RunConfiguration runConfiguration)
@@ -45,8 +46,9 @@ public class AgentTool extends AbstractBuiltinTool
 
     /**
      * Executes this tool operation and returns the produced output.
+     *
      * @param Map<String map<string.
-     * @param input input payload.
+     * @param input      input payload.
      * @return Tool execution output returned by the MCP server.
      */
     @Override
@@ -57,7 +59,9 @@ public class AgentTool extends AbstractBuiltinTool
             .prompt()
             .user(task)
             .runConfiguration(runConfiguration)
-            .runHooks(new stark.dataworks.coderaider.gundam.core.runner.IRunHooks() {})
+            .runHooks(new stark.dataworks.coderaider.gundam.core.runner.IRunHooks()
+            {
+            })
             .call()
             .content();
     }

@@ -31,9 +31,10 @@ public class ToolCall
 
     /**
      * Initializes ToolCall with required runtime dependencies and options.
-     * @param toolName tool name.
+     *
+     * @param toolName   tool name.
      * @param Map<String map<string.
-     * @param arguments arguments.
+     * @param arguments  arguments.
      */
     public ToolCall(String toolName, Map<String, Object> arguments)
     {
@@ -42,9 +43,10 @@ public class ToolCall
 
     /**
      * Initializes ToolCall with required runtime dependencies and options.
-     * @param toolName tool name.
+     *
+     * @param toolName   tool name.
      * @param Map<String map<string.
-     * @param arguments arguments.
+     * @param arguments  arguments.
      * @param toolCallId tool call identifier.
      */
     public ToolCall(String toolName, Map<String, Object> arguments, String toolCallId)

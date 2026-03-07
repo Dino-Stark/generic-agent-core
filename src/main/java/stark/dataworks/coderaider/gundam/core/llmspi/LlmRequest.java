@@ -44,10 +44,11 @@ public class LlmRequest
 
     /**
      * Initializes LlmRequest with required runtime dependencies and options.
-     * @param model model identifier.
+     *
+     * @param model    model identifier.
      * @param messages conversation messages.
-     * @param tools tools.
-     * @param options provider options.
+     * @param tools    tools.
+     * @param options  provider options.
      */
     public LlmRequest(String model, List<Message> messages, List<ToolDefinition> tools, LlmOptions options)
     {
@@ -56,10 +57,11 @@ public class LlmRequest
 
     /**
      * Creates an LLM request.
-     * @param model model identifier.
-     * @param messages conversation messages.
-     * @param tools tools.
-     * @param options options map.
+     *
+     * @param model       model identifier.
+     * @param messages    conversation messages.
+     * @param tools       tools.
+     * @param options     options map.
      * @param attachments attachments.
      */
     public LlmRequest(String model, List<Message> messages, List<ToolDefinition> tools, LlmOptions options,

@@ -21,7 +21,8 @@ public class OutputValidationResult
 
     /**
      * Initializes OutputValidationResult with required runtime dependencies and options.
-     * @param valid valid.
+     *
+     * @param valid  valid.
      * @param reason human-readable reason.
      */
     private OutputValidationResult(boolean valid, String reason)
@@ -32,6 +33,7 @@ public class OutputValidationResult
 
     /**
      * Returns a successful validation/result object.
+     *
      * @return output validation result.
      */
     public static OutputValidationResult ok()
@@ -41,6 +43,7 @@ public class OutputValidationResult
 
     /**
      * Returns a failed validation/result object.
+     *
      * @param reason human-readable reason.
      * @return output validation result.
      */

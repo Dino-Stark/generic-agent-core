@@ -19,6 +19,7 @@ public class ProcessorTraceProvider implements ITraceProvider
 
     /**
      * Initializes ProcessorTraceProvider with required runtime dependencies and options.
+     *
      * @param processors processors.
      */
     public ProcessorTraceProvider(TracingProcessors processors)
@@ -28,6 +29,7 @@ public class ProcessorTraceProvider implements ITraceProvider
 
     /**
      * Starts span.
+     *
      * @param name human-readable name.
      * @return itrace span result.
      */
@@ -38,7 +40,7 @@ public class ProcessorTraceProvider implements ITraceProvider
         {
 
             /**
- * Span attributes attached to trace events.
+             * Span attributes attached to trace events.
              */
             private final Map<String, String> attrs = new HashMap<>();
 

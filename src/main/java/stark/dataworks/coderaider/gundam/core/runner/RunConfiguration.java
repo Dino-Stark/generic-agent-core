@@ -75,12 +75,13 @@ public class RunConfiguration
 
     /**
      * Builds a run configuration with the provided runtime limits and model options.
-     * @param maxTurns maximum number of turns before termination.
-     * @param sessionId session identifier used to resume conversation state.
-     * @param temperature sampling temperature.
+     *
+     * @param maxTurns        maximum number of turns before termination.
+     * @param sessionId       session identifier used to resume conversation state.
+     * @param temperature     sampling temperature.
      * @param maxOutputTokens maximum output token limit.
-     * @param toolChoice tool-choice policy passed to the model provider.
-     * @param responseFormat response format requested from the model provider.
+     * @param toolChoice      tool-choice policy passed to the model provider.
+     * @param responseFormat  response format requested from the model provider.
      * @param providerOptions provider-specific model options.
      */
     public RunConfiguration(int maxTurns,
@@ -96,14 +97,15 @@ public class RunConfiguration
 
     /**
      * Creates a run configuration with explicit retry policy and default error handlers.
-     * @param maxTurns Maximum number of turns before stopping.
-     * @param sessionId Optional session id for conversation resume.
-     * @param temperature Model temperature.
+     *
+     * @param maxTurns        Maximum number of turns before stopping.
+     * @param sessionId       Optional session id for conversation resume.
+     * @param temperature     Model temperature.
      * @param maxOutputTokens Maximum output token budget.
-     * @param toolChoice Tool-choice behavior to pass to the provider.
-     * @param responseFormat Response format requested from the provider.
+     * @param toolChoice      Tool-choice behavior to pass to the provider.
+     * @param responseFormat  Response format requested from the provider.
      * @param providerOptions Provider-specific options.
-     * @param retryPolicy Retry/backoff policy.
+     * @param retryPolicy     Retry/backoff policy.
      */
     public RunConfiguration(int maxTurns,
                             String sessionId,
@@ -190,6 +192,7 @@ public class RunConfiguration
 
     /**
      * Builds a practical default configuration for local development and tests.
+     *
      * @return Default run configuration.
      */
     public static RunConfiguration defaults()

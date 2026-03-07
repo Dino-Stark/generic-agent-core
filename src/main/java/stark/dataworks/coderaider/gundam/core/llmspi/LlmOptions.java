@@ -38,8 +38,9 @@ public class LlmOptions
 
     /**
      * Initializes LlmOptions with required runtime dependencies and options.
+     *
      * @param temperature sampling temperature.
-     * @param maxTokens maximum token limit.
+     * @param maxTokens   maximum token limit.
      */
     public LlmOptions(double temperature, int maxTokens)
     {
@@ -48,10 +49,11 @@ public class LlmOptions
 
     /**
      * Creates LLM options.
-     * @param temperature sampling temperature.
-     * @param maxTokens maximum token limit.
-     * @param toolChoice tool-choice policy passed to the model provider.
-     * @param responseFormat response format requested from the model provider.
+     *
+     * @param temperature     sampling temperature.
+     * @param maxTokens       maximum token limit.
+     * @param toolChoice      tool-choice policy passed to the model provider.
+     * @param responseFormat  response format requested from the model provider.
      * @param providerOptions provider-specific model options.
      */
     public LlmOptions(double temperature,

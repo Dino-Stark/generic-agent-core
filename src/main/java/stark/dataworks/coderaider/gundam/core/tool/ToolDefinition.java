@@ -30,9 +30,10 @@ public class ToolDefinition
 
     /**
      * Initializes ToolDefinition with required runtime dependencies and options.
-     * @param name human-readable name.
+     *
+     * @param name        human-readable name.
      * @param description description.
-     * @param parameters parameters.
+     * @param parameters  parameters.
      */
     public ToolDefinition(String name, String description, List<ToolParameterSchema> parameters)
     {

@@ -13,17 +13,18 @@ public class HookManager
 {
 
     /**
- * Registered agent lifecycle hooks.
+     * Registered agent lifecycle hooks.
      */
     private final List<IAgentHook> agentHooks = new ArrayList<>();
 
     /**
- * Registered tool lifecycle hooks.
+     * Registered tool lifecycle hooks.
      */
     private final List<IToolHook> toolHooks = new ArrayList<>();
 
     /**
      * Registers an agent lifecycle hook.
+     *
      * @param hook hook.
      */
     public void registerAgentHook(IAgentHook hook)
@@ -33,6 +34,7 @@ public class HookManager
 
     /**
      * Registers a tool lifecycle hook.
+     *
      * @param hook hook.
      */
     public void registerToolHook(IToolHook hook)
@@ -42,6 +44,7 @@ public class HookManager
 
     /**
      * Invoked before an agent run starts.
+     *
      * @param context execution context.
      */
     public void beforeRun(ExecutionContext context)
@@ -51,6 +54,7 @@ public class HookManager
 
     /**
      * Invoked after each agent step.
+     *
      * @param context execution context.
      */
     public void onStep(ExecutionContext context)
@@ -60,8 +64,9 @@ public class HookManager
 
     /**
      * Invoked for streamed model text deltas.
+     *
      * @param context execution context.
-     * @param delta delta.
+     * @param delta   delta.
      */
     public void onModelResponseDelta(ExecutionContext context, String delta)
     {
@@ -70,6 +75,7 @@ public class HookManager
 
     /**
      * Invoked after an agent run finishes.
+     *
      * @param context execution context.
      */
     public void afterRun(ExecutionContext context)
@@ -79,9 +85,10 @@ public class HookManager
 
     /**
      * Invoked before a tool call executes.
-     * @param toolName tool name.
+     *
+     * @param toolName   tool name.
      * @param Map<String map<string.
-     * @param args tool arguments passed to the MCP server.
+     * @param args       tool arguments passed to the MCP server.
      */
     public void beforeTool(String toolName, Map<String, Object> args)
     {
@@ -90,8 +97,9 @@ public class HookManager
 
     /**
      * Invoked after a tool call completes.
+     *
      * @param toolName tool name.
-     * @param result result.
+     * @param result   result.
      */
     public void afterTool(String toolName, String result)
     {

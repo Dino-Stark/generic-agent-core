@@ -8,6 +8,7 @@ public interface IToolApprovalPolicy
 
     /**
      * Evaluates and returns an approval decision.
+     *
      * @param request request payload.
      * @return tool approval decision result.
      */

@@ -28,7 +28,8 @@ public class AgentWorkflowProcessor implements IWorkflowVertexProcessor
 
     /**
      * Initializes AgentWorkflowProcessor with required runtime dependencies and options.
-     * @param runner agent runner.
+     *
+     * @param runner           agent runner.
      * @param runConfiguration run configuration.
      */
     public AgentWorkflowProcessor(AgentRunner runner, RunConfiguration runConfiguration)
@@ -39,9 +40,10 @@ public class AgentWorkflowProcessor implements IWorkflowVertexProcessor
 
     /**
      * Processes the supplied workflow/tracing input.
-     * @param vertex vertex.
+     *
+     * @param vertex     vertex.
      * @param Map<String map<string.
-     * @param state state.
+     * @param state      state.
      * @return workflow vertex result.
      */
     @Override
@@ -61,7 +63,9 @@ public class AgentWorkflowProcessor implements IWorkflowVertexProcessor
             .prompt()
             .user(renderedPrompt)
             .runConfiguration(runConfiguration)
-            .runHooks(new IRunHooks() {})
+            .runHooks(new IRunHooks()
+            {
+            })
             .call()
             .content();
 

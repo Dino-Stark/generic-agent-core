@@ -39,8 +39,9 @@ public class ExecutionContext
 
     /**
      * Initializes ExecutionContext with required runtime dependencies and options.
-     * @param agent agent instance.
-     * @param memory conversation memory backend.
+     *
+     * @param agent             agent instance.
+     * @param memory            conversation memory backend.
      * @param tokenUsageTracker token usage tracker.
      */
     public ExecutionContext(IAgent agent, IAgentMemory memory, TokenUsageTracker tokenUsageTracker)

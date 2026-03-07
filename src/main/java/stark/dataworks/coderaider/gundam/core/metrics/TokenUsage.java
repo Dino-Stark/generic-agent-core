@@ -21,7 +21,8 @@ public class TokenUsage
 
     /**
      * Initializes TokenUsage with required runtime dependencies and options.
-     * @param inputTokens input tokens.
+     *
+     * @param inputTokens  input tokens.
      * @param outputTokens output tokens.
      */
     public TokenUsage(int inputTokens, int outputTokens)
@@ -32,6 +33,7 @@ public class TokenUsage
 
     /**
      * Returns total tokens.
+     *
      * @return Computed numeric result.
      */
     public int getTotalTokens()

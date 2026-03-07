@@ -21,6 +21,7 @@ public class ImageGenerationTool extends AbstractBuiltinTool
 
     /**
      * Initializes ImageGenerationTool with required runtime dependencies and options.
+     *
      * @param definition definition object.
      */
     public ImageGenerationTool(ToolDefinition definition)
@@ -30,9 +31,10 @@ public class ImageGenerationTool extends AbstractBuiltinTool
 
     /**
      * Initializes ImageGenerationTool with required runtime dependencies and options.
-     * @param definition definition object.
+     *
+     * @param definition     definition object.
      * @param imageGenerator image generator.
-     * @param ossClient oss client.
+     * @param ossClient      oss client.
      */
     public ImageGenerationTool(ToolDefinition definition, IImageGenerator imageGenerator, IOssClient ossClient)
     {
@@ -43,8 +45,9 @@ public class ImageGenerationTool extends AbstractBuiltinTool
 
     /**
      * Executes this tool operation and returns the produced output.
+     *
      * @param Map<String map<string.
-     * @param input input payload.
+     * @param input      input payload.
      * @return Tool execution output returned by the MCP server.
      */
     @Override

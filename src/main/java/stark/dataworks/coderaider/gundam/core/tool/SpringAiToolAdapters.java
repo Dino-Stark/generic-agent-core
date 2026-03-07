@@ -17,12 +17,14 @@ import java.util.Set;
 public final class SpringAiToolAdapters
 {
     private static final ObjectMapper MAPPER = new ObjectMapper();
+
     private SpringAiToolAdapters()
     {
     }
 
     /**
      * Adapts tool objects that use Spring AI {@code @Tool} annotations into GUNDAM {@link ITool}s.
+     *
      * @param toolObjects Objects containing methods annotated with Spring AI {@code @Tool}.
      * @return Adapted tool list.
      */
@@ -37,6 +39,7 @@ public final class SpringAiToolAdapters
 
     /**
      * Adapts Spring AI {@link ToolCallback} instances into GUNDAM {@link ITool}s.
+     *
      * @param callbacks Spring AI callbacks.
      * @return Adapted tool list.
      */

@@ -30,10 +30,11 @@ public class ContextItem
 
     /**
      * Initializes ContextItem with required runtime dependencies and options.
-     * @param type type discriminator.
-     * @param content content.
+     *
+     * @param type       type discriminator.
+     * @param content    content.
      * @param Map<String map<string.
-     * @param metadata metadata map.
+     * @param metadata   metadata map.
      */
     public ContextItem(ContextItemType type, String content, Map<String, Object> metadata)
     {

@@ -8,6 +8,7 @@ public class AllowAllMcpToolApprovalPolicy implements IMcpToolApprovalPolicy
 
     /**
      * Evaluates and returns an approval decision.
+     *
      * @param request model/tool request payload.
      * @return mcp tool approval result.
      */

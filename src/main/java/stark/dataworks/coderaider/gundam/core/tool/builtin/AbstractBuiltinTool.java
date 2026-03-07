@@ -25,8 +25,9 @@ public abstract class AbstractBuiltinTool implements ITool
 
     /**
      * Initializes AbstractBuiltinTool with required runtime dependencies and options.
+     *
      * @param definition definition object.
-     * @param category category.
+     * @param category   category.
      */
     protected AbstractBuiltinTool(ToolDefinition definition, ToolCategory category)
     {
@@ -36,6 +37,7 @@ public abstract class AbstractBuiltinTool implements ITool
 
     /**
      * Returns definition metadata for this component.
+     *
      * @return tool definition result.
      */
     @Override
@@ -46,6 +48,7 @@ public abstract class AbstractBuiltinTool implements ITool
 
     /**
      * Returns the tool category used for routing.
+     *
      * @return tool category result.
      */
     public ToolCategory category()
@@ -55,8 +58,9 @@ public abstract class AbstractBuiltinTool implements ITool
 
     /**
      * Executes this tool operation and returns the produced output.
+     *
      * @param Map<String map<string.
-     * @param input input payload.
+     * @param input      input payload.
      * @return abstract string result.
      */
     @Override

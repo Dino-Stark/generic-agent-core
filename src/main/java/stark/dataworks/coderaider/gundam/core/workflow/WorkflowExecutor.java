@@ -32,7 +32,8 @@ public class WorkflowExecutor
 
     /**
      * Initializes WorkflowExecutor with required runtime dependencies and options.
-     * @param definition definition object.
+     *
+     * @param definition        definition object.
      * @param processorRegistry processor registry.
      */
     public WorkflowExecutor(WorkflowDefinition definition, WorkflowProcessorRegistry processorRegistry)
@@ -44,8 +45,9 @@ public class WorkflowExecutor
 
     /**
      * Executes this tool operation and returns the produced output.
+     *
      * @param Map<String map<string.
-     * @param input input payload.
+     * @param input      input payload.
      * @return workflow execution result.
      */
     public WorkflowExecutionResult execute(Map<String, Object> input)
@@ -119,7 +121,7 @@ public class WorkflowExecutor
     }
 
     private Map<String, WorkflowVertexResult> executeLayerInParallel(List<String> layerVertexIds, Map<String, Object> state,
-        Map<String, WorkflowVertexDefinition> vertexIndex)
+                                                                     Map<String, WorkflowVertexDefinition> vertexIndex)
     {
         Map<String, WorkflowVertexResult> results = new HashMap<>();
         Map<String, Object> layerStateSnapshot = Collections.unmodifiableMap(new HashMap<>(state));

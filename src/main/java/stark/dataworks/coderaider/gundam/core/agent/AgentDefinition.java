@@ -39,68 +39,68 @@ public class AgentDefinition
     private String model;
 
     /**
- * Sampling temperature used for model generation.
+     * Sampling temperature used for model generation.
      */
     private double modelTemperature = 0.2;
 
     /**
- * Maximum output tokens allowed for this configuration.
+     * Maximum output tokens allowed for this configuration.
      */
     private int modelMaxTokens = 512;
 
     /**
- * Tool selection policy sent to the model.
+     * Tool selection policy sent to the model.
      */
     private String modelToolChoice = "auto";
 
     /**
- * Requested response format for model output.
+     * Requested response format for model output.
      */
     private String modelResponseFormat = "text";
 
     /**
- * Provider-specific options forwarded as-is with model requests.
+     * Provider-specific options forwarded as-is with model requests.
      */
     private Map<String, Object> modelProviderOptions = Map.of();
 
 
     /**
- * Reasoning options for providers that support explicit reasoning controls.
+     * Reasoning options for providers that support explicit reasoning controls.
      */
     private Map<String, Object> modelReasoning = Map.of();
 
     /**
- * Skill descriptors exposed to the model runtime.
+     * Skill descriptors exposed to the model runtime.
      */
     private List<Map<String, Object>> modelSkills = new ArrayList<>();
 
     /**
- * Tools this agent is allowed to call.
+     * Tools this agent is allowed to call.
      */
     private List<String> toolNames = new ArrayList<>();
 
     /**
- * Ordered list of handoff agent ids used to resolve cross-component references.
+     * Ordered list of handoff agent ids used to resolve cross-component references.
      */
     private List<String> handoffAgentIds = new ArrayList<>();
 
     /**
- * Maximum steps allowed for this configuration.
+     * Maximum steps allowed for this configuration.
      */
     private int maxSteps = 8;
 
     /**
- * Whether to reset input after tool call to avoid carrying stale context into the next turn.
+     * Whether to reset input after tool call to avoid carrying stale context into the next turn.
      */
     private boolean resetInputAfterToolCall = true;
 
     /**
- * Whether to reset input after handoff to avoid carrying stale context into the next turn.
+     * Whether to reset input after handoff to avoid carrying stale context into the next turn.
      */
     private boolean resetInputAfterHandoff = true;
 
     /**
- * Whether tool calls must be approved before execution.
+     * Whether tool calls must be approved before execution.
      */
     private boolean requireToolApproval = false;
 
@@ -120,7 +120,7 @@ public class AgentDefinition
     private String outputSchemaName;
 
     /**
- * Arbitrary metadata attached for caller-specific routing or auditing.
+     * Arbitrary metadata attached for caller-specific routing or auditing.
      */
     private Map<String, Object> metadata = Map.of();
 

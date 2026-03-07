@@ -19,6 +19,7 @@ public final class ToolSchemaJson
 
     /**
      * Converts a JSON schema definition into internal schema structures.
+     *
      * @param definition definition object.
      * @return Map containing operation results.
      */

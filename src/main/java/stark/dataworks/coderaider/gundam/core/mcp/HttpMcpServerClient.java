@@ -67,11 +67,11 @@ public class HttpMcpServerClient implements IMcpServerClient
         try
         {
             System.out.println("[MCP-HTTP] Connecting to: " + config.getEndpoint());
-            
+
             // Generate a session ID for this connection
             String sessionId = UUID.randomUUID().toString();
             sessionIds.put(config.getServerId(), sessionId);
-            
+
             // Initialize the connection
             initialize(config);
             connectedServers.put(config.getServerId(), true);
@@ -153,7 +153,8 @@ public class HttpMcpServerClient implements IMcpServerClient
             if (args != null && !args.isEmpty())
             {
                 ObjectNode argsNode = params.putObject("arguments");
-                args.forEach((key, value) -> {
+                args.forEach((key, value) ->
+                {
                     if (value instanceof String)
                     {
                         argsNode.put(key, (String) value);

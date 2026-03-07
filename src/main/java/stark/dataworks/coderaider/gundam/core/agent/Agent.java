@@ -15,6 +15,7 @@ public class Agent implements IAgent
 
     /**
      * Initializes Agent with required runtime dependencies and options.
+     *
      * @param definition definition object.
      */
     public Agent(AgentDefinition definition)
@@ -25,6 +26,7 @@ public class Agent implements IAgent
 
     /**
      * Returns definition metadata for this component.
+     *
      * @return Agent definition associated with this instance.
      */
     @Override

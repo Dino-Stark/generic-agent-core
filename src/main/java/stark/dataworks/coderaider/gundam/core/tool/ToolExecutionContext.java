@@ -23,8 +23,9 @@ public class ToolExecutionContext
 
     /**
      * Initializes ToolExecutionContext with required runtime dependencies and options.
-     * @param agentId agent identifier.
-     * @param Map<String map<string.
+     *
+     * @param agentId         agent identifier.
+     * @param Map<String      map<string.
      * @param runtimeMetadata runtime metadata.
      */
     public ToolExecutionContext(String agentId, Map<String, Object> runtimeMetadata)

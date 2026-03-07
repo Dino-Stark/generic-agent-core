@@ -12,12 +12,13 @@ public class RunEventPublisher
 {
 
     /**
- * Run-event listeners that receive streamed events.
+     * Run-event listeners that receive streamed events.
      */
     private final List<IRunEventListener> listeners = new ArrayList<>();
 
     /**
      * Registers a run-event listener.
+     *
      * @param listener event listener.
      */
     public void subscribe(IRunEventListener listener)
@@ -27,6 +28,7 @@ public class RunEventPublisher
 
     /**
      * Publishes this value.
+     *
      * @param event run event.
      */
     public void publish(RunEvent event)

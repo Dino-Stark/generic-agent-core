@@ -23,8 +23,9 @@ public class ToolApprovalDecision
 
     /**
      * Initializes ToolApprovalDecision with required runtime dependencies and options.
+     *
      * @param approved approved.
-     * @param reason human-readable reason.
+     * @param reason   human-readable reason.
      */
     private ToolApprovalDecision(boolean approved, String reason)
     {
@@ -34,6 +35,7 @@ public class ToolApprovalDecision
 
     /**
      * Returns an approval decision.
+     *
      * @return tool approval decision result.
      */
     public static ToolApprovalDecision approve()
@@ -43,6 +45,7 @@ public class ToolApprovalDecision
 
     /**
      * Returns a deny decision with a reason.
+     *
      * @param reason human-readable reason.
      * @return tool approval decision result.
      */

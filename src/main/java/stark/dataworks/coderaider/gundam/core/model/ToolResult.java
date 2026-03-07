@@ -23,8 +23,9 @@ public class ToolResult
 
     /**
      * Initializes ToolResult with required runtime dependencies and options.
+     *
      * @param toolName tool name.
-     * @param content content.
+     * @param content  content.
      */
     public ToolResult(String toolName, String content)
     {

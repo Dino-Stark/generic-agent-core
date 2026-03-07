@@ -17,7 +17,8 @@ public class WorkflowProcessorRegistry
 
     /**
      * Registers this value for later lookup and execution.
-     * @param type type discriminator.
+     *
+     * @param type      type discriminator.
      * @param processor processor.
      */
     public void register(String type, IWorkflowVertexProcessor processor)
@@ -27,6 +28,7 @@ public class WorkflowProcessorRegistry
 
     /**
      * Returns the current value for this object.
+     *
      * @param type type discriminator.
      * @return Optional iworkflow vertex processor value.
      */

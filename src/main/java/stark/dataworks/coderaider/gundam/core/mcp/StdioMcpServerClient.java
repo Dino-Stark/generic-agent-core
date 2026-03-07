@@ -59,20 +59,20 @@ public class StdioMcpServerClient implements IMcpServerClient
         {
             return;
         }
-        
+
         try
         {
             String command = config.getEndpoint();
             System.out.println("[MCP] Starting process: " + command);
-            
+
             ProcessBuilder pb = new ProcessBuilder(command.split("\\s+"));
             pb.redirectErrorStream(false);
             Process process = pb.start();
-            
+
             processes.put(config.getServerId(), process);
             writers.put(config.getServerId(), new BufferedWriter(new OutputStreamWriter(process.getOutputStream())));
             readers.put(config.getServerId(), new BufferedReader(new InputStreamReader(process.getInputStream())));
-            
+
             System.out.println("[MCP] Process started, initializing...");
             initialize(config);
             System.out.println("[MCP] Initialized successfully");
@@ -96,11 +96,11 @@ public class StdioMcpServerClient implements IMcpServerClient
             params.put("protocolVersion", "2024-11-05");
             ObjectNode capabilities = params.putObject("capabilities");
             capabilities.putObject("tools");
-            
+
             System.out.println("[MCP] Sending initialize request: " + objectMapper.writeValueAsString(initRequest));
             JsonNode response = sendRequest(config, initRequest);
             System.out.println("[MCP] Initialize response: " + objectMapper.writeValueAsString(response));
-            
+
             ObjectNode initializedRequest = createRequest("notifications/initialized");
             initializedRequest.remove("id");
             sendNotification(config, initializedRequest);
@@ -117,10 +117,10 @@ public class StdioMcpServerClient implements IMcpServerClient
         try
         {
             ensureConnected(config);
-            
+
             ObjectNode request = createRequest("tools/list");
             JsonNode response = sendRequest(config, request);
-            
+
             List<McpToolDescriptor> tools = new ArrayList<>();
             JsonNode toolsNode = response.path("result").path("tools");
             if (toolsNode.isArray())
@@ -152,14 +152,15 @@ public class StdioMcpServerClient implements IMcpServerClient
         try
         {
             ensureConnected(config);
-            
+
             ObjectNode request = createRequest("tools/call");
             ObjectNode params = request.putObject("params");
             params.put("name", toolName);
             if (args != null && !args.isEmpty())
             {
                 ObjectNode argsNode = params.putObject("arguments");
-                args.forEach((key, value) -> {
+                args.forEach((key, value) ->
+                {
                     if (value instanceof String)
                     {
                         argsNode.put(key, (String) value);
@@ -186,7 +187,7 @@ public class StdioMcpServerClient implements IMcpServerClient
                     }
                 });
             }
-            
+
             JsonNode response = sendRequest(config, request);
             JsonNode content = response.path("result").path("content");
             if (content.isArray() && content.size() > 0)
@@ -216,10 +217,10 @@ public class StdioMcpServerClient implements IMcpServerClient
         try
         {
             ensureConnected(config);
-            
+
             ObjectNode request = createRequest("resources/list");
             JsonNode response = sendRequest(config, request);
-            
+
             List<McpResource> resources = new ArrayList<>();
             JsonNode resourcesNode = response.path("result").path("resources");
             if (resourcesNode.isArray())
@@ -251,11 +252,11 @@ public class StdioMcpServerClient implements IMcpServerClient
         try
         {
             ensureConnected(config);
-            
+
             ObjectNode request = createRequest("resources/read");
             ObjectNode params = request.putObject("params");
             params.put("uri", uri);
-            
+
             JsonNode response = sendRequest(config, request);
             JsonNode contents = response.path("result").path("contents");
             if (contents.isArray() && contents.size() > 0)
@@ -294,21 +295,21 @@ public class StdioMcpServerClient implements IMcpServerClient
     {
         BufferedWriter writer = writers.get(config.getServerId());
         BufferedReader reader = readers.get(config.getServerId());
-        
+
         if (writer == null || reader == null)
         {
             throw new RuntimeException("Not connected to MCP server: " + config.getServerId());
         }
-        
+
         String body = objectMapper.writeValueAsString(request);
         System.out.println("[MCP] Sending: " + body);
-        
+
         writer.write(body);
         writer.newLine();
         writer.flush();
-        
+
         Future<String> future = executor.submit(() -> reader.readLine());
-        
+
         try
         {
             String responseLine = future.get(timeoutSeconds, TimeUnit.SECONDS);
@@ -329,15 +330,15 @@ public class StdioMcpServerClient implements IMcpServerClient
     private void sendNotification(McpServerConfiguration config, ObjectNode notification) throws Exception
     {
         BufferedWriter writer = writers.get(config.getServerId());
-        
+
         if (writer == null)
         {
             throw new RuntimeException("Not connected to MCP server: " + config.getServerId());
         }
-        
+
         String body = objectMapper.writeValueAsString(notification);
         System.out.println("[MCP] Sending notification: " + body);
-        
+
         writer.write(body);
         writer.newLine();
         writer.flush();
@@ -349,7 +350,7 @@ public class StdioMcpServerClient implements IMcpServerClient
         Process process = processes.remove(serverId);
         BufferedWriter writer = writers.remove(serverId);
         BufferedReader reader = readers.remove(serverId);
-        
+
         // Close streams first to unblock any pending reads
         try
         {
@@ -361,7 +362,7 @@ public class StdioMcpServerClient implements IMcpServerClient
         catch (Exception ignored)
         {
         }
-        
+
         try
         {
             if (reader != null)
@@ -372,7 +373,7 @@ public class StdioMcpServerClient implements IMcpServerClient
         catch (Exception ignored)
         {
         }
-        
+
         if (process != null)
         {
             process.destroyForcibly();

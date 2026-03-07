@@ -8,6 +8,7 @@ public class AllowAllToolApprovalPolicy implements IToolApprovalPolicy
 
     /**
      * Evaluates and returns an approval decision.
+     *
      * @param request model/tool request payload.
      * @return tool approval decision result.
      */

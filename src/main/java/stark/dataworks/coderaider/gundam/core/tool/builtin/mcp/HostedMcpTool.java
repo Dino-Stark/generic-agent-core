@@ -29,9 +29,10 @@ public class HostedMcpTool implements ITool
 
     /**
      * Initializes HostedMcpTool with required runtime dependencies and options.
+     *
      * @param serverId MCP server identifier.
      * @param toolName tool name.
-     * @param manager manager instance.
+     * @param manager  manager instance.
      */
     public HostedMcpTool(String serverId, String toolName, McpManager manager)
     {
@@ -42,6 +43,7 @@ public class HostedMcpTool implements ITool
 
     /**
      * Returns definition metadata for this component.
+     *
      * @return tool definition result.
      */
     @Override
@@ -56,8 +58,9 @@ public class HostedMcpTool implements ITool
 
     /**
      * Executes this tool operation and returns the produced output.
+     *
      * @param Map<String map<string.
-     * @param input input payload.
+     * @param input      input payload.
      * @return Tool execution output returned by the MCP server.
      */
     @Override

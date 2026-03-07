@@ -43,11 +43,12 @@ public class ContextResult
 
     /**
      * Constructs the final run result returned to callers.
-     * @param finalOutput final output.
+     *
+     * @param finalOutput  final output.
      * @param finalAgentId final agent id.
-     * @param usage usage.
-     * @param items items.
-     * @param events run events.
+     * @param usage        usage.
+     * @param items        items.
+     * @param events       run events.
      */
     public ContextResult(String finalOutput,
                          String finalAgentId,

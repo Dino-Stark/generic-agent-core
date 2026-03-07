@@ -11,12 +11,13 @@ public class InMemorySessionStore implements ISessionStore
 {
 
     /**
- * In-memory session storage keyed by session id.
+     * In-memory session storage keyed by session id.
      */
     private final Map<String, Session> sessions = new ConcurrentHashMap<>();
 
     /**
      * Persists the supplied value to storage.
+     *
      * @param session session.
      */
     @Override
@@ -27,6 +28,7 @@ public class InMemorySessionStore implements ISessionStore
 
     /**
      * Loads and returns the requested value from storage.
+     *
      * @param sessionId session identifier used to resume conversation state.
      * @return Optional session value.
      */

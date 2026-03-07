@@ -193,20 +193,89 @@ public class AgentRunner
         {
         }
 
-        public Builder llmClient(ILlmClient value) { this.llmClientRegistry = LlmClientRegistry.single(Objects.requireNonNull(value, "llmClient")); return this; }
-        public Builder llmClientRegistry(LlmClientRegistry value) { this.llmClientRegistry = Objects.requireNonNull(value, "llmClientRegistry"); return this; }
-        public Builder toolRegistry(IToolRegistry value) { this.toolRegistry = Objects.requireNonNull(value, "toolRegistry"); return this; }
-        public Builder agentRegistry(IAgentRegistry value) { this.agentRegistry = Objects.requireNonNull(value, "agentRegistry"); return this; }
-        public Builder contextBuilder(IContextBuilder value) { this.contextBuilder = Objects.requireNonNull(value); return this; }
-        public Builder hookManager(HookManager value) { this.hookManager = Objects.requireNonNull(value); return this; }
-        public Builder guardrailEngine(GuardrailEngine value) { this.guardrailEngine = Objects.requireNonNull(value); return this; }
-        public Builder handoffRouter(HandoffRouter value) { this.handoffRouter = Objects.requireNonNull(value); return this; }
-        public Builder sessionStore(ISessionStore value) { this.sessionStore = Objects.requireNonNull(value); return this; }
-        public Builder traceProvider(ITraceProvider value) { this.traceProvider = Objects.requireNonNull(value); return this; }
-        public Builder toolApprovalPolicy(IToolApprovalPolicy value) { this.toolApprovalPolicy = Objects.requireNonNull(value); return this; }
-        public Builder outputSchemaRegistry(OutputSchemaRegistry value) { this.outputSchemaRegistry = Objects.requireNonNull(value); return this; }
-        public Builder outputValidator(OutputValidator value) { this.outputValidator = Objects.requireNonNull(value); return this; }
-        public Builder eventPublisher(RunEventPublisher value) { this.eventPublisher = Objects.requireNonNull(value); return this; }
+        public Builder llmClient(ILlmClient value)
+        {
+            this.llmClientRegistry = LlmClientRegistry.single(Objects.requireNonNull(value, "llmClient"));
+            return this;
+        }
+
+        public Builder llmClientRegistry(LlmClientRegistry value)
+        {
+            this.llmClientRegistry = Objects.requireNonNull(value, "llmClientRegistry");
+            return this;
+        }
+
+        public Builder toolRegistry(IToolRegistry value)
+        {
+            this.toolRegistry = Objects.requireNonNull(value, "toolRegistry");
+            return this;
+        }
+
+        public Builder agentRegistry(IAgentRegistry value)
+        {
+            this.agentRegistry = Objects.requireNonNull(value, "agentRegistry");
+            return this;
+        }
+
+        public Builder contextBuilder(IContextBuilder value)
+        {
+            this.contextBuilder = Objects.requireNonNull(value);
+            return this;
+        }
+
+        public Builder hookManager(HookManager value)
+        {
+            this.hookManager = Objects.requireNonNull(value);
+            return this;
+        }
+
+        public Builder guardrailEngine(GuardrailEngine value)
+        {
+            this.guardrailEngine = Objects.requireNonNull(value);
+            return this;
+        }
+
+        public Builder handoffRouter(HandoffRouter value)
+        {
+            this.handoffRouter = Objects.requireNonNull(value);
+            return this;
+        }
+
+        public Builder sessionStore(ISessionStore value)
+        {
+            this.sessionStore = Objects.requireNonNull(value);
+            return this;
+        }
+
+        public Builder traceProvider(ITraceProvider value)
+        {
+            this.traceProvider = Objects.requireNonNull(value);
+            return this;
+        }
+
+        public Builder toolApprovalPolicy(IToolApprovalPolicy value)
+        {
+            this.toolApprovalPolicy = Objects.requireNonNull(value);
+            return this;
+        }
+
+        public Builder outputSchemaRegistry(OutputSchemaRegistry value)
+        {
+            this.outputSchemaRegistry = Objects.requireNonNull(value);
+            return this;
+        }
+
+        public Builder outputValidator(OutputValidator value)
+        {
+            this.outputValidator = Objects.requireNonNull(value);
+            return this;
+        }
+
+        public Builder eventPublisher(RunEventPublisher value)
+        {
+            this.eventPublisher = Objects.requireNonNull(value);
+            return this;
+        }
 
         public AgentRunner build()
         {
@@ -231,10 +300,11 @@ public class AgentRunner
 
     /**
      * Executes an agent session until a final answer is produced, a guardrail blocks execution, or limits are reached.
-     * @param startingAgent First agent that receives the user request.
-     * @param userInput Initial user message.
+     *
+     * @param startingAgent    First agent that receives the user request.
+     * @param userInput        Initial user message.
      * @param runConfiguration Run limits, generation options, retry policy, and error-handler configuration.
-     * @param runHooks Lifecycle callbacks invoked for run/step/tool events.
+     * @param runHooks         Lifecycle callbacks invoked for run/step/tool events.
      * @return Final run output, agent id, usage metrics, emitted events, and timeline items.
      */
     public ContextResult run(IAgent startingAgent, String userInput, RunConfiguration runConfiguration, IRunHooks runHooks)
@@ -249,10 +319,11 @@ public class AgentRunner
 
     /**
      * Executes an agent session with streamed model deltas while preserving the same final result contract.
-     * @param startingAgent First agent that receives the user request.
-     * @param userInput Initial user message.
+     *
+     * @param startingAgent    First agent that receives the user request.
+     * @param userInput        Initial user message.
      * @param runConfiguration Run limits, generation options, retry policy, and error-handler configuration.
-     * @param runHooks Lifecycle callbacks invoked for run/step/tool events.
+     * @param runHooks         Lifecycle callbacks invoked for run/step/tool events.
      * @return Final run output, agent id, usage metrics, emitted events, and timeline items.
      */
     public ContextResult runStreamed(IAgent startingAgent, String userInput, RunConfiguration runConfiguration, IRunHooks runHooks)
@@ -267,10 +338,11 @@ public class AgentRunner
 
     /**
      * Executes an agent run either in synchronous mode or in streaming mode based on the supplied flag.
-     * @param startingAgent First agent that receives the user request.
-     * @param userInput Initial user message.
-     * @param runConfiguration Run limits, generation options, retry policy, and error-handler configuration.
-     * @param runHooks Lifecycle callbacks invoked for run/step/tool events.
+     *
+     * @param startingAgent       First agent that receives the user request.
+     * @param userInput           Initial user message.
+     * @param runConfiguration    Run limits, generation options, retry policy, and error-handler configuration.
+     * @param runHooks            Lifecycle callbacks invoked for run/step/tool events.
      * @param streamModelResponse Whether model output should be streamed as delta events.
      * @return Final run output, agent id, usage metrics, emitted events, and timeline items.
      */
@@ -559,11 +631,12 @@ public class AgentRunner
 
     /**
      * Normalizes and routes an execution error through configured handlers.
-     * @param context execution context.
-     * @param config run configuration.
-     * @param error captured error.
+     *
+     * @param context       execution context.
+     * @param config        run configuration.
+     * @param error         captured error.
      * @param legacyContext legacy context.
-     * @param memoryPolicy memory policy.
+     * @param memoryPolicy  memory policy.
      * @return context result.
      */
     private ContextResult handleError(RunnerContext context, RunConfiguration config, RuntimeException error, ExecutionContext legacyContext, MemoryLifecyclePolicy memoryPolicy)
@@ -588,8 +661,8 @@ public class AgentRunner
         }
         else
         {
-            String errorMessage = error instanceof ModelInvocationException mie 
-                ? mie.getFullMessage() 
+            String errorMessage = error instanceof ModelInvocationException mie
+                ? mie.getFullMessage()
                 : error.getMessage();
             finalOutput = "Run failed: " + errorMessage;
         }
@@ -611,6 +684,7 @@ public class AgentRunner
 
     /**
      * Classifies a throwable into a run error category.
+     *
      * @param error captured error.
      * @return run error kind result.
      */
@@ -629,10 +703,11 @@ public class AgentRunner
 
     /**
      * Executes approved tool calls concurrently.
-     * @param context execution context.
-     * @param runHooks run hooks.
-     * @param toolCalls tool calls.
-     * @param config run configuration.
+     *
+     * @param context      execution context.
+     * @param runHooks     run hooks.
+     * @param toolCalls    tool calls.
+     * @param config       run configuration.
      * @param memoryPolicy memory policy.
      */
 
@@ -844,6 +919,7 @@ public class AgentRunner
             throw new UnsupportedOperationException("Snapshot memory is read-only");
         }
     }
+
     private LlmResponse invokeModel(ILlmClient llmClient,
                                     LlmRequest request,
                                     RunConfiguration config,
@@ -890,6 +966,7 @@ public class AgentRunner
 
     /**
      * Resolves tools by name from the active registry.
+     *
      * @param toolNames tool names.
      * @return List of tool definition values.
      */
@@ -907,9 +984,10 @@ public class AgentRunner
 
     /**
      * Emits a trace event to registered processors.
-     * @param context execution context.
-     * @param hooks hook collection.
-     * @param type type discriminator.
+     *
+     * @param context    execution context.
+     * @param hooks      hook collection.
+     * @param type       type discriminator.
      * @param Map<String map<string.
      * @param attributes attribute map.
      */
@@ -923,11 +1001,12 @@ public class AgentRunner
 
     /**
      * Builds the final run result object.
-     * @param context execution context.
-     * @param finalOutput final output.
-     * @param config run configuration.
+     *
+     * @param context       execution context.
+     * @param finalOutput   final output.
+     * @param config        run configuration.
      * @param legacyContext legacy context.
-     * @param memoryPolicy memory policy.
+     * @param memoryPolicy  memory policy.
      * @return context result.
      */
     private ContextResult finalizeResult(RunnerContext context, String finalOutput, RunConfiguration config, ExecutionContext legacyContext, MemoryLifecyclePolicy memoryPolicy)
@@ -937,8 +1016,8 @@ public class AgentRunner
         if (config.getSessionId() != null)
         {
             sessionStore.save(new Session(config.getSessionId(), readFromMemory(context, new IRunHooks()
-        {
-        }, config.getSessionId(), memoryPolicy)));
+            {
+            }, config.getSessionId(), memoryPolicy)));
         }
         Map<String, Object> attrs = new HashMap<>();
         attrs.put("finalAgent", context.getCurrentAgent().definition().getId());

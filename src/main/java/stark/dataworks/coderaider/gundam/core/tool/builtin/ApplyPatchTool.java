@@ -46,7 +46,7 @@ public class ApplyPatchTool implements ITool
             List.of(
                 new ToolParameterSchema("operation", "object", true,
                     "The patch operation. Must have 'type' (create_file/update_file/delete_file) and 'path'. " +
-                    "For create_file, include 'content' or 'diff'. For update_file, include 'diff'.")
+                        "For create_file, include 'content' or 'diff'. For update_file, include 'diff'.")
             )
         );
     }
@@ -65,7 +65,7 @@ public class ApplyPatchTool implements ITool
         {
             operationObj = tryExtractOperation(input);
         }
-        
+
         if (operationObj == null)
         {
             return errorResult("Missing 'operation' parameter. Provide: {\"operation\": {\"type\": \"update_file\", \"path\": \"...\", \"diff\": \"...\"}}");
@@ -226,7 +226,7 @@ public class ApplyPatchTool implements ITool
         {
             return input;
         }
-        
+
         Object rawObj = input.get("raw");
         if (rawObj != null)
         {
@@ -236,7 +236,7 @@ public class ApplyPatchTool implements ITool
                 return op;
             }
         }
-        
+
         for (Object value : input.values())
         {
             if (value instanceof Map)
@@ -248,7 +248,7 @@ public class ApplyPatchTool implements ITool
                 }
             }
         }
-        
+
         for (Object value : input.values())
         {
             if (value instanceof String)
@@ -260,7 +260,7 @@ public class ApplyPatchTool implements ITool
                 }
             }
         }
-        
+
         return null;
     }
 
@@ -331,7 +331,7 @@ public class ApplyPatchTool implements ITool
 
     @SuppressWarnings("unchecked")
     private Map<String, Object> tryExtractOperationBySubstring(com.fasterxml.jackson.databind.ObjectMapper mapper,
-                                                                String raw)
+                                                               String raw)
     {
         if (raw == null)
         {

@@ -14,9 +14,10 @@ public class TemplateRenderWorkflowProcessor implements IWorkflowVertexProcessor
 {
     /**
      * Processes the supplied workflow/tracing input.
-     * @param vertex vertex.
+     *
+     * @param vertex     vertex.
      * @param Map<String map<string.
-     * @param state state.
+     * @param state      state.
      * @return workflow vertex result.
      */
     @Override

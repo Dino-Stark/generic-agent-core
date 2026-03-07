@@ -33,9 +33,10 @@ public class ToolParameterSchema
 
     /**
      * Initializes ToolParameterSchema with required runtime dependencies and options.
-     * @param name human-readable name.
-     * @param type type discriminator.
-     * @param required required.
+     *
+     * @param name        human-readable name.
+     * @param type        type discriminator.
+     * @param required    required.
      * @param description description.
      */
     public ToolParameterSchema(String name, String type, boolean required, String description)
