@@ -13,8 +13,11 @@ import stark.dataworks.coderaider.gundam.core.editor.IApplyPatchEditor;
 import stark.dataworks.coderaider.gundam.core.llmspi.adapter.ModelScopeLlmClient;
 import stark.dataworks.coderaider.gundam.core.runner.AgentRunner;
 import stark.dataworks.coderaider.gundam.core.runner.RunConfiguration;
+import stark.dataworks.coderaider.gundam.core.tool.ToolDefinition;
+import stark.dataworks.coderaider.gundam.core.tool.ToolParameterSchema;
 import stark.dataworks.coderaider.gundam.core.tool.ToolRegistry;
 import stark.dataworks.coderaider.gundam.core.tool.builtin.ApplyPatchTool;
+import stark.dataworks.coderaider.gundam.core.tool.builtin.LocalShellTool;
 
 import java.io.IOException;
 import java.nio.charset.Charset;
@@ -38,7 +41,7 @@ public class Example25ComplexReActDebugFixTest
     private static final Path INPUT_FILE = Path.of("src", "test", "resources", "inputs", "InvoiceSummaryEngine.java");
     private static final Path INPUT_VERIFIER_FILE = Path.of("src", "test", "resources", "inputs", "InvoiceSummaryEngineVerifier.java");
     private static final RunConfiguration EXAMPLE_RUN_CONFIGURATION =
-        new RunConfiguration(2, null, 0.0, 256, "auto", "text", Map.of());
+        new RunConfiguration(6, null, 0.0, 2048, "auto", "text", Map.of());
 
     @Test
     public void run() throws IOException
@@ -56,6 +59,7 @@ public class Example25ComplexReActDebugFixTest
         Path targetFile = resetWorkspace(workspace);
 
         ToolRegistry toolRegistry = new ToolRegistry();
+        toolRegistry.register(createShellTool());
         toolRegistry.register(new ApplyPatchTool(new FileSystemEditor(workspace), false));
 
         AgentRegistry agentRegistry = new AgentRegistry();
@@ -132,67 +136,48 @@ public class Example25ComplexReActDebugFixTest
         def.setModel(MODEL);
         def.setReactEnabled(true);
         def.setSystemPrompt("""
-            You are a Java debugging agent working in a local workspace.
+            You are a Java bug fixer. Think 1 line per step.
 
-            Goal:
-            Make verifier output include BEHAVIOR_OK with:
-            - caseA = 102.6
-            - caseB = 52.0
+            WORKFLOW:
+            1. Read: %s
+            2. Apply ONE patch fixing ALL 3 bugs
+            3. Verify: %s
+            4. Output [Answer] block with summary when BEHAVIOR_OK
 
-            Known defects in this scenario to verify and fix:
-            1) subtotal loop starts at 1 and should start at 0.
-            2) food tax is 0.18 and should be 0.08.
-            3) round2 uses *10.0 and should use *100.0.
+            THREE BUGS TO FIX IN ONE PATCH:
+            Bug 1: for (int i = 1 -> for (int i = 0
+            Bug 2: return 0.18; -> return 0.08;
+            Bug 3: * 10.0 / 10.0 -> * 100.0 / 100.0
 
-            Constraints:
-            - Use apply_patch for edits.
-            - Use paths relative to workspace in apply_patch operations.
-            - Use simple diff lines (context / '-' remove / '+' add).
-            - Avoid git/unified headers (diff --git, ---, +++, @@).
-            - Prefer one minimal patch that fixes all identified defects.
-
-            apply_patch format:
-            {"operation":{"type":"update_file","path":"...","diff":"..."}}
-
-            Simple diff example:
+            EXACT DIFF (copy these lines exactly, use spaces not tabs):
             -        for (int i = 1; i < items.length; i++) {
             +        for (int i = 0; i < items.length; i++) {
-            ...
             -            return 0.18;
             +            return 0.08;
-            ...
             -        return Math.round(value * 10.0) / 10.0;
             +        return Math.round(value * 100.0) / 100.0;
-
-            Runtime OS: %s
-            Workspace: %s
-            """.formatted(runtimeOs.displayName, workspace));
-        def.setReactInstructions("Think briefly, then patch. Keep output concise: root causes + patch summary.");
-        def.setToolNames(List.of("apply_patch"));
+            """.formatted(runtimeOs.printFileCommand(workspace, "InvoiceSummaryEngine.java"),
+                          runtimeOs.verifyCommand(workspace)));
+        def.setReactInstructions("""
+            1. Read file to confirm content
+            2. Apply ONE patch with the EXACT diff above (all 3 fixes)
+            3. Run verification
+            4. When BEHAVIOR_OK: output [Answer] with 2-3 sentence summary of what was fixed
+            Keep thoughts to 1 line each.
+            """);
+        def.setToolNames(List.of("apply_patch", "local_shell"));
         def.setModelProviderOptions(Map.of("working_directory", workspace.toString()));
-        def.setModelReasoning(Map.of("effort", "medium"));
+        def.setModelReasoning(Map.of("effort", "low"));
         return new Agent(def);
     }
 
     private static String buildDebuggerPrompt(RuntimeOs runtimeOs, Path workspace, int attempt, String behaviorOutput, String sourceSnapshot)
     {
         return """
-            Debug attempt: %d
+            Attempt %d. Status: %s
 
-            Current verifier output:
-            %s
-
-            Expected behavior:
-            - caseA should become 102.6
-            - caseB should become 52.0
-            - output should include BEHAVIOR_OK
-            - fix aggregation logic, tax logic, and rounding logic.
-
-            Current source snapshot (InvoiceSummaryEngine.java):
-            %s
-
-            Please patch based on the verifier output and source snapshot. External verification will run after your response.
-            """.formatted(attempt, behaviorOutput, sourceSnapshot);
+            Apply patch to fix all 3 bugs in ONE diff, then verify: %s
+            """.formatted(attempt, behaviorOutput.trim(), runtimeOs.verifyCommand(workspace));
     }
 
     private static void stageVerifierSource(Path targetVerifierFile) throws IOException
@@ -283,6 +268,33 @@ public class Example25ComplexReActDebugFixTest
         {
             this.displayName = displayName;
         }
+
+        private String verifyCommand(Path workspace)
+        {
+            return switch (this)
+            {
+                case WINDOWS -> "cmd /c \"cd /d \"" + workspace + "\" && javac InvoiceSummaryEngine.java InvoiceSummaryEngineVerifier.java && java InvoiceSummaryEngineVerifier\"";
+                case MACOS, LINUX -> "cd '" + workspace + "' && javac InvoiceSummaryEngine.java InvoiceSummaryEngineVerifier.java && java InvoiceSummaryEngineVerifier";
+            };
+        }
+
+        private String printFileCommand(Path workspace, String fileName)
+        {
+            return switch (this)
+            {
+                case WINDOWS -> "cmd /c \"cd /d \"" + workspace + "\" && type " + fileName + "\"";
+                case MACOS, LINUX -> "cd '" + workspace + "' && cat " + fileName;
+            };
+        }
+    }
+
+    private static LocalShellTool createShellTool()
+    {
+        ToolDefinition definition = new ToolDefinition(
+            "local_shell",
+            "Execute a local shell command and return stdout/stderr.",
+            List.of(new ToolParameterSchema("command", "string", true, "Shell command to execute")));
+        return new LocalShellTool(definition);
     }
 
     private static final class FileSystemEditor implements IApplyPatchEditor
