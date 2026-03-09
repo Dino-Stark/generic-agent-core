@@ -186,3 +186,100 @@ graph TD
 - **Scaffolding/partial**: realtime and voice pipeline interfaces, multimodal generation provider implementations.
 
 This split mirrors the repository goal: fully usable core runtime with clear extension seams for progressively implemented modalities and transports.
+
+## 9. Recommended Code Reading Order (Added)
+
+For a comprehensive understanding, read the code in the following order. This sequence is designed to move from runtime control flow to extension surfaces, then to advanced subsystems.
+
+### Phase 1: Understand the execution backbone first
+
+1. `src/main/java/stark/dataworks/coderaider/genericagent/core/runner/AgentRunner.java`
+   - Main orchestration loop (`run`, `runStreamed`, tool loop, handoff loop, finalization).
+2. `src/main/java/stark/dataworks/coderaider/genericagent/core/runner/RunConfiguration.java`
+   - Runtime knobs: turns, retries, memory/session, provider options, output settings.
+3. `src/main/java/stark/dataworks/coderaider/genericagent/core/runner/RunnerContext.java`
+   - Mutable run state (events, timeline items, memory, usage, current agent).
+4. `src/main/java/stark/dataworks/coderaider/genericagent/core/runner/IRunHooks.java`
+   - External callback surface for observing run events.
+
+### Phase 2: Learn agent and model contracts
+
+5. `src/main/java/stark/dataworks/coderaider/genericagent/core/agent/AgentDefinition.java`
+6. `src/main/java/stark/dataworks/coderaider/genericagent/core/agent/IAgent.java`
+7. `src/main/java/stark/dataworks/coderaider/genericagent/core/agent/AgentRegistry.java`
+8. `src/main/java/stark/dataworks/coderaider/genericagent/core/llmspi/ILlmClient.java`
+9. `src/main/java/stark/dataworks/coderaider/genericagent/core/llmspi/LlmRequest.java`
+10. `src/main/java/stark/dataworks/coderaider/genericagent/core/llmspi/LlmResponse.java`
+11. `src/main/java/stark/dataworks/coderaider/genericagent/core/llmspi/LlmClientRegistry.java`
+12. `src/main/java/stark/dataworks/coderaider/genericagent/core/llmspi/LlmOptions.java`
+
+### Phase 3: Understand tool architecture and built-ins
+
+13. `src/main/java/stark/dataworks/coderaider/genericagent/core/tool/ITool.java`
+14. `src/main/java/stark/dataworks/coderaider/genericagent/core/tool/ToolDefinition.java`
+15. `src/main/java/stark/dataworks/coderaider/genericagent/core/tool/ToolRegistry.java`
+16. `src/main/java/stark/dataworks/coderaider/genericagent/core/tool/builtin/FunctionTool.java`
+17. `src/main/java/stark/dataworks/coderaider/genericagent/core/tool/builtin/AgentTool.java`
+18. `src/main/java/stark/dataworks/coderaider/genericagent/core/tool/builtin/WorkflowTool.java`
+19. `src/main/java/stark/dataworks/coderaider/genericagent/core/tool/builtin/ComputerTool.java`
+20. `src/main/java/stark/dataworks/coderaider/genericagent/core/tool/builtin/ApplyPatchTool.java`
+
+### Phase 4: Safety, policy, and resilience layers
+
+21. `src/main/java/stark/dataworks/coderaider/genericagent/core/guardrail/GuardrailEngine.java`
+22. `src/main/java/stark/dataworks/coderaider/genericagent/core/approval/IToolApprovalPolicy.java`
+23. `src/main/java/stark/dataworks/coderaider/genericagent/core/policy/RetryPolicy.java`
+24. `src/main/java/stark/dataworks/coderaider/genericagent/core/runerror/RunErrorHandlers.java`
+25. `src/main/java/stark/dataworks/coderaider/genericagent/core/runerror/RunErrorKind.java`
+
+### Phase 5: Context, memory, and session persistence
+
+26. `src/main/java/stark/dataworks/coderaider/genericagent/core/context/DefaultContextBuilder.java`
+27. `src/main/java/stark/dataworks/coderaider/genericagent/core/memory/IAgentMemory.java`
+28. `src/main/java/stark/dataworks/coderaider/genericagent/core/memory/InMemoryAgentMemory.java`
+29. `src/main/java/stark/dataworks/coderaider/genericagent/core/memory/context/ContextServiceAgentMemory.java`
+30. `src/main/java/stark/dataworks/coderaider/genericagent/core/memory/policy/MemoryLifecyclePolicy.java`
+31. `src/main/java/stark/dataworks/coderaider/genericagent/core/session/ISessionStore.java`
+32. `src/main/java/stark/dataworks/coderaider/genericagent/core/session/InMemorySessionStore.java`
+
+### Phase 6: Handoff, output schemas, and observability
+
+33. `src/main/java/stark/dataworks/coderaider/genericagent/core/handoff/HandoffRouter.java`
+34. `src/main/java/stark/dataworks/coderaider/genericagent/core/output/OutputSchemaMapper.java`
+35. `src/main/java/stark/dataworks/coderaider/genericagent/core/output/OutputValidator.java`
+36. `src/main/java/stark/dataworks/coderaider/genericagent/core/events/RunEvent.java`
+37. `src/main/java/stark/dataworks/coderaider/genericagent/core/streaming/RunEventPublisher.java`
+38. `src/main/java/stark/dataworks/coderaider/genericagent/core/tracing/DistributedTraceProvider.java`
+39. `src/main/java/stark/dataworks/coderaider/genericagent/core/tracing/processor/TracingProcessors.java`
+
+### Phase 7: Advanced runtime modules
+
+40. `src/main/java/stark/dataworks/coderaider/genericagent/core/workflow/WorkflowDefinition.java`
+41. `src/main/java/stark/dataworks/coderaider/genericagent/core/workflow/WorkflowExecutor.java`
+42. `src/main/java/stark/dataworks/coderaider/genericagent/core/workflow/processor/AgentWorkflowProcessor.java`
+43. `src/main/java/stark/dataworks/coderaider/genericagent/core/mcp/McpManager.java`
+44. `src/main/java/stark/dataworks/coderaider/genericagent/core/mcp/IMcpServerClient.java`
+45. `src/main/java/stark/dataworks/coderaider/genericagent/core/rag/RagService.java`
+46. `src/main/java/stark/dataworks/coderaider/genericagent/core/rag/InMemoryVectorStore.java`
+47. `src/main/java/stark/dataworks/coderaider/genericagent/core/multimodal/MessagePart.java`
+48. `src/main/java/stark/dataworks/coderaider/genericagent/core/realtime/IRealtimeSession.java`
+49. `src/main/java/stark/dataworks/coderaider/genericagent/core/voice/IVoicePipeline.java`
+
+### Phase 8: Adapter-level implementation details (provider-specific)
+
+50. Read adapter base/normalization code first:
+   - `src/main/java/stark/dataworks/coderaider/genericagent/core/llmspi/adapter/OpenAiCompatibleLlmClient.java`
+   - `src/main/java/stark/dataworks/coderaider/genericagent/core/llmspi/adapter/OpenAiCompatibleResponseConverter.java`
+51. Then read concrete providers:
+   - `ModelScopeLlmClient`, `OpenAiLlmClient`, `GeminiLlmClient`, `QwenLlmClient`, `SeedLlmClient`, `DeepSeekLlmClient`, `SpringAiChatClientLlmClient`.
+
+### Phase 9: Validate understanding through executable examples
+
+Use `src/test/java/stark/dataworks/coderaider/genericagent/core/examples` in numeric order (`Example01` -> `Example28`).
+
+- `Example01`–`Example07`: baseline loop, tools, MCP, handoff, reasoning streams.
+- `Example08`–`Example14`: declarative JSON loading, structured output, tracing.
+- `Example15`–`Example20`: multimodal and RAG flows.
+- `Example21`–`Example28`: tracking, patch/computer tools, ReAct debugging, agent/workflow composition.
+
+This progression mirrors the runtime dependency graph and provides a reliable path to full-system comprehension.
