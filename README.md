@@ -1,431 +1,204 @@
-# Generic Agent Core
+# Generic Agent Core (GUNDAM-core)
 
-generic-agent-core is a modular, provider-agnostic, declarative-first Agent Runtime Kernel.
+`generic-agent-core` is a Java runtime kernel for building provider-agnostic AI agents with OpenAI-Agents-style execution semantics (multi-turn loop, tool calling, handoff, streaming, and guardrails).
 
-It is not a demo framework.  
-It is not a wrapper around an API.  
-It is not a business platform.
-
-It is the engine.
+This repository is intentionally kernel-focused:
+- It provides execution primitives and extension points.
+- It does **not** include business platform concerns such as auth, tenancy, web APIs, or billing.
 
 ---
 
+## What this project is
 
-# Supported Features
+- A **runtime engine** centered on `AgentRunner`
+- A **provider abstraction layer** centered on `ILlmClient`
+- A **composable orchestration kernel** for agents, tools, workflows, and handoffs
+- A **streaming-first** execution model with event publication and tracing
 
-generic-agent-core currently supports the following runtime capabilities:
+## What this project is not
 
-- Constructing and running a single agent with provider-agnostic LLM backends
-- Local tool calling with typed tool schemas and runtime registration
-- Agent-to-agent delegation through tool calls (`AgentTool`)
-- Agent handoff orchestration across multiple agents
-- Workflow-as-tool execution with DAG validation, retries, and failure strategies (`WorkflowTool`)
-- Running an agent as a workflow step (`AgentWorkflowProcessor`)
-- Streaming model output events for interactive user experiences
-- Guardrails, retry policies, and run error handlers
-- Session persistence and pluggable memory backends
-- Structured output with JSON schema/class-based mapping
-- MCP tool integration (stdio / HTTP / streamable HTTP)
-- Tracing, tool usage tracking, and hook-based extensibility
+- Not just an SDK wrapper
+- Not an application framework
+- Not a ready-made end-user product
 
 ---
 
-# Vision
+## Design goals
 
-generic-agent-core is designed to be:
-
-- A runtime kernel for LLM-based Agents
-- 100% feature-compatible with OpenAI's Agent SDK
-- Provider-agnostic (OpenAI, Gemini, Qwen, LiteLLM, etc.)
-- Declarative-first (JSON-defined Agents)
-- Extensible via runtime hooks
-- Business-logic free
-- Evolvable into a full Generic Agent Platform
-
-It is built to power:
-
-- Dualwalker
-- Future Agent Store
-- Future Agent Runner
-- Any internal or external system that needs programmable AI agents
+1. **Declarative-first**: agent/workflow definitions can be loaded from JSON (`AgentDefinition.fromJson`, `WorkflowDefinition.fromJson`).
+2. **Provider-agnostic**: model invocation goes through `ILlmClient` / `LlmClientRegistry`.
+3. **Runtime-centric**: the kernel owns turn orchestration, tool looping, guardrails, retries, and session/memory flow.
+4. **Strict separation of concerns**: no business-domain coupling in core modules.
+5. **Extensible by interfaces**: hooks, guardrails, memory backends, tool approval policies, tracing providers, realtime transports, etc.
 
 ---
 
-# Design Principles
+## High-level architecture
 
-## 1. Declarative First
+### Runtime backbone
 
-Agents should be defined as JSON configurations.
+- `runner`: `AgentRunner`, `RunConfiguration`, `RunnerContext`, `IRunHooks`
+- `agent`: `IAgent`, `AgentDefinition`, `IAgentRegistry`, `AgentRegistry`, `AgentChatClient`
+- `tool`: `ITool`, `ToolDefinition`, `ToolRegistry`, built-ins (`AgentTool`, `WorkflowTool`, `FunctionTool`, `ComputerTool`, `ApplyPatchTool`, ...)
+- `llmspi`: `ILlmClient`, `LlmRequest`, `LlmResponse`, `LlmOptions`, adapters and stream listener
+- `context` + `memory` + `session`: conversation assembly and persistence
 
-Changing an Agent should not require code changes.
-Agent definitions must be database-storable and runtime-reloadable.
+### Control and safety
 
-Code-defined Agents are allowed, but considered static.
+- `guardrail`: input/output guardrails and decision engine
+- `approval`: human-in-the-loop style tool approval policy
+- `policy`: retry policy
+- `runerror`: typed error classification and handler dispatch
 
----
+### Observability and streaming
 
-## 2. Runtime-Centric
+- `events` + `streaming`: `RunEvent`, `RunEventType`, `RunEventPublisher`
+- `tracing`: trace providers, spans, distributed collector, processor pipeline
+- `tracking`: tool-use tracker and serializer
 
-This project is not an SDK wrapper.
+### Advanced capabilities
 
-It is a runtime engine:
-
-- Step execution loop
-- Tool call resolution
-- Memory update
-- Context rendering
-- Token tracking
-- Hook injection
-
----
-
-## 3. Strict Separation of Concerns
-
-generic-agent-core MUST NOT include:
-
-- Tenant logic
-- Permission logic
-- Authentication
-- Database layer
-- Business orchestration
-- UI logic
-
-Those belong to outer systems.
+- `handoff`: inter-agent handoff routing/filtering
+- `workflow`: DAG execution with processor registry, retries, and failure strategy
+- `mcp`: stdio/http/streamable-http MCP clients + approvals
+- `rag`: embedding model + vector store + retrieval service
+- `multimodal`: message parts and generation contracts (image/audio/video interfaces)
+- `realtime` + `voice`: interfaces and transport scaffolding for realtime/voice flows
+- `editor`, `computer`, `oss`: host-integrated utility capabilities
 
 ---
 
-## 4. Provider Agnostic
+## Provider adapters currently included
 
-Model access must go through an abstraction layer:
+OpenAI-compatible and bridge clients in `src/main/java/.../llmspi/adapter`:
 
-`ILlmClient`
-
-No vendor lock-in.
-
----
-
-## 5. Extensible by Hooks
-
-Two categories of hooks are required:
-
-- Agent Runtime Hooks
-- Tool Execution Hooks
-
-Hook implementations are not part of the kernel.
-Only hook interfaces and lifecycle triggers are included.
+- `ModelScopeLlmClient`
+- `OpenAiLlmClient`
+- `GeminiLlmClient`
+- `QwenLlmClient`
+- `SeedLlmClient`
+- `DeepSeekLlmClient`
+- `OpenAiCompatibleLlmClient`
+- `SpringAiChatClientLlmClient`
 
 ---
 
-# Feature Parity Target
+## End-to-end execution model (`AgentRunner`)
 
-generic-agent-core must be feature-complete compared to openai-agents-python.
-
-Including:
-
-- Agent abstraction
-- Tool definition and execution
-- Step loop runtime
-- Conversation memory
-- Model abstraction
-- Multimodal message/request/response abstraction (text + image/video/audio parts)
-- Multimodal generation contracts (image/video/audio)
-- Agent-to-Agent handoff
-- Tool schema definition
-- Generation options
-- Message abstraction
-
-Plus:
-
-- Hook system
-- Token usage tracking
-- Multi-provider architecture
-- Declarative agent definitions
-
----
-
-# Module Structure
-
-```
-generic-agent-core
-│
-├── agent
-│   ├── IAgent
-│   ├── Agent
-│   ├── AgentDefinition
-│   ├── IAgentRegistry
-│   └── AgentRegistry
-│
-├── runtime
-│   ├── IAgentRunner
-│   ├── AgentRunner
-│   ├── IStepEngine
-│   ├── DefaultStepEngine
-│   └── ExecutionContext
-│
-├── tool
-│   ├── ITool
-│   ├── ToolDefinition
-│   ├── ToolParameterSchema
-│   ├── IToolRegistry
-│   └── ToolRegistry
-│
-├── llm-spi
-│   ├── ILlmClient
-│   ├── LlmRequest
-│   ├── LlmResponse
-│   └── LlmOptions
-│
-├── memory
-│   ├── IAgentMemory
-│   └── InMemoryAgentMemory
-│
-├── context
-│   ├── IContextBuilder
-│   └── DefaultContextBuilder
-│
-├── model
-│   ├── Message
-│   └── Role
-│
-├── hook
-│   ├── IAgentHook
-│   ├── IToolHook
-│   └── HookManager
-│
-├── metrics
-│   ├── TokenUsage
-│   └── TokenUsageTracker
-│
-└── adapters
-    ├── openai
-    ├── gemini
-    └── qwen
-```
-
----
-
-# Core Runtime Loop
-
-Pseudocode:
-
-```
-while not finished:
-    render context
-    call model
-    track token usage
-
-    if model requests tool:
-        execute tool
-        append tool result to memory
-    else:
-        return final answer
-```
+For each turn:
+1. Build context from memory/history.
+2. Run input guardrails.
+3. Invoke model (sync or streaming).
+4. Accumulate token usage and emit events.
+5. If model requested tools:
+   - approval check,
+   - execute tool(s),
+   - append tool outputs,
+   - continue loop.
+6. If handoff requested:
+   - validate with router/filter,
+   - switch `currentAgent`,
+   - continue loop.
+7. Validate structured output if configured.
+8. Persist session state and return `ContextResult`.
 
 Termination conditions:
-
-- Model produces final message
-- Max steps reached
-- Explicit stop condition
-
----
-
-# Core Interfaces (Conceptual)
-
-## IAgent
-
-Represents a runtime agent instance.
-
-## IAgentRunner
-
-Responsible for executing an agent session.
-
-## IStepEngine
-
-Implements the execution loop.
-
-## ITool
-
-Represents a callable tool.
-
-## ILlmClient
-
-Provider-agnostic LLM interface:
-
-```
-chat(request: LlmRequest) -> LlmResponse
-```
-
-## IAgentMemory
-
-Conversation state manager.
-
-## IContextBuilder
-
-Responsible for building model input context.
-
-## IAgentHook
-
-Agent lifecycle hook interface.
-
-## IToolHook
-
-Tool lifecycle hook interface.
+- Final assistant output produced
+- `maxTurns` exceeded
+- Guardrail tripwire / denied handoff / unhandled runtime error
 
 ---
 
-# Non-Goals
+## Examples (streaming, real model calls)
 
-This project will NOT include:
+Examples are in `src/test/java/stark/dataworks/coderaider/genericagent/core/examples`.
 
-- HTTP server
-- REST API
-- Web UI
-- Multi-tenant logic
-- Database integration
-- Billing system
-- Authentication
-- Authorization
+Current suite:
 
-Those belong to outer platform layers.
+1. `Example01SingleSimpleAgentTest`
+2. `Example02AgentWithToolsTest`
+3. `Example03AgentWithMcpTest`
+4. `Example04MultiRoundSingleAgentWithToolsAndMcpTest`
+5. `Example05MultiRoundSingleAgentWithToolsAndStreamableHttpMcpTest`
+6. `Example06AgentGroupWithHandoffsTest`
+7. `Example07ReasoningStreamingTest`
+8. `Example08AgentDefinitionFromJsonTest`
+9. `Example09DocxSkillAnalysisStreamingTest`
+10. `Example10StructuredOutputByClassTest`
+11. `Example11StructuredOutputByPromptTest`
+12. `Example12AgentRunnerBuilderTest`
+13. `Example13TracingSingleTurnTest`
+14. `Example14TracingMultiRoundTest`
+15. `Example15IntegralImageQuestionTest`
+16. `Example16KiteImageDescriptionTest`
+17. `Example17FlyingDragonTextToImageTest`
+18. `Example18FlyingCatStyleTransferTextToImageTest`
+19. `Example19MultiRoundMultiProviderHandoffStreamingTest`
+20. `Example20RagVectorStoreStreamingTest`
+21. `Example21ToolUseTrackerTest`
+22. `Example22ApplyPatchToolTest`
+23. `Example23ComputerToolTest`
+24. `Example24ReActAgentDebugFixTest`
+25. `Example25ComplexReActDebugFixTest`
+26. `Example26AgentAsToolTest`
+27. `Example27WorkflowAsToolTest`
+28. `Example28AgentInWorkflowThenCalledByAnotherAgentTest`
 
----
-
-# Final Statement
-
-generic-agent-core is not a wrapper.
-
-It is not a convenience layer.
-
-It is the runtime engine for declarative, extensible, provider-agnostic AI agents.
-
-It is the kernel.
-
----
-
-# Current Implementation Status (Java Kernel)
-
-The Java kernel now includes the following runtime capabilities aligned with OpenAI Agents SDK concepts:
-
-- Agent + declarative agent definition loading from JSON
-- Agent registry and runtime agent switching
-- Step/turn execution runtime with max-turn stopping
-- Provider-agnostic LLM SPI and configurable generation options
-- Tool abstractions, tool registries, and JSON-schema conversion helpers
-- Tool call execution loop and tool lifecycle hooks
-- Agent lifecycle hooks
-- Agent-to-agent handoff with handoff allow-list + handoff filters/router
-- In-memory conversation memory
-- Session persistence abstraction (`SessionStore`) and in-memory implementation
-- Input and output guardrails
-- Run result model with timeline events and items
-- Token usage tracking
-- Tracing abstractions (`TraceProvider`) with no-op implementation
-- Structured output validation via output schemas
-- Tool approval policy for human-in-the-loop style gating
-- Retry policy for resilient model invocation
-- Event publisher/listener for streaming-like run observability
-- Built-in tool ecosystem stubs (web/file/shell/code/image/function)
-- MCP subsystem foundation (server config/client/manager + proxy tools + resources/templates)
-- Rich run error handling (typed exceptions + handler registry)
-- Tracing processor pipeline (custom processors + emitted trace events)
-
-This repository is designed as a runtime kernel; providers/adapters can plug in through `ILlmClient`, `SessionStore`, tracing providers, and tool implementations.
+> Note: examples are designed for real LLM calls and streaming event output.
 
 ---
 
-# Examples
+## Local setup
 
-The examples are organized from basic to complex, all with **real streaming output** using **ModelScope** with Qwen models:
+### Prerequisites
 
-1. `Example01SingleSimpleAgentTest` - Basic agent with streaming
-2. `Example02AgentWithToolsTest` - Agent with tools and streaming
-3. `Example03AgentWithMcpTest` - Agent with MCP tools and streaming
-4. `Example04MultiRoundSingleAgentWithToolsAndMcpTest` - Multi-round conversation with streaming
-5. `Example05MultiRoundSingleAgentWithToolsAndStreamableHttpMcpTest` - Multi-round conversation via Streamable HTTP MCP
-6. `Example06AgentGroupWithHandoffsTest` - Agent group with handoffs and streaming
-7. `Example07ReasoningStreamingTest` - Streaming + reasoning trace events
-8. `Example08AgentWithSkillsStreamingTest` - Streaming with model skills payload
-9. `Example09DocxSkillAnalysisStreamingTest` - Streaming docx analysis using local `docx` skill
-10. `Example10StructuredOutputByClassTest` - Structured output by developer-provided `Type.class`
-11. `Example11StructuredOutputByPromptTest` - Structured output by user prompt schema
-12. `Example12AgentRunnerBuilderTest` - Minimal `AgentRunner` setup via builder defaults
+- JDK 21+
+- Maven 3.9+
+- Python 3 (for MCP server scripts when running MCP examples)
 
-## Prerequisites
+Environment variables (or `.env.local` used by tests):
 
-All examples require a **ModelScope API key**. You can provide it via:
-- Environment variable: `MODEL_SCOPE_API_KEY`
+- `MODEL_SCOPE_API_KEY`
+- `VOLCENGINE_API_KEY` (needed for some multi-provider examples)
 
-Get your API key from: https://modelscope.cn/
-
-For MCP examples (Example03, Example04, Example05), install the MCP package:
-```powershell
-pip install mcp[cli]
-```
-
-## Run from IDE
-
-Run each JUnit test class directly from IDE (single test run), with `.env.local` configured in project root.
-
-## Run with Maven
+### Run tests/examples
 
 ```bash
-# Run all example tests
+# compile + run all tests
+mvn test
+
+# run only example tests
 mvn -Dtest="stark.dataworks.coderaider.genericagent.core.examples.Example*Test" test
 
-# Run one specific example test
-mvn -Dtest=stark.dataworks.coderaider.genericagent.core.examples.Example03AgentWithMcpTest test
+# run one example
+mvn -Dtest=stark.dataworks.coderaider.genericagent.core.examples.Example01SingleSimpleAgentTest test
 ```
 
-For Example04 and Example05, start their corresponding MCP servers first:
+For MCP examples, start test MCP servers first:
+
 ```bash
 python3 src/main/resources/mcp/simple_mcp_server_http.py 8765
 python3 src/main/resources/mcp/simple_mcp_server_streamable_http.py 8766
 ```
 
-## Streaming Output
+---
 
-All examples use `runStreamed()` with real streaming from ModelScope's API. Output appears incrementally in the console as tokens are generated, demonstrating:
+## Design/reference docs
 
-- **MODEL_RESPONSE_DELTA** - Text tokens streamed in real-time
-- **TOOL_CALL_REQUESTED/COMPLETED** - Tool execution events
-- **HANDOFF_OCCURRED** - Agent handoff events (Example06)
+- `designs/GUNDAM-core-Architecture.md`
+- `designs/OpenAI-AgentSDK-vs-GUNDAM-core.md`
+- `designs/` (design discussions and implementation notes)
+- `references/openai-agents-python-main` (OpenAI Agents SDK source used as comparison reference)
 
-## Available Models
+---
 
-ModelScope supports various Qwen models. Default model used: `Qwen/Qwen3-4B`
+## Non-goals
 
-You can specify other models like:
-- `Qwen/Qwen3-8B`
-- `Qwen/Qwen3-14B`
-- `Qwen/Qwen2.5-72B-Instruct`
+This kernel intentionally excludes:
+- HTTP API layer
+- UI layer
+- tenant/account/auth concerns
+- billing and usage charging systems
+- application-specific business workflows
 
-## Provider Adapter Classes
-
-OpenAI-compatible adapters are available in `llmspi/adapter`:
-
-- `ModelScopeLlmClient` - ModelScope API (used in examples)
-- `OpenAiLlmClient` - OpenAI API
-- `GeminiLlmClient` - Google Gemini
-- `QwenLlmClient` - Alibaba DashScope
-- `SeedLlmClient` - ByteDance Seed
-- `DeepSeekLlmClient` - DeepSeek
-- `SpringAiChatClientLlmClient` - Spring AI bridge
-
-They normalize native responses into `LlmResponse` (`content`, `toolCalls`, `handoffAgentId`) and support both sync and stream invocation.
-
-### Spring AI `@Tool` Compatibility
-
-High-level tool APIs now provide Spring AI compatibility via `SpringAiToolAdapters` and `ToolRegistry` helpers:
-
-```java
-ToolRegistry toolRegistry = new ToolRegistry();
-toolRegistry.registerSpringToolObjects(new WeatherTools());
-// or: toolRegistry.registerSpringToolCallbacks(callback1, callback2)
-```
-
-Any Spring AI tool object using `org.springframework.ai.tool.annotation.Tool` is automatically converted to generic-agent `ITool` definitions and executable callbacks.
-
-## Architecture & planning notes
-
-- `designs/generic-agent-core-Architecture.md`
-- `designs/OpenAI-AgentSDK-vs-generic-agent-core.md` (feature comparison + progress + next steps)
+These should live in outer platform layers built on top of this runtime.

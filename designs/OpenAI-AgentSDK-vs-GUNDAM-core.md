@@ -1,159 +1,97 @@
-# OpenAI Agents SDK vs generic-agent-core: feature comparison, current progress, and next steps
+# OpenAI Agents SDK vs GUNDAM-core
 
-This document compares the current capabilities of **OpenAI Agents SDK** (reference implementation in `references/openai-agents-python-main`) and **generic-agent-core`.
+This document compares the current capabilities of:
+
+- **OpenAI Agents SDK** (reference source in `references/openai-agents-python-main`)
+- **GUNDAM-core** (`generic-agent-core`, Java runtime in `src/main/java`)
 
 ## Scope
 
-- OpenAI side: Python SDK in `references/openai-agents-python-main`.
-- generic-agent-core side: Java implementation in `src/main/java` and executable examples in `src/test/java/.../examples`.
+- OpenAI side: Python SDK architecture/features used as baseline reference.
+- GUNDAM-core side: Java runtime kernel + executable streaming examples in `src/test/java/.../examples`.
 
 ## Feature comparison matrix
 
-| Capability | OpenAI Agents SDK | generic-agent-core status | Notes |
+| Capability | OpenAI Agents SDK | GUNDAM-core status | Notes |
 |---|---|---|---|
-| Core agent loop (model -> tools -> continue) | ✅ | ✅ | `AgentRunner` implements loop, retries, hooks, guardrails, handoff flow. |
-| ReAct mode (reasoning + iterative action planning) | ✅ | ✅ | `AgentDefinition.reactEnabled` and `reactInstructions` augment system prompts for explicit ReAct loop behavior. |
-| Streaming token events | ✅ | ✅ | `runStreamed` and run-event publication available. |
-| Reasoning stream handling | ✅ | ✅ | Reasoning delta events exposed and consumed in examples. |
-| Tool calling (local tools) | ✅ | ✅ | Mature in both projects, including agent-as-tool and workflow-as-tool patterns. |
-| MCP tool integration | ✅ | ✅ | Supports stdio, HTTP, and streamable-http MCP usage. |
-| Handoffs / multi-agent orchestration | ✅ | ✅ | `HandoffRouter` + handoff examples implemented. |
-| Guardrails | ✅ | ✅ | Input/output guardrail evaluation in runner flow. |
-| Structured output | ✅ | ✅ | Prompt and class-schema based structured output supported. |
-| Tracing / observability | ✅ | ✅ | Trace provider abstractions, distributed tracing, and processors exist. |
-| Session persistence | ✅ | ✅ | Session store abstraction and in-memory implementation available. |
-| Memory backend pluggability | ✅ | ✅ | Caller-provided `IAgentMemory` supported per run. |
-| Context-service memory backend | ✅ | ✅ | `ContextServiceAgentMemory` with `IContextServiceMemoryStore` implemented. |
-| Memory lifecycle policies | ✅ | ✅ | `MemoryLifecyclePolicy`, sliding window, summarization, composite policies. |
-| Human-in-the-loop approvals | ✅ | ✅ | Tool approval policy and requests implemented. |
-| Multi-provider handoffs | ✅ | ✅ | `LlmClientRegistry` supports multiple providers in single session. |
-| RAG / Vector store | ✅ | ✅ | `RagService`, `InMemoryVectorStore`, `EmbeddingModel` implemented. |
-| Tool output trimming | ✅ | ✅ | `ToolOutputTrimmer` extension implemented. |
-| Handoff history filters | ✅ | ✅ | `HandoffHistoryFilters` utilities implemented. |
-| Computer tool | ✅ | ✅ | `ComputerTool` with full interface (`IComputer`, `AbstractComputer`, `SimulatedComputer`), supports screenshot, click, double_click, scroll, type, wait, move, keypress, drag. |
-| Voice pipeline | ✅ | 🟡 Partial | `IVoicePipeline` interface exists, full workflow not implemented. |
-| Multimodal generation (audio/image/video) | ✅ | 🟡 Partial | Interfaces exist (`IAudioGenerator`, `IImageGenerator`, `IVideoGenerator`), no providers. |
-| Agent tool state tracking | ✅ | ✅ | `AgentToolUseTracker` implemented with serialization/hydration support. |
-| Editor (file diff/patch) | ✅ | ✅ | `ApplyPatchTool`, `IApplyPatchEditor`, `DiffApplier` implemented for file operations. |
-| Workflow DAG orchestration tool | ✅ | ✅ | Configurable DAG workflow runtime with vertex processors, retries/failure strategy, and JSON loading (`WorkflowDefinition.fromJson`). |
-| Realtime voice/webhook workflows | ✅ | ⚪ Partial | Interfaces exist (`IRealtimeClient`, `IRealtimeSession`), no full implementation. |
-| Codex/experimental features | ✅ | ⚪ Not implemented | OpenAI has experimental codex module. |
-| Error handling registry | ✅ | ✅ | `RunErrorHandlers`, `IRunErrorHandler`, `RunErrorKind` implemented. |
-| Spring AI compatibility | ⚪ | ✅ | `SpringAiToolAdapters`, `SpringAiChatClientLlmClient` unique to GUNDAM. |
+| Core agent loop (model -> tools -> continue) | ✅ | ✅ | `AgentRunner` owns turn orchestration, retries, hooks, guardrails, handoff. |
+| Streaming token events | ✅ | ✅ | `runStreamed` + run event publication (`MODEL_RESPONSE_DELTA`, reasoning delta). |
+| Tool calling (local tools) | ✅ | ✅ | Includes typed tool schemas and execution hooks. |
+| MCP tool integration | ✅ | ✅ | stdio, HTTP, streamable-HTTP MCP clients and manager. |
+| Agent handoff orchestration | ✅ | ✅ | `HandoffRouter`, allow-lists, and history filtering extensions. |
+| Guardrails | ✅ | ✅ | Input/output guardrail engine with tripwire semantics. |
+| Structured output validation | ✅ | ✅ | Prompt/class schema mapping + validation pipeline. |
+| Session persistence | ✅ | ✅ | `ISessionStore` abstraction + in-memory implementation. |
+| Memory backend pluggability | ✅ | ✅ | `IAgentMemory` + context-service memory store options. |
+| Memory lifecycle policies | ✅ | ✅ | Sliding window, summarization, composite policies. |
+| Retry/backoff policy | ✅ | ✅ | `RetryPolicy` integrated into model invocation path. |
+| Error handler registry | ✅ | ✅ | `RunErrorHandlers`, `RunErrorKind`, typed dispatch. |
+| Tracing/observability | ✅ | ✅ | Trace providers + processor pipeline + distributed collector. |
+| Tool-use tracking | ✅ | ✅ | `AgentToolUseTracker` + serializer/hydration helpers. |
+| Agent-as-tool | ✅ | ✅ | `AgentTool` supported and covered by examples. |
+| Workflow-as-tool / DAG | ✅ | ✅ | `WorkflowTool`, `WorkflowExecutor`, processor registry, retries/failure strategy. |
+| Computer automation tool | ✅ | ✅ | `ComputerTool` + `IComputer` abstraction. |
+| Diff/patch editor tool | ✅ | ✅ | `ApplyPatchTool`, `DiffApplier`, `IApplyPatchEditor`. |
+| RAG/vector-store support | ✅ | ✅ | `RagService`, in-memory vector store, embedding model contracts. |
+| Multi-provider runtime in one session | ✅ | ✅ | `LlmClientRegistry` + agent-level provider selection. |
+| Spring AI tool/chat compatibility | ⚪ | ✅ | `SpringAiToolAdapters`, `SpringAiChatClientLlmClient` (GUNDAM-specific advantage). |
+| Multimodal generation providers | ✅ | 🟡 Partial | Interfaces are present; provider-side full implementations are still evolving. |
+| Voice pipeline end-to-end | ✅ | 🟡 Partial | Interfaces/config objects present; complete runtime pipeline pending. |
+| Realtime workflow/webhook transport | ✅ | 🟡 Partial | Realtime transport interfaces + SSE/webhook scaffolding exist. |
+| Experimental Codex modules | ✅ | ⚪ Not implemented | Not in current GUNDAM-core roadmap focus. |
 
-Legend: ✅ implemented, 🟡 partial/in progress, ⚪ not implemented.
+Legend: ✅ implemented, 🟡 partial, ⚪ not implemented.
 
-## Progress summary
+## Current GUNDAM-core profile
 
-1. **Memory pluggability completed**: `RunConfiguration` accepts optional caller-provided `IAgentMemory`; `ContextServiceAgentMemory` with `IContextServiceMemoryStore` implemented.
-2. **Memory lifecycle policies implemented**: `MemoryLifecyclePolicy` interface with `SlidingWindowMemoryPolicy`, `SummarizingMemoryPolicy`, and `CompositeMemoryLifecyclePolicy` for compaction/retention/isolation.
-3. **Example streaming hooks consolidated**: Duplicated event listeners centralized via shared helpers for text-only, tool-lifecycle, and reasoning-aware streaming output.
-4. **Multi-provider handoffs**: `LlmClientRegistry` enables cross-provider handoffs (Example19 demonstrates ModelScope + Seed/Doubao in single session).
-5. **RAG foundation**: `RagService`, `InMemoryVectorStore`, `EmbeddingModel`, and `SimpleHashEmbeddingModel` implemented (Example20 demonstrates retrieval-augmented generation).
-6. **Tool output trimming**: `ToolOutputTrimmer` extension matches OpenAI's `ToolOutputTrimmer` for reducing token usage from large tool outputs.
-7. **Handoff history filters**: `HandoffHistoryFilters` utilities for filtering conversation history during agent handoffs.
-8. **Distributed tracing**: `DistributedTraceProvider`, `DistributedTraceCollector`, and tracing processors (Example13, Example14) provide observability.
-9. **Error handling registry**: `RunErrorHandlers`, `IRunErrorHandler`, and `RunErrorKind` provide typed error classification and handler dispatch.
-10. **Spring AI compatibility**: `SpringAiToolAdapters` and `SpringAiChatClientLlmClient` enable Spring AI `@Tool` annotation compatibility.
-11. **Multimodal interfaces**: `IAudioGenerator`, `IImageGenerator`, `IVideoGenerator`, `IMultimodalLlmClient` interfaces defined for future provider implementations.
-12. **Realtime interfaces**: `IRealtimeClient`, `IRealtimeSession`, `IRealtimeEventListener`, and transport abstractions (SSE, webhook) defined.
-13. **Agent tool state tracking**: `AgentToolUseTracker` implemented to track which tools each agent has used, with serialization/hydration support for session persistence.
-14. **Apply patch editor**: `ApplyPatchTool`, `IApplyPatchEditor`, `ApplyPatchOperation`, `ApplyPatchResult`, and `DiffApplier` implemented for file diff/patch operations (create, update, delete).
-15. **Computer tool completed**: Full `IComputer` interface with `AbstractComputer` base class and `SimulatedComputer` for testing. Supports all operations: screenshot, click, double_click, scroll, type, wait, move, keypress, drag.
-16. **Existing strengths retained**: lifecycle hooks, retries, guardrails, tracing, handoffs, MCP, and structured output remain aligned with design goals.
-17. **ReAct debug-fix workflow hardened**: Example24 now stages verifier sources in workspace before agent execution, uses concise streaming output (tool lifecycle + final text) instead of verbose thought dumps, enforces tighter step/token limits, injects OS-specific verification commands into reviewer prompts, and includes a deterministic fallback patch so the scenario always completes with behavior validation and reviewer summary.
-18. **Complex ReAct debugging scenario hardened**: Example25 now uses an agent-driven debug/patch/verify retry loop on `InvoiceSummaryEngine.java` without deterministic fallback patching, keeps concise streaming output, and verifies correctness via runtime tool execution so convergence depends on real behavior checks; both Example24/25 load buggy and verifier sources from `src/test/resources/inputs` on each test run.
-19. **apply_patch argument compatibility improved**: `ApplyPatchTool` now robustly parses OpenAI-compatible `raw` tool payload variants (including nested/quoted JSON argument strings and substring extraction fallback), reducing repeated `Missing 'operation' parameter` failures in ReAct repair loops.
+### Strongly implemented today
 
-20. **Workflow DAG runtime support**: Added configurable workflow DAG model (`WorkflowDefinition`, `WorkflowVertexDefinition`), runtime execution (`WorkflowExecutor`), failure strategies/retries, JSON loading (`WorkflowDefinition.fromJson`), and tool wrapper (`WorkflowTool`) so agents can invoke workflows as tools.
-21. **Agent-as-tool support example**: Added `AgentTool` plus Example26 to demonstrate orchestrator agent delegating to a specialist agent through standard tool-calling.
-22. **Workflow-as-tool examples**: Example27 demonstrates both hardcoded workflow construction and JSON-loaded workflow definitions, each executed by an agent through tool-calling with streaming output.
+1. Runtime orchestration kernel (`AgentRunner`) with streaming/non-streaming parity.
+2. Tool and agent composition primitives (local tools, agent-as-tool, workflow-as-tool).
+3. Safety/control plane (guardrails, approval policies, retries, typed error handlers).
+4. Observability plane (events, tracing, token accounting, tool-use tracking).
+5. Provider-agnostic model layer with multiple adapters.
+6. Session/memory foundations including memory lifecycle policy support.
 
-23. **Documentation comment clarity refresh**: Replaced low-signal field comments across `src/main/java` (for example, repeated `Internal state ... used while coordinating runtime behavior`) with explicit descriptions that capture limits, identifiers, flags, and orchestration intent.
+### Implemented with evolving breadth
 
-24. **Agent/workflow definition API simplification**: Removed wrapper-only `Agent` and `AgentDefinitionLoader`/`WorkflowDefinitionLoader`; `AgentDefinition` now directly implements `IAgent` and both definitions expose `fromJson(...)` static constructors.
+- MCP ecosystem support (multiple transports, approvals, manager/proxy contracts).
+- Workflow DAG runtime and processor ecosystem.
+- RAG/vector foundations and multimodal message contracts.
 
-## New examples demonstrating capabilities
+### Partial/scaffolding areas
 
-The following examples have been added to demonstrate new features:
+- Realtime full session workflow.
+- Voice pipeline implementation.
+- Provider-specific implementations for audio/image/video generation.
 
-- **Example13TracingSingleTurnTest**: Demonstrates distributed tracing with `DistributedTraceProvider` collecting span events.
-- **Example14TracingMultiRoundTest**: Multi-turn distributed tracing with span relationships.
-- **Example15IntegralImageQuestionTest**: Multimodal image understanding with `IMultimodalLlmClient`.
-- **Example16KiteImageDescriptionTest**: Image description generation.
-- **Example17FlyingDragonTextToImageTest**: Text-to-image generation with `IImageGenerator`.
-- **Example18FlyingCatStyleTransferTest**: Style transfer image generation.
-- **Example19MultiRoundMultiProviderHandoffStreamingTest**: Cross-provider handoffs (ModelScope + Seed/Doubao) in single session.
-- **Example20RagVectorStoreStreamingTest**: RAG with `RagService`, `InMemoryVectorStore`, and `SimpleHashEmbeddingModel`.
-- **Example21ToolUseTrackerTest**: Demonstrates `AgentToolUseTracker` for tracking tool usage across agents.
-- **Example22ApplyPatchToolTest**: Demonstrates `ApplyPatchTool` for file diff/patch operations.
-- **Example23ComputerToolTest**: Demonstrates `ComputerTool` for browser/desktop automation.
-- **Example24ReActAgentDebugFixTest**: Demonstrates a coordinator/investigator/fixer/reviewer multi-agent topology where each role follows ReAct loops to debug and patch a Java bug with cross-platform command guidance.
-- **Example25ComplexReActDebugFixTest**: Demonstrates an agent-driven ReAct debugging pipeline that fixes multiple logical defects (iteration, tax rate, rounding) through iterative patch attempts and runtime verification, without deterministic fallback patching.
-- **Example26AgentAsToolTest**: Demonstrates an orchestrator agent invoking a specialist agent via `AgentTool`.
-- **Example27WorkflowAsToolTest**: Demonstrates workflow DAG as a tool, including one hardcoded workflow and one JSON-loaded workflow definition.
+## Example coverage alignment
 
-## What's next (recommended roadmap)
+The examples package contains **28 streaming-oriented test cases** (`Example01` ~ `Example28`) demonstrating the maturity areas above, including:
 
-### 1) Realtime workflow implementation (medium priority)
+- basic and multi-round agent loops,
+- tools and MCP,
+- handoffs and multi-provider runs,
+- tracing,
+- structured output,
+- multimodal input/output,
+- RAG,
+- tool use tracking,
+- patch/computer tools,
+- ReAct-style debugging,
+- agent/workflow composition patterns.
 
-- Complete `IRealtimeClient` and `IRealtimeSession` implementations.
-- Implement SSE and webhook transport adapters.
-- Add voice-to-text and text-to-voice pipeline integration.
+## Recommended next roadmap
 
-### 2) Multimodal provider implementations (medium priority)
+1. **Realtime completion**: finalize `IRealtimeClient` / `IRealtimeSession` implementations and durable transport behaviors.
+2. **Voice pipeline completion**: integrate STT/TTS providers and streaming audio lifecycle.
+3. **Multimodal provider depth**: add concrete `IImageGenerator`, `IAudioGenerator`, `IVideoGenerator` adapters.
+4. **Production hardening**: concurrency/fault-injection/performance benchmarking on non-memory backends.
+5. **Capability governance**: introduce compatibility test suites that continuously compare target behavior against OpenAI Agents SDK semantics.
 
-- Implement providers for `IAudioGenerator`, `IImageGenerator`, `IVideoGenerator`.
-- Integrate with `IMultimodalLlmClient` for multimodal message handling.
-- Add examples for audio/image/video generation workflows.
-
-### 3) Voice pipeline implementation (medium priority)
-
-- Complete `IVoicePipeline` implementation.
-- Add speech-to-text and text-to-speech integration.
-- Support real-time audio streaming.
-
-### 4) Codex/experimental features (lower priority)
-
-- Evaluate OpenAI's experimental codex module for relevant patterns.
-- Consider implementing codex tool interfaces if applicable to use cases.
-
-### 5) Production hardening
-
-- Concurrency tests for multi-session + multi-agent runs on non-memory backends.
-- Fault-injection tests for network partitions/timeouts on context-service memory.
-- Idempotency and exactly-once semantics for session persistence APIs.
-- Performance benchmarks for memory lifecycle policies and RAG operations.
-
-## New classes and packages
-
-### Tracking Package (`stark.dataworks.coderaider.genericagent.core.tracking`)
-
-- `AgentToolUseTracker`: Tracks which tools each agent has used during a run. Supports serialization/hydration for session persistence.
-- `ToolUseTrackerSerializer`: Utility methods for serializing and hydrating tracker state.
-
-### Editor Package (`stark.dataworks.coderaider.genericagent.core.editor`)
-
-- `IApplyPatchEditor`: Interface for host-defined editors that apply diffs on disk.
-- `ApplyPatchOperation`: Represents a single apply_patch editor operation (create_file, update_file, delete_file).
-- `ApplyPatchResult`: Optional metadata returned by editor operations.
-- `DiffApplier`: Utility for applying V4A diffs against text inputs.
-
-### Computer Package (`stark.dataworks.coderaider.genericagent.core.computer`)
-
-- `IComputer`: Interface abstracting operations needed to control a computer or browser.
-- `AbstractComputer`: Base implementation providing common functionality.
-- `SimulatedComputer`: Simulated implementation for testing purposes.
-- `Environment`: Enum for environment types (mac, windows, ubuntu, browser).
-- `Button`: Enum for mouse button types.
-
-### Tool Package Updates (`stark.dataworks.coderaider.genericagent.core.tool.builtin`)
-
-- `ApplyPatchTool`: Hosted tool for file mutations via unified diffs.
-- `ComputerTool`: Updated with full implementation supporting all computer operations.
-
-## References used
+## References
 
 - `README.md`
-- `designs/generic-agent-core-Architecture.md`
+- `designs/GUNDAM-core-Architecture.md`
+- `designs/` directory design notes
 - `references/openai-agents-python-main`
