@@ -5,7 +5,7 @@ import java.util.List;
 /**
  * Spring-AI-like vector store contract.
  */
-public interface VectorStore
+public interface IVectorStore
 {
     void add(List<Document> documents);
 

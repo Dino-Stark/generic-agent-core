@@ -8,9 +8,9 @@ import java.util.stream.Collectors;
  */
 public class RagService
 {
-    private final VectorStore vectorStore;
+    private final IVectorStore vectorStore;
 
-    public RagService(VectorStore vectorStore)
+    public RagService(IVectorStore vectorStore)
     {
         this.vectorStore = vectorStore;
     }

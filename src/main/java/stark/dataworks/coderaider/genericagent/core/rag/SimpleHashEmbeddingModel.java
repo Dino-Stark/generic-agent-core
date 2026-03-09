@@ -6,7 +6,7 @@ import java.util.List;
 /**
  * Deterministic local embedding model for tests/examples.
  */
-public class SimpleHashEmbeddingModel implements EmbeddingModel
+public class SimpleHashEmbeddingModel implements IEmbeddingModel
 {
     private final int dimensions;
 

@@ -10,12 +10,12 @@ import java.util.concurrent.ConcurrentHashMap;
 /**
  * Default vector store implementation; swap with milvus/postgresql/redis-backed implementations via interface.
  */
-public class InMemoryVectorStore implements VectorStore
+public class InMemoryVectorStore implements IVectorStore
 {
     private final Map<String, Document> documents = new ConcurrentHashMap<>();
-    private final EmbeddingModel embeddingModel;
+    private final IEmbeddingModel embeddingModel;
 
-    public InMemoryVectorStore(EmbeddingModel embeddingModel)
+    public InMemoryVectorStore(IEmbeddingModel embeddingModel)
     {
         this.embeddingModel = embeddingModel;
     }
