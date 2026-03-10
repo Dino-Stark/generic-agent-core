@@ -4,7 +4,7 @@ import lombok.Getter;
 
 import java.util.Map;
 
-import stark.dataworks.coderaider.genericagent.core.memory.IAgentMemory;
+import stark.dataworks.coderaider.genericagent.core.context.IContextManager;
 import stark.dataworks.coderaider.genericagent.core.memory.policy.MemoryLifecyclePolicy;
 import stark.dataworks.coderaider.genericagent.core.policy.RetryPolicy;
 import stark.dataworks.coderaider.genericagent.core.runerror.RunErrorHandlers;
@@ -64,9 +64,9 @@ public class RunConfiguration
     private final RunErrorHandlers runErrorHandlers;
 
     /**
-     * Optional externally supplied memory implementation for this run.
+     * Optional externally supplied context manager implementation for this run.
      */
-    private final IAgentMemory agentMemory;
+    private final IContextManager contextManager;
 
     /**
      * Optional lifecycle policy for memory compaction/retention/isolation.
@@ -147,10 +147,10 @@ public class RunConfiguration
                             Map<String, Object> providerOptions,
                             RetryPolicy retryPolicy,
                             RunErrorHandlers runErrorHandlers,
-                            IAgentMemory agentMemory)
+                            IContextManager contextManager)
     {
         this(maxTurns, sessionId, temperature, maxOutputTokens, toolChoice, responseFormat, providerOptions, retryPolicy, runErrorHandlers,
-            agentMemory, null);
+            contextManager, null);
     }
 
     public RunConfiguration(int maxTurns,
@@ -162,7 +162,7 @@ public class RunConfiguration
                             Map<String, Object> providerOptions,
                             RetryPolicy retryPolicy,
                             RunErrorHandlers runErrorHandlers,
-                            IAgentMemory agentMemory,
+                            IContextManager contextManager,
                             MemoryLifecyclePolicy memoryLifecyclePolicy)
     {
         if (maxTurns < 1)
@@ -186,7 +186,7 @@ public class RunConfiguration
         this.providerOptions = providerOptions == null ? Map.of() : Map.copyOf(providerOptions);
         this.retryPolicy = retryPolicy == null ? RetryPolicy.none() : retryPolicy;
         this.runErrorHandlers = runErrorHandlers == null ? new RunErrorHandlers() : runErrorHandlers;
-        this.agentMemory = agentMemory;
+        this.contextManager = contextManager;
         this.memoryLifecyclePolicy = memoryLifecyclePolicy;
     }
 

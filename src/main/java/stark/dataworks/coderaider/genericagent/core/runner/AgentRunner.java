@@ -39,10 +39,10 @@ import stark.dataworks.coderaider.genericagent.core.llmspi.LlmOptions;
 import stark.dataworks.coderaider.genericagent.core.llmspi.LlmRequest;
 import stark.dataworks.coderaider.genericagent.core.llmspi.LlmResponse;
 import stark.dataworks.coderaider.genericagent.core.llmspi.ILlmStreamListener;
-import stark.dataworks.coderaider.genericagent.core.memory.IAgentMemory;
+import stark.dataworks.coderaider.genericagent.core.context.IContextManager;
 import stark.dataworks.coderaider.genericagent.core.memory.policy.MemoryLifecyclePolicy;
 import stark.dataworks.coderaider.genericagent.core.metrics.TokenUsage;
-import stark.dataworks.coderaider.genericagent.core.memory.InMemoryAgentMemory;
+import stark.dataworks.coderaider.genericagent.core.context.InMemoryContextManager;
 import stark.dataworks.coderaider.genericagent.core.context.ContextItem;
 import stark.dataworks.coderaider.genericagent.core.model.Role;
 import stark.dataworks.coderaider.genericagent.core.model.ToolCall;
@@ -348,9 +348,9 @@ public class AgentRunner
 
         ITraceSpan runSpan = traceProvider.startSpan("agent.run");
         runSpan.annotate("agent", startingAgent.definition().getId());
-        IAgentMemory memory = runConfiguration.getAgentMemory() == null
-            ? new InMemoryAgentMemory()
-            : runConfiguration.getAgentMemory();
+        IContextManager memory = runConfiguration.getContextManager() == null
+            ? new InMemoryContextManager()
+            : runConfiguration.getContextManager();
         MemoryLifecyclePolicy memoryPolicy = runConfiguration.getMemoryLifecyclePolicy() == null
             ? MemoryLifecyclePolicy.noop()
             : runConfiguration.getMemoryLifecyclePolicy();
@@ -384,7 +384,7 @@ public class AgentRunner
                     throw new GuardrailTripwireException("input", inputDecision.getReason());
                 }
 
-                List<ContextItem> messages = contextBuilder.build(context.getCurrentAgent(), new SnapshotAgentMemory(readFromMemory(context, runHooks, runConfiguration.getSessionId(), memoryPolicy)), null);
+                List<ContextItem> messages = contextBuilder.build(context.getCurrentAgent(), new SnapshotContextManager(readFromMemory(context, runHooks, runConfiguration.getSessionId(), memoryPolicy)), null);
                 List<ToolDefinition> toolDefinitions = resolveTools(context.getCurrentAgent().definition().getToolNames());
                 Map<String, Object> providerOptions = new HashMap<>(context.getCurrentAgent().definition().getModelProviderOptions());
                 providerOptions.putAll(runConfiguration.getProviderOptions());
@@ -838,7 +838,7 @@ public class AgentRunner
     {
     }
 
-    private AgentRunnerContext contextForBootstrap(IAgent agent, IAgentMemory memory)
+    private AgentRunnerContext contextForBootstrap(IAgent agent, IContextManager memory)
     {
         return new AgentRunnerContext(agent, memory);
     }
@@ -849,11 +849,11 @@ public class AgentRunner
         long started = System.nanoTime();
         try
         {
-            context.getMemory().append(message);
-            List<ContextItem> normalized = memoryPolicy.onWrite(context.getCurrentAgent().definition().getId(), sessionId, context.getMemory().messages());
-            if (normalized.size() != context.getMemory().messages().size())
+            context.getContextManager().append(message);
+            List<ContextItem> normalized = memoryPolicy.onWrite(context.getCurrentAgent().definition().getId(), sessionId, context.getContextManager().items());
+            if (normalized.size() != context.getContextManager().items().size())
             {
-                rewriteMemory(context.getMemory(), normalized);
+                rewriteMemory(context.getContextManager(), normalized);
             }
             if (emitEvent)
             {
@@ -872,7 +872,7 @@ public class AgentRunner
         long started = System.nanoTime();
         try
         {
-            List<ContextItem> messages = memoryPolicy.onRead(context.getCurrentAgent().definition().getId(), sessionId, context.getMemory().messages());
+            List<ContextItem> messages = memoryPolicy.onRead(context.getCurrentAgent().definition().getId(), sessionId, context.getContextManager().items());
             emit(context, hooks, RunEventType.MEMORY_READ, Map.of("messages", messages.size(), "durationMs", durationMs(started), "cacheHit", false));
             return messages;
         }
@@ -887,22 +887,22 @@ public class AgentRunner
         return Math.max(0, (System.nanoTime() - startedNs) / 1_000_000);
     }
 
-    private void rewriteMemory(IAgentMemory memory, List<ContextItem> messages)
+    private void rewriteMemory(IContextManager memory, List<ContextItem> messages)
     {
         memory.replaceAll(messages);
     }
 
-    private static final class SnapshotAgentMemory implements IAgentMemory
+    private static final class SnapshotContextManager implements IContextManager
     {
         private final List<ContextItem> messages;
 
-        private SnapshotAgentMemory(List<ContextItem> messages)
+        private SnapshotContextManager(List<ContextItem> messages)
         {
             this.messages = List.copyOf(messages);
         }
 
         @Override
-        public List<ContextItem> messages()
+        public List<ContextItem> items()
         {
             return messages;
         }

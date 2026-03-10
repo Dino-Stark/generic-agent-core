@@ -4,7 +4,6 @@ import java.util.ArrayList;
 import java.util.List;
 
 import stark.dataworks.coderaider.genericagent.core.agent.IAgent;
-import stark.dataworks.coderaider.genericagent.core.memory.IAgentMemory;
 import stark.dataworks.coderaider.genericagent.core.model.Role;
 import stark.dataworks.coderaider.genericagent.core.react.ReActPromptComposer;
 
@@ -23,7 +22,7 @@ public class DefaultContextBuilder implements IContextBuilder
      * @return List of message values.
      */
     @Override
-    public List<ContextItem> build(IAgent agent, IAgentMemory memory, String userInput)
+    public List<ContextItem> build(IAgent agent, IContextManager memory, String userInput)
     {
         List<ContextItem> messages = new ArrayList<>();
         String systemPrompt = ReActPromptComposer.compose(
@@ -31,7 +30,7 @@ public class DefaultContextBuilder implements IContextBuilder
             agent.definition().getReactInstructions(),
             agent.definition().isReactEnabled());
         messages.add(new ContextItem(Role.SYSTEM, systemPrompt));
-        messages.addAll(memory.messages());
+        messages.addAll(memory.items());
         if (userInput != null && !userInput.isBlank())
         {
             messages.add(new ContextItem(Role.USER, userInput));

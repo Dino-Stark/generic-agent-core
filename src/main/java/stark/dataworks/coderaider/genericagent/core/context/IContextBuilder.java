@@ -3,7 +3,6 @@ package stark.dataworks.coderaider.genericagent.core.context;
 import java.util.List;
 
 import stark.dataworks.coderaider.genericagent.core.agent.IAgent;
-import stark.dataworks.coderaider.genericagent.core.memory.IAgentMemory;
 
 /**
  * IContextBuilder implements prompt/context assembly before model calls.
@@ -19,5 +18,5 @@ public interface IContextBuilder
      * @param userInput user input.
      * @return List of message values.
      */
-    List<ContextItem> build(IAgent agent, IAgentMemory memory, String userInput);
+    List<ContextItem> build(IAgent agent, IContextManager memory, String userInput);
 }

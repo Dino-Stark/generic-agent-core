@@ -10,7 +10,7 @@ import java.util.Objects;
 import stark.dataworks.coderaider.genericagent.core.agent.IAgent;
 import stark.dataworks.coderaider.genericagent.core.context.ContextItem;
 import stark.dataworks.coderaider.genericagent.core.events.RunEvent;
-import stark.dataworks.coderaider.genericagent.core.memory.IAgentMemory;
+import stark.dataworks.coderaider.genericagent.core.context.IContextManager;
 import stark.dataworks.coderaider.genericagent.core.metrics.TokenUsageTracker;
 
 /**
@@ -30,9 +30,9 @@ public class AgentRunnerContext
     private final List<ContextItem> items = new ArrayList<>();
 
     /**
-     * Conversation memory for storing and retrieving prior messages.
+     * Context manager for storing and retrieving prior context items.
      */
-    private final IAgentMemory memory;
+    private final IContextManager contextManager;
 
     /**
      * Accumulator that tracks token usage across the run.
@@ -59,12 +59,12 @@ public class AgentRunnerContext
      * Initializes AgentRunnerContext with required runtime dependencies and options.
      *
      * @param currentAgent current agent.
-     * @param memory       conversation memory backend.
+     * @param contextManager context manager backend.
      */
-    public AgentRunnerContext(IAgent currentAgent, IAgentMemory memory)
+    public AgentRunnerContext(IAgent currentAgent, IContextManager contextManager)
     {
         this.currentAgent = Objects.requireNonNull(currentAgent, "currentAgent");
-        this.memory = Objects.requireNonNull(memory, "memory");
+        this.contextManager = Objects.requireNonNull(contextManager, "contextManager");
     }
 
     /**

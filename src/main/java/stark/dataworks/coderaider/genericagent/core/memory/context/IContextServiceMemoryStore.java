@@ -11,9 +11,9 @@ public interface IContextServiceMemoryStore
 {
     ContextReadResult read(String namespace, String sessionId);
 
-    void write(String namespace, String sessionId, List<ContextItem> messages);
+    void write(String namespace, String sessionId, List<ContextItem> items);
 
-    record ContextReadResult(List<ContextItem> messages, boolean cacheHit)
+    record ContextReadResult(List<ContextItem> items, boolean cacheHit)
     {
     }
 }

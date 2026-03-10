@@ -16,7 +16,7 @@ import stark.dataworks.coderaider.genericagent.core.guardrail.GuardrailEngine;
 import stark.dataworks.coderaider.genericagent.core.handoff.HandoffRouter;
 import stark.dataworks.coderaider.genericagent.core.hooks.HookManager;
 import stark.dataworks.coderaider.genericagent.core.llmspi.LlmResponse;
-import stark.dataworks.coderaider.genericagent.core.memory.context.ContextServiceAgentMemory;
+import stark.dataworks.coderaider.genericagent.core.memory.context.ContextServiceContextManager;
 import stark.dataworks.coderaider.genericagent.core.memory.context.InMemoryContextServiceMemoryStore;
 import stark.dataworks.coderaider.genericagent.core.memory.policy.CompositeMemoryLifecyclePolicy;
 import stark.dataworks.coderaider.genericagent.core.memory.policy.SlidingWindowMemoryPolicy;
@@ -65,7 +65,7 @@ class MemoryRoadmapFeaturesTest
             new RunEventPublisher());
 
         InMemoryContextServiceMemoryStore store = new InMemoryContextServiceMemoryStore();
-        ContextServiceAgentMemory memory = new ContextServiceAgentMemory("agent-a", "session-a", store);
+        ContextServiceContextManager memory = new ContextServiceContextManager("agent-a", "session-a", store);
         RunConfiguration config = new RunConfiguration(8, "session-a", 0.2, 128, "auto", "text", Map.of(), null, null, memory,
             CompositeMemoryLifecyclePolicy.of(new SummarizingMemoryPolicy(4), new SlidingWindowMemoryPolicy(4)));
 
@@ -76,6 +76,6 @@ class MemoryRoadmapFeaturesTest
         assertEquals("ok", result.getFinalOutput());
         assertTrue(result.getEvents().stream().anyMatch(e -> e.getType() == RunEventType.MEMORY_READ));
         assertTrue(result.getEvents().stream().anyMatch(e -> e.getType() == RunEventType.MEMORY_WRITE));
-        assertTrue(store.read("agent-a", "session-a").messages().size() >= 2);
+        assertTrue(store.read("agent-a", "session-a").items().size() >= 2);
     }
 }

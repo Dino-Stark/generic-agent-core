@@ -16,14 +16,14 @@ public class InMemoryContextServiceMemoryStore implements IContextServiceMemoryS
     @Override
     public ContextReadResult read(String namespace, String sessionId)
     {
-        List<ContextItem> messages = data.get(key(namespace, sessionId));
-        return new ContextReadResult(messages == null ? List.of() : List.copyOf(messages), messages != null);
+        List<ContextItem> items = data.get(key(namespace, sessionId));
+        return new ContextReadResult(items == null ? List.of() : List.copyOf(items), items != null);
     }
 
     @Override
-    public void write(String namespace, String sessionId, List<ContextItem> messages)
+    public void write(String namespace, String sessionId, List<ContextItem> items)
     {
-        data.put(key(namespace, sessionId), List.copyOf(messages));
+        data.put(key(namespace, sessionId), List.copyOf(items));
     }
 
     private String key(String namespace, String sessionId)
