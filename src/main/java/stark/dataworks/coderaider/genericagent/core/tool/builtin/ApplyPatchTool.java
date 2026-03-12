@@ -18,9 +18,31 @@ import stark.dataworks.coderaider.genericagent.core.tool.ToolParameterSchema;
 public class ApplyPatchTool implements ITool
 {
     private static final String TOOL_NAME = "apply_patch";
-    private static final String TOOL_DESCRIPTION = "Apply file operations using patch-style operations. " +
-        "Accepted payloads: {type,path,diff|content} or {operation:{type,path,diff|content}}. " +
-        "Supported types: 'create_file' (or 'create'), 'update_file' (or 'update'), 'delete_file' (or 'delete').";
+    private static final String TOOL_DESCRIPTION = """
+        Apply file operations using patch-style diffs.
+        
+        QUICK START - Most common usage:
+        {"type":"update_file","path":"File.java","diff":"- old line\\n+ new line"}
+        
+        TYPES: create_file, update_file, delete_file (aliases: create, update, delete)
+        
+        DIFF FORMAT (simplest, recommended for LLMs):
+        - Use '-' prefix for lines to remove (exact match required)
+        - Use '+' prefix for lines to add
+        - Context lines (space prefix) are optional but help with positioning
+        
+        EXAMPLES:
+        1. Single line change:
+           {"type":"update_file","path":"Test.java","diff":"- return a - b;\\n+ return a + b;"}
+        
+        2. Multiple changes (order matters):
+           {"type":"update_file","path":"Test.java","diff":"- line1\\n+ newLine1\\n- line2\\n+ newLine2"}
+        
+        3. With context (optional):
+           {"type":"update_file","path":"Test.java","diff":" public void test() {\\n-     old code;\\n+     new code;\\n }"}
+        
+        CRITICAL: '-' lines must match original file EXACTLY (including whitespace/indentation).
+        TIP: Use minimal diff with just -/+ lines for best reliability.""";
 
     private final IApplyPatchEditor editor;
     private final boolean needsApproval;

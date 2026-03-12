@@ -213,22 +213,22 @@ public class Example24ReActAgentDebugFixTest
         def.setModel(MODEL);
         def.setReactEnabled(true);
         def.setSystemPrompt("""
-            Fix BuggyCalculator.java. Bug: add(a,b) subtracts instead of adds.
-            Target: add(7,5)=12, add(3,-2)=1.
-            OS: %s. Workspace: %s
+            Fix BuggyCalculator.java bug.
             
-            Use apply_patch with direct JSON args:
-            {"type":"update_file","path":"BuggyCalculator.java","diff":"..."}
+            PROBLEM: add(a,b) uses subtraction instead of addition
+            TARGET: add(7,5)=12, add(3,-2)=1
             
-            Simple diff format (space for context, - for remove, + for add):
-             public class BuggyCalculator {
-                 public static int add(int a, int b) {
-            -        return a - b;
-            +        return a + b;
-                 }
-             }
+            INSTRUCTIONS:
+            1. Apply ONE patch to fix the bug
+            2. Compile to verify
+            3. Report result
+            
+            PATCH FORMAT (minimal, copy exact line from file):
+            {"type":"update_file","path":"BuggyCalculator.java","diff":"-        return a - b;\\n+        return a + b;"}
+            
+            CRITICAL: The '-' line must match the file EXACTLY (with correct indentation).
             """.formatted(runtimeOs.displayName, workspace));
-        def.setReactInstructions("Use minimal reasoning. Apply one direct patch call, compile, then return a 3-line summary.");
+        def.setReactInstructions("Act immediately: 1) apply patch 2) compile 3) output 2-line result. No explanations.");
         def.setToolNames(List.of("apply_patch", "local_shell"));
         def.setModelProviderOptions(Map.of("working_directory", workspace.toString()));
         def.setModelReasoning(Map.of("effort", "low"));

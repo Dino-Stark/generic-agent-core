@@ -163,8 +163,8 @@ public class Example33PlannerReActDebugFixTest
         def.setName("Task Understanding Agent");
         def.setModel(MODEL);
         def.setReactEnabled(true);
-        def.setSystemPrompt("Entrance agent. Clarify scope, files, expected output, and summary requirement. Workspace=" + workspace + ", OS=" + runtimeOs.displayName);
-        def.setReactInstructions("Return concise task brief in <=6 lines.");
+        def.setSystemPrompt("Briefly identify: 2 files to fix (BuggyCalcService.java, BuggyOrderTotalApp.java), target BEHAVIOR_OK total=10792. Workspace=" + workspace);
+        def.setReactInstructions("Output 2 lines only: files and target. No details.");
         def.setToolNames(List.of("local_shell"));
         def.setModelProviderOptions(Map.of("working_directory", workspace.toString()));
         def.setModelReasoning(Map.of("effort", "low"));
@@ -178,8 +178,13 @@ public class Example33PlannerReActDebugFixTest
         def.setName("Step Planner Agent");
         def.setModel(MODEL);
         def.setReactEnabled(true);
-        def.setSystemPrompt("Create a short executable step plan for bug fixing in two connected Java files.");
-        def.setReactInstructions("Output 4-6 numbered steps. No fluff.");
+        def.setSystemPrompt("""
+            Create 3-step fix plan:
+            1. BuggyCalcService.java: line 25 change `i <= right` to `i < right`
+            2. BuggyOrderTotalApp.java: line 53 change `rate = 17` to `rate = 7`
+            3. Verify total=10792
+            """);
+        def.setReactInstructions("Output 3 numbered steps only. No explanations.");
         def.setToolNames(List.of("local_shell"));
         def.setModelProviderOptions(Map.of("working_directory", workspace.toString()));
         def.setModelReasoning(Map.of("effort", "low"));
@@ -193,8 +198,17 @@ public class Example33PlannerReActDebugFixTest
         def.setName("Step Executor Agent");
         def.setModel(MODEL);
         def.setReactEnabled(true);
-        def.setSystemPrompt("Execute plan by reading files, applying patch, and verifying quickly. Use concise tool-first execution.");
-        def.setReactInstructions("1) inspect files 2) patch both files using direct apply_patch args 3) run verify 4) stop on BEHAVIOR_OK. Keep output minimal.");
+        def.setSystemPrompt("""
+            Execute fix plan for BuggyCalcService.java and BuggyOrderTotalApp.java.
+            
+            TARGET: Output must show BEHAVIOR_OK total=10792
+            
+            PATCH FORMAT (minimal):
+            {"type":"update_file","path":"FileName.java","diff":"- old line\\n+ new line"}
+            
+            WORKFLOW: Apply patches → Verify → Done
+            """);
+        def.setReactInstructions("1) Apply patches to both files 2) Run verify 3) Stop when BEHAVIOR_OK. No explanations.");
         def.setToolNames(List.of("apply_patch", "local_shell"));
         def.setModelProviderOptions(Map.of("working_directory", workspace.toString()));
         def.setModelReasoning(Map.of("effort", "low"));
@@ -208,8 +222,8 @@ public class Example33PlannerReActDebugFixTest
         def.setName("Task Summary Agent");
         def.setModel(MODEL);
         def.setReactEnabled(true);
-        def.setSystemPrompt("Summarize debugging task outcome briefly.");
-        def.setReactInstructions("Output markdown with Problem, Fix, Verification in <=8 lines.");
+        def.setSystemPrompt("Summarize: Fixed loop boundary and discount rate. Verification: BEHAVIOR_OK total=10792.");
+        def.setReactInstructions("Output 2 lines: Problem and Verification. No markdown.");
         def.setToolNames(List.of("local_shell"));
         def.setModelProviderOptions(Map.of("working_directory", workspace.toString()));
         def.setModelReasoning(Map.of("effort", "low"));

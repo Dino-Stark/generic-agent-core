@@ -175,43 +175,27 @@ public class Example25ComplexReActDebugFixTest
         def.setModel(MODEL);
         def.setReactEnabled(true);
         def.setSystemPrompt("""
-            You are a Java bug fixer. Keep reasoning minimal and action-oriented.
+            Fix 3 bugs in InvoiceSummaryEngine.java in ONE patch.
             
-            WORKFLOW:
-            1. Read: %s
-            2. Apply ONE patch fixing ALL 3 bugs using direct apply_patch args
-            3. Verify: %s
-            4. Output FINAL SUMMARY when BEHAVIOR_OK
+            BUGS (fix all in single apply_patch call):
+            1. Line: for (int i = 1; i < items.length; i++)
+               Fix:  for (int i = 0; i < items.length; i++)
             
-            THREE BUGS TO FIX IN ONE PATCH:
-            Bug 1: for (int i = 1 -> for (int i = 0
-            Bug 2: return 0.18; -> return 0.08;
-            Bug 3: * 10.0 / 10.0 -> * 100.0 / 100.0
+            2. Line: return 0.18;
+               Fix:  return 0.08;
             
-            EXACT DIFF (copy these lines exactly, use spaces not tabs):
-            -        for (int i = 1; i < items.length; i++) {
-            +        for (int i = 0; i < items.length; i++) {
-            -            return 0.18;
-            +            return 0.08;
-            -        return Math.round(value * 10.0) / 10.0;
-            +        return Math.round(value * 100.0) / 100.0;
+            3. Line: return Math.round(value * 10.0) / 10.0;
+               Fix:  return Math.round(value * 100.0) / 100.0;
             
-            SUMMARY FORMAT (output after BEHAVIOR_OK):
-            ## Summary
-            **Problem**: Brief description of the bugs found
-            **Root Cause**: Why the bugs occurred
-            **Fix Applied**: What changes were made
-            **Verification**: Test results confirming the fix
+            PATCH FORMAT (minimal, each change on separate line):
+            {"type":"update_file","path":"InvoiceSummaryEngine.java","diff":"-        for (int i = 1; i < items.length; i++)\\n+        for (int i = 0; i < items.length; i++)\\n-            return 0.18;\\n+            return 0.08;\\n-        return Math.round(value * 10.0) / 10.0;\\n+        return Math.round(value * 100.0) / 100.0;"}
+            
+            CRITICAL: Copy '-' lines EXACTLY from file (with correct indentation).
+            
+            WORKFLOW: apply patch → verify → done
             """.formatted(runtimeOs.printFileCommand(workspace, "InvoiceSummaryEngine.java"),
             runtimeOs.verifyCommand(workspace)));
-        def.setReactInstructions("""
-            1. Read file to confirm content
-            2. Apply ONE patch with the EXACT diff above (all 3 fixes)
-            3. Run verification
-            4. When BEHAVIOR_OK: output Summary in Markdown format with Problem, Root Cause, Fix Applied, Verification sections
-            5. Keep final summary under 8 lines.
-            Keep output concise.
-            """);
+        def.setReactInstructions("1) Apply patch 2) Verify 3) Output 3-line summary when BEHAVIOR_OK. No internal monologue.");
         def.setToolNames(List.of("apply_patch", "local_shell"));
         def.setModelProviderOptions(Map.of("working_directory", workspace.toString()));
         def.setModelReasoning(Map.of("effort", "low"));
