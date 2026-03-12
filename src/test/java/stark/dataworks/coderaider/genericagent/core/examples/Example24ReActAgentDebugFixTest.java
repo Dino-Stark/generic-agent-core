@@ -94,7 +94,7 @@ public class Example24ReActAgentDebugFixTest
 
         ContextResult fixerResult = null;
         ContextResult reviewerResult = null;
-        for (int attempt = 1; attempt <= 3; attempt++)
+        for (int attempt = 1; attempt <= 5; attempt++)
         {
             String sourceSnapshot = Files.readString(targetBugFile);
             fixerResult = runner.chatClient("react-fixer")
@@ -129,34 +129,14 @@ public class Example24ReActAgentDebugFixTest
         Assertions.assertTrue(Files.exists(targetBugFile), "Expected buggy source in workspace");
 
         String behaviorOutput = runBehaviorVerification(workspace);
-        if (!behaviorOutput.contains("BEHAVIOR_OK"))
-        {
-            applyDeterministicFallbackFix(targetBugFile);
-            behaviorOutput = runBehaviorVerification(workspace);
-
-            reviewerResult = runner.chatClient("react-reviewer")
-                .prompt()
-                .stream(true)
-                .user(buildReviewerPrompt(runtimeOs, workspace, "Applied deterministic fallback fix after failed ReAct attempts."))
-                .runConfiguration(EXAMPLE_RUN_CONFIGURATION)
-                .runHooks(ExampleSupport.noopHooks())
-                .call()
-                .contextResult();
-        }
-        Assertions.assertTrue(behaviorOutput.contains("BEHAVIOR_OK"), "Expected add behavior verification to pass: " + behaviorOutput);
-        Assertions.assertTrue(reviewerResult.getFinalOutput() != null && !reviewerResult.getFinalOutput().isBlank(), "Expected reviewer summary output");
-        String reviewerSummary = reviewerResult.getFinalOutput();
-        if (reviewerSummary != null && reviewerSummary.startsWith("Run failed:"))
-        {
-            reviewerSummary = "## Summary\nProblem: add() used subtraction.\nFix: patched return statement to a + b.\nVerification: "
-                + behaviorOutput.trim();
-        }
-        Assertions.assertTrue(reviewerSummary.toLowerCase(Locale.ROOT).contains("pass")
-                || reviewerSummary.toLowerCase(Locale.ROOT).contains("summary"),
-            "Expected concise verification summary from reviewer: " + reviewerSummary);
-        Assertions.assertTrue(reviewerSummary.length() <= 1800, "Expected concise reviewer output but got length=" + reviewerSummary.length());
+        Assertions.assertTrue(behaviorOutput.contains("BEHAVIOR_OK"), 
+            "Agent must fix the bug successfully. Verification output: " + behaviorOutput);
+        
+        Assertions.assertTrue(reviewerResult.getFinalOutput() != null && !reviewerResult.getFinalOutput().isBlank(), 
+            "Expected reviewer summary output");
+        
         long elapsedSeconds = (System.nanoTime() - startedAt) / 1_000_000_000L;
-        Assertions.assertTrue(elapsedSeconds <= 90, "Expected short runtime (<=90s) but took " + elapsedSeconds + "s");
+        Assertions.assertTrue(elapsedSeconds <= 120, "Expected runtime (<=120s) but took " + elapsedSeconds + "s");
     }
 
     private static AgentRegistry createAgentRegistry(RuntimeOs runtimeOs, Path workspace)
@@ -213,22 +193,18 @@ public class Example24ReActAgentDebugFixTest
         def.setModel(MODEL);
         def.setReactEnabled(true);
         def.setSystemPrompt("""
-            Fix BuggyCalculator.java bug.
+            You are a code fixer. Diagnose and fix bugs in Java files.
             
-            PROBLEM: add(a,b) uses subtraction instead of addition
-            TARGET: add(7,5)=12, add(3,-2)=1
+            Process:
+            1. Read the buggy file to understand the code
+            2. Identify the bug by analyzing the logic
+            3. Apply a patch to fix it
+            4. Compile and verify the fix works
             
-            INSTRUCTIONS:
-            1. Apply ONE patch to fix the bug
-            2. Compile to verify
-            3. Report result
-            
-            PATCH FORMAT (minimal, copy exact line from file):
-            {"type":"update_file","path":"BuggyCalculator.java","diff":"-        return a - b;\\n+        return a + b;"}
-            
-            CRITICAL: The '-' line must match the file EXACTLY (with correct indentation).
+            OS: %s
+            Workspace: %s
             """.formatted(runtimeOs.displayName, workspace));
-        def.setReactInstructions("Act immediately: 1) apply patch 2) compile 3) output 2-line result. No explanations.");
+        def.setReactInstructions("Read code → Find bug → Fix it → Verify → Done. No explanations until fix is verified.");
         def.setToolNames(List.of("apply_patch", "local_shell"));
         def.setModelProviderOptions(Map.of("working_directory", workspace.toString()));
         def.setModelReasoning(Map.of("effort", "low"));
@@ -293,35 +269,19 @@ public class Example24ReActAgentDebugFixTest
     private static String buildFixerPrompt(RuntimeOs runtimeOs, Path workspace, String investigationOutput, String sourceSnapshot, int attempt)
     {
         return """
-            Fix BuggyCalculator.java based on the investigation results.
+            Attempt %d to fix BuggyCalculator.java.
             
-            Attempt: %d
-            Target behavior: add(7,5)=12, add(3,-2)=1
-            
-            Investigation report:
+            Investigation findings:
             %s
             
-            Current source code:
+            Current code:
             %s
             
-            Runtime OS: %s
+            Fix the bug and verify with: javac BuggyCalculator.java BuggyCalculatorVerifier.java && java BuggyCalculatorVerifier
+            Target: output should contain BEHAVIOR_OK
+            
+            OS: %s
             Workspace: %s
-            
-            Instructions:
-            1. Use apply_patch with one direct tool call to fix the bug
-            2. Compile to verify the fix
-            3. Provide a summary of the fix
-            
-            apply_patch format (preferred):
-            {"type":"update_file","path":"BuggyCalculator.java","diff":"..."}
-            
-            Simple diff format (space for context, - for remove, + for add):
-             public class BuggyCalculator {
-                 public static int add(int a, int b) {
-            -        return a - b;
-            +        return a + b;
-                 }
-             }
             """.formatted(attempt, investigationOutput, sourceSnapshot, runtimeOs.displayName, workspace);
     }
 
@@ -384,12 +344,6 @@ public class Example24ReActAgentDebugFixTest
             throw new IOException("Missing verifier input source: " + INPUT_VERIFIER_FILE);
         }
         Files.writeString(targetVerifierFile, Files.readString(INPUT_VERIFIER_FILE));
-    }
-
-    private static void applyDeterministicFallbackFix(Path targetBugFile) throws IOException
-    {
-        String source = Files.readString(targetBugFile);
-        Files.writeString(targetBugFile, source.replace("return a - b;", "return a + b;"));
     }
 
     private static String runBehaviorVerification(Path workspace)

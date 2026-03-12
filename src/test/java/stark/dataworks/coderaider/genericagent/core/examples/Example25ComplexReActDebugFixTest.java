@@ -76,7 +76,7 @@ public class Example25ComplexReActDebugFixTest
         System.out.println("INITIAL_VERIFICATION: " + behaviorOutput.trim());
 
         ContextResult debuggerResult = null;
-        for (int attempt = 1; attempt <= 3; attempt++)
+        for (int attempt = 1; attempt <= 5; attempt++)
         {
             String sourceSnapshot = Files.readString(targetFile);
             debuggerResult = runner.chatClient("react25-debugger")
@@ -96,50 +96,16 @@ public class Example25ComplexReActDebugFixTest
             }
         }
 
-        boolean usedFallback = false;
-        if (!behaviorOutput.contains("BEHAVIOR_OK"))
-        {
-            applyDeterministicFallbackFix(targetFile);
-            behaviorOutput = runBehaviorVerification(runtimeOs, workspace);
-            System.out.println("FALLBACK_VERIFICATION: " + behaviorOutput.trim());
-            usedFallback = true;
-        }
-
-        if (debuggerResult != null)
-        {
-            String finalOutput = debuggerResult.getFinalOutput();
-            if (finalOutput == null || finalOutput.isBlank() || !finalOutput.contains("## Summary") || usedFallback)
-            {
-                debuggerResult = runner.chatClient("react25-debugger")
-                    .prompt()
-                    .stream(true)
-                    .user("Final verification output: " + behaviorOutput.trim()
-                        + "\nProvide a concise markdown summary with exactly these sections: Problem, Root Cause, Fix Applied, Verification.")
-                    .runConfiguration(EXAMPLE_RUN_CONFIGURATION)
-                    .runHooks(ExampleSupport.noopHooks())
-                    .call()
-                    .contextResult();
-            }
-        }
-
         Assertions.assertNotNull(debuggerResult, "Expected debugger output");
         Assertions.assertTrue(debuggerResult.getFinalOutput() != null && !debuggerResult.getFinalOutput().isBlank(),
             "Expected debugger summary output");
-        String debuggerSummary = debuggerResult.getFinalOutput();
-        if (debuggerSummary != null && debuggerSummary.startsWith("Run failed:"))
-        {
-            debuggerSummary = "## Summary\n**Problem**: Invoice summary logic had loop/index/tax/rounding defects.\n"
-                + "**Root Cause**: Wrong constants and index boundary in core calculations.\n"
-                + "**Fix Applied**: Updated loop start, tax rate, and rounding precision.\n"
-                + "**Verification**: " + behaviorOutput.trim();
-        }
-        Assertions.assertTrue(debuggerSummary.contains("Problem") && debuggerSummary.contains("Verification"),
-            "Expected structured summary with Problem and Verification: " + debuggerSummary);
-        Assertions.assertTrue(debuggerSummary.length() <= 2000, "Expected concise debugger output but got length=" + debuggerSummary.length());
-        Assertions.assertTrue(behaviorOutput.contains("BEHAVIOR_OK"), "Expected runtime verification output: " + behaviorOutput);
+        
+        Assertions.assertTrue(behaviorOutput.contains("BEHAVIOR_OK"), 
+            "Agent must fix all bugs successfully. Verification output: " + behaviorOutput);
+        
         System.out.println("FINAL_VERIFICATION: " + behaviorOutput.trim());
         long elapsedSeconds = (System.nanoTime() - startedAt) / 1_000_000_000L;
-        Assertions.assertTrue(elapsedSeconds <= 90, "Expected short runtime (<=90s) but took " + elapsedSeconds + "s");
+        Assertions.assertTrue(elapsedSeconds <= 120, "Expected runtime (<=120s) but took " + elapsedSeconds + "s");
     }
 
     private static Path resetWorkspace(Path workspace) throws IOException
@@ -175,27 +141,19 @@ public class Example25ComplexReActDebugFixTest
         def.setModel(MODEL);
         def.setReactEnabled(true);
         def.setSystemPrompt("""
-            Fix 3 bugs in InvoiceSummaryEngine.java in ONE patch.
+            You are a code debugger. Find and fix bugs in Java files.
             
-            BUGS (fix all in single apply_patch call):
-            1. Line: for (int i = 1; i < items.length; i++)
-               Fix:  for (int i = 0; i < items.length; i++)
+            Process:
+            1. Read the file to understand its logic
+            2. Identify bugs by analyzing the code
+            3. Apply patches to fix all bugs
+            4. Verify the fixes work correctly
             
-            2. Line: return 0.18;
-               Fix:  return 0.08;
-            
-            3. Line: return Math.round(value * 10.0) / 10.0;
-               Fix:  return Math.round(value * 100.0) / 100.0;
-            
-            PATCH FORMAT (minimal, each change on separate line):
-            {"type":"update_file","path":"InvoiceSummaryEngine.java","diff":"-        for (int i = 1; i < items.length; i++)\\n+        for (int i = 0; i < items.length; i++)\\n-            return 0.18;\\n+            return 0.08;\\n-        return Math.round(value * 10.0) / 10.0;\\n+        return Math.round(value * 100.0) / 100.0;"}
-            
-            CRITICAL: Copy '-' lines EXACTLY from file (with correct indentation).
-            
-            WORKFLOW: apply patch → verify → done
-            """.formatted(runtimeOs.printFileCommand(workspace, "InvoiceSummaryEngine.java"),
-            runtimeOs.verifyCommand(workspace)));
-        def.setReactInstructions("1) Apply patch 2) Verify 3) Output 3-line summary when BEHAVIOR_OK. No internal monologue.");
+            OS: %s
+            Workspace: %s
+            Verify command: %s
+            """.formatted(runtimeOs.displayName, workspace, runtimeOs.verifyCommand(workspace)));
+        def.setReactInstructions("Read → Diagnose → Fix → Verify → Done. No explanations until verification passes.");
         def.setToolNames(List.of("apply_patch", "local_shell"));
         def.setModelProviderOptions(Map.of("working_directory", workspace.toString()));
         def.setModelReasoning(Map.of("effort", "low"));
@@ -205,26 +163,21 @@ public class Example25ComplexReActDebugFixTest
     private static String buildDebuggerPrompt(RuntimeOs runtimeOs, Path workspace, int attempt, String behaviorOutput, String sourceSnapshot)
     {
         return """
-            Attempt %d. Status: %s
-
-            Current source:
+            Attempt %d to fix InvoiceSummaryEngine.java.
+            
+            Current verification status:
             %s
-
-            Apply one patch to fix all 3 bugs in ONE diff, then verify: %s
-
-            apply_patch preferred format:
-            {"type":"update_file","path":"InvoiceSummaryEngine.java","diff":"..."}
-            """.formatted(attempt, behaviorOutput.trim(), sourceSnapshot, runtimeOs.verifyCommand(workspace));
-    }
-
-
-    private static void applyDeterministicFallbackFix(Path targetFile) throws IOException
-    {
-        String source = Files.readString(targetFile);
-        source = source.replace("for (int i = 1; i < items.length; i++)", "for (int i = 0; i < items.length; i++)");
-        source = source.replace("return 0.18;", "return 0.08;");
-        source = source.replace("return Math.round(value * 10.0) / 10.0;", "return Math.round(value * 100.0) / 100.0;");
-        Files.writeString(targetFile, source);
+            
+            Current code:
+            %s
+            
+            Fix all bugs and verify with: %s
+            Target: output should contain BEHAVIOR_OK
+            
+            OS: %s
+            Workspace: %s
+            """.formatted(attempt, behaviorOutput.trim(), sourceSnapshot, runtimeOs.verifyCommand(workspace), 
+                runtimeOs.displayName, workspace);
     }
 
     private static void stageVerifierSource(Path targetVerifierFile) throws IOException

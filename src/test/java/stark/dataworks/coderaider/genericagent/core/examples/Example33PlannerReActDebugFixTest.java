@@ -79,7 +79,7 @@ public class Example33PlannerReActDebugFixTest
 
         String verifyOutput = runBehaviorVerification(runtimeOs, workspace);
         ContextResult execution = null;
-        for (int attempt = 1; attempt <= 4; attempt++)
+        for (int attempt = 1; attempt <= 6; attempt++)
         {
             execution = runner.chatClient("react30-executor").prompt().stream(true)
                 .user(buildExecutorPrompt(runtimeOs, workspace, planning.getFinalOutput(), verifyOutput, attempt))
@@ -91,12 +91,6 @@ public class Example33PlannerReActDebugFixTest
             }
         }
 
-        if (!verifyOutput.contains("BEHAVIOR_OK"))
-        {
-            applyFallbackFixes(workspace);
-            verifyOutput = runBehaviorVerification(runtimeOs, workspace);
-        }
-
         ContextResult summary = null;
         if (!userRequest.toLowerCase(Locale.ROOT).contains("no summary"))
         {
@@ -105,55 +99,42 @@ public class Example33PlannerReActDebugFixTest
                 .runConfiguration(EXAMPLE_RUN_CONFIGURATION).runHooks(ExampleSupport.noopHooks()).call().contextResult();
         }
 
-        Assertions.assertTrue(verifyOutput.contains("BEHAVIOR_OK"), "Expected BEHAVIOR_OK but got: " + verifyOutput);
+        Assertions.assertTrue(verifyOutput.contains("BEHAVIOR_OK"), 
+            "Agent must fix the bugs successfully. Verification output: " + verifyOutput);
         Assertions.assertNotNull(understanding.getFinalOutput());
         Assertions.assertNotNull(planning.getFinalOutput());
         Assertions.assertNotNull(execution.getFinalOutput());
+        
         if (summary != null)
         {
             String summaryText = summary.getFinalOutput();
             Assertions.assertFalse(summaryText.isBlank());
-            if (summaryText.startsWith("Run failed:"))
-            {
-                summaryText = "## Summary\nProblem: bugs in discount/tax logic across two Java files.\n"
-                    + "Fix: corrected loop boundary and tax rate.\nVerification: " + verifyOutput.trim();
-            }
-            Assertions.assertTrue(summaryText.contains("Problem")
-                    && summaryText.contains("Verification"),
-                "Expected summary sections in final output: " + summaryText);
-            Assertions.assertTrue(summaryText.length() <= 1800,
-                "Expected concise summary but got length=" + summaryText.length());
+            Assertions.assertTrue(summaryText.contains("Problem") || summaryText.contains("Fix") || summaryText.contains("Verification"),
+                "Expected summary with relevant sections. Got: " + summaryText);
         }
+        
         long elapsedSeconds = (System.nanoTime() - startedAt) / 1_000_000_000L;
-        Assertions.assertTrue(elapsedSeconds <= 90, "Expected short runtime (<=90s) but took " + elapsedSeconds + "s");
+        Assertions.assertTrue(elapsedSeconds <= 150, "Expected runtime (<=150s) but took " + elapsedSeconds + "s");
     }
 
     private static String buildExecutorPrompt(RuntimeOs runtimeOs, Path workspace, String plan, String verifyOutput, int attempt)
     {
         return """
-            Attempt %d
-            Execute this plan and fix all bugs in BuggyCalcService.java and BuggyOrderTotalApp.java:
+            Attempt %d to fix the bugs.
+            
+            Fix plan:
             %s
-
-            Current verification: %s
+            
+            Current verification status:
+            %s
+            
             Verify command: %s
-            Target runtime behavior must print BEHAVIOR_OK total=10792.
-            Keep thoughts minimal and only output necessary steps.
-            """.formatted(attempt, plan, verifyOutput.trim(), runtimeOs.verifyCommand(workspace));
-    }
-
-
-    private static void applyFallbackFixes(Path workspace) throws IOException
-    {
-        Path calc = workspace.resolve("BuggyCalcService.java");
-        String calcSource = Files.readString(INPUT_FILE_1)
-            .replace("for (int i = 0; i <= right; i++)", "for (int i = 0; i < right; i++)");
-        Files.writeString(calc, calcSource);
-
-        Path app = workspace.resolve("BuggyOrderTotalApp.java");
-        String appSource = Files.readString(INPUT_FILE_2)
-            .replace("rate = 17;", "rate = 7;");
-        Files.writeString(app, appSource);
+            Target: output should contain BEHAVIOR_OK
+            
+            OS: %s
+            Workspace: %s
+            """.formatted(attempt, plan, verifyOutput.trim(), runtimeOs.verifyCommand(workspace), 
+                runtimeOs.displayName, workspace);
     }
 
     private static AgentDefinition createUnderstandingAgent(RuntimeOs runtimeOs, Path workspace)
@@ -163,8 +144,18 @@ public class Example33PlannerReActDebugFixTest
         def.setName("Task Understanding Agent");
         def.setModel(MODEL);
         def.setReactEnabled(true);
-        def.setSystemPrompt("Briefly identify: 2 files to fix (BuggyCalcService.java, BuggyOrderTotalApp.java), target BEHAVIOR_OK total=10792. Workspace=" + workspace);
-        def.setReactInstructions("Output 2 lines only: files and target. No details.");
+        def.setSystemPrompt("""
+            You are a task analyzer. Quickly understand the debugging task.
+            
+            Identify:
+            - Which files need to be fixed
+            - What the expected behavior is
+            - How to verify the fix
+            
+            OS: %s
+            Workspace: %s
+            """.formatted(runtimeOs.displayName, workspace));
+        def.setReactInstructions("Briefly state: files, expected behavior, verification method. Keep it under 4 lines.");
         def.setToolNames(List.of("local_shell"));
         def.setModelProviderOptions(Map.of("working_directory", workspace.toString()));
         def.setModelReasoning(Map.of("effort", "low"));
@@ -179,12 +170,17 @@ public class Example33PlannerReActDebugFixTest
         def.setModel(MODEL);
         def.setReactEnabled(true);
         def.setSystemPrompt("""
-            Create 3-step fix plan:
-            1. BuggyCalcService.java: line 25 change `i <= right` to `i < right`
-            2. BuggyOrderTotalApp.java: line 53 change `rate = 17` to `rate = 7`
-            3. Verify total=10792
-            """);
-        def.setReactInstructions("Output 3 numbered steps only. No explanations.");
+            You are a debugging planner. Create a concise fix plan.
+            
+            Process:
+            1. Read the buggy files
+            2. Identify the bugs by analyzing code logic
+            3. List the fixes needed
+            
+            OS: %s
+            Workspace: %s
+            """.formatted(runtimeOs.displayName, workspace));
+        def.setReactInstructions("Read files → Identify bugs → List fixes in numbered steps. Keep plan under 6 steps.");
         def.setToolNames(List.of("local_shell"));
         def.setModelProviderOptions(Map.of("working_directory", workspace.toString()));
         def.setModelReasoning(Map.of("effort", "low"));
@@ -199,16 +195,18 @@ public class Example33PlannerReActDebugFixTest
         def.setModel(MODEL);
         def.setReactEnabled(true);
         def.setSystemPrompt("""
-            Execute fix plan for BuggyCalcService.java and BuggyOrderTotalApp.java.
+            You are a code fixer. Execute the fix plan and verify it works.
             
-            TARGET: Output must show BEHAVIOR_OK total=10792
+            Process:
+            1. Apply patches to fix the bugs
+            2. Verify the fixes work correctly
+            3. Iterate if needed
             
-            PATCH FORMAT (minimal):
-            {"type":"update_file","path":"FileName.java","diff":"- old line\\n+ new line"}
-            
-            WORKFLOW: Apply patches → Verify → Done
-            """);
-        def.setReactInstructions("1) Apply patches to both files 2) Run verify 3) Stop when BEHAVIOR_OK. No explanations.");
+            OS: %s
+            Workspace: %s
+            Verify: %s
+            """.formatted(runtimeOs.displayName, workspace, runtimeOs.verifyCommand(workspace)));
+        def.setReactInstructions("Apply patches → Verify → Retry if fails → Done. No explanations until verification passes.");
         def.setToolNames(List.of("apply_patch", "local_shell"));
         def.setModelProviderOptions(Map.of("working_directory", workspace.toString()));
         def.setModelReasoning(Map.of("effort", "low"));
@@ -222,8 +220,13 @@ public class Example33PlannerReActDebugFixTest
         def.setName("Task Summary Agent");
         def.setModel(MODEL);
         def.setReactEnabled(true);
-        def.setSystemPrompt("Summarize: Fixed loop boundary and discount rate. Verification: BEHAVIOR_OK total=10792.");
-        def.setReactInstructions("Output 2 lines: Problem and Verification. No markdown.");
+        def.setSystemPrompt("""
+            You are a result summarizer. Briefly report the debugging outcome.
+            
+            OS: %s
+            Workspace: %s
+            """.formatted(runtimeOs.displayName, workspace));
+        def.setReactInstructions("Summarize in 2-3 lines: Problem, Fix, Verification result.");
         def.setToolNames(List.of("local_shell"));
         def.setModelProviderOptions(Map.of("working_directory", workspace.toString()));
         def.setModelReasoning(Map.of("effort", "low"));

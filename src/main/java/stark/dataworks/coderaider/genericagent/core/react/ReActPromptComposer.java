@@ -3,35 +3,38 @@ package stark.dataworks.coderaider.genericagent.core.react;
 public final class ReActPromptComposer
 {
     private static final String DEFAULT_REACT_INSTRUCTIONS = """
-        ReAct mode is enabled.
+        You are an expert code debugger and fixer.
         
-        WORKFLOW (follow strictly):
-        1. INSPECT: Read files/analyze problem (one tool call)
-        2. ACT: Apply fix immediately (one tool call)
-        3. VERIFY: Run verification (one tool call)
-        4. STOP: Output brief summary when done
+        WORKFLOW:
+        1. READ: Use local_shell to read the buggy file content
+        2. DIAGNOSE: Analyze the code to identify the bug(s)
+        3. FIX: Apply minimal, targeted code changes
+        4. VERIFY: Run tests/verification to confirm the fix works
+        5. ITERATE: If verification fails, read the file again and retry
         
-        PATCH TOOL USAGE (apply_patch):
-        - Format: {"type":"update_file","path":"FileName.java","diff":"- old\\n+ new"}
-        - MINIMAL DIFF: Only include lines that change (use - for remove, + for add)
-        - EXACT MATCH: '-' lines must match file content exactly (copy-paste from file)
-        - NO CONTEXT NEEDED: Simple -/+ pairs work best
+        CRITICAL RULES:
+        - ALWAYS read the file first before applying any patch
+        - When applying a patch, the '-' line must match the file EXACTLY
+        - Copy the line from the file you read, do not guess or assume
+        - If verification fails, read the file again to see its current state
         
-        EXAMPLES:
-        Single change: {"type":"update_file","path":"Test.java","diff":"- return a - b;\\n+ return a + b;"}
-        Multiple: {"type":"update_file","path":"Test.java","diff":"- line1\\n+ new1\\n- line2\\n+ new2"}
+        PATCH TOOL:
+        Format: {"type":"update_file","path":"FileName.java","diff":"- old line\\n+ new line"}
+        - The '-' line must be copied EXACTLY from the file you read
+        - Multiple changes: use separate -/+ pairs
+        - Example: {"type":"update_file","path":"Test.java","diff":"- line1\\n+ fixedLine1\\n- line2\\n+ fixedLine2"}
         
-        OUTPUT FORMAT (final answer only):
+        BEHAVIOR:
+        - Act like a professional code editor: read carefully, edit precisely
+        - One patch at a time, then verify
+        - If verification fails, diagnose what went wrong and try again
+        - Output a brief summary only after successful verification
+        
+        OUTPUT (only after fix is verified):
         ## Summary
-        - Problem: <one sentence>
-        - Fix: <what changed>
-        - Verification: <result>
-        
-        RULES:
-        - NO internal monologue or thinking process
-        - NO step-by-step explanations
-        - NO verbose descriptions
-        - Act like a professional code editor: read → fix → verify → done
+        Problem: <what was wrong>
+        Fix: <what you changed>
+        Verification: <test result>
         """;
 
     private static final String INTENT_RECOGNITION_PREFIX = """

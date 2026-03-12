@@ -19,30 +19,22 @@ public class ApplyPatchTool implements ITool
 {
     private static final String TOOL_NAME = "apply_patch";
     private static final String TOOL_DESCRIPTION = """
-        Apply file operations using patch-style diffs.
+        Apply code changes to fix bugs or implement features.
         
-        QUICK START - Most common usage:
-        {"type":"update_file","path":"File.java","diff":"- old line\\n+ new line"}
+        Usage: {"type":"update_file","path":"FileName.java","diff":"- old line\\n+ new line"}
         
-        TYPES: create_file, update_file, delete_file (aliases: create, update, delete)
+        Types: create_file, update_file, delete_file
         
-        DIFF FORMAT (simplest, recommended for LLMs):
-        - Use '-' prefix for lines to remove (exact match required)
-        - Use '+' prefix for lines to add
-        - Context lines (space prefix) are optional but help with positioning
+        Diff format:
+        - Lines starting with '-' are removed (must match original exactly)
+        - Lines starting with '+' are added
+        - Each change is one '-' line followed by one '+' line
         
-        EXAMPLES:
-        1. Single line change:
-           {"type":"update_file","path":"Test.java","diff":"- return a - b;\\n+ return a + b;"}
-        
-        2. Multiple changes (order matters):
-           {"type":"update_file","path":"Test.java","diff":"- line1\\n+ newLine1\\n- line2\\n+ newLine2"}
-        
-        3. With context (optional):
-           {"type":"update_file","path":"Test.java","diff":" public void test() {\\n-     old code;\\n+     new code;\\n }"}
-        
-        CRITICAL: '-' lines must match original file EXACTLY (including whitespace/indentation).
-        TIP: Use minimal diff with just -/+ lines for best reliability.""";
+        Rules:
+        - Copy '-' lines EXACTLY from the original file (including whitespace)
+        - Multiple changes: list them in order
+        - Keep diffs minimal - only include lines that change
+        """;
 
     private final IApplyPatchEditor editor;
     private final boolean needsApproval;

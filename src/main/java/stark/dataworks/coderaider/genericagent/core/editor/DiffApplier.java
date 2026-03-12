@@ -177,14 +177,14 @@ public final class DiffApplier
 
     private static String applySimpleDiff(String input, List<String> diffLines, String newline)
     {
-        // First, try the simple replacement approach for minimal diffs
-        String simpleResult = trySimpleLineReplacement(input, diffLines, newline);
+        // Try simple string replacement for minimal diffs first
+        String simpleResult = trySimpleStringReplacement(diffLines, input);
         if (simpleResult != null)
         {
             return simpleResult;
         }
 
-        // Fall back to the original context-aware approach
+        // Fall back to line-by-line processing
         String[] inputLines = input.split("\n", -1);
         List<String> result = new ArrayList<>();
         int inputIndex = 0;
@@ -245,10 +245,10 @@ public final class DiffApplier
     }
 
     /**
-     * Attempts simple line-by-line replacement when diff contains only -/+ lines.
-     * This is more robust for LLM-generated diffs that may have imprecise context.
+     * Simple string-based replacement for minimal diffs.
+     * Much safer than line-by-line approach.
      */
-    private static String trySimpleLineReplacement(String input, List<String> diffLines, String newline)
+    private static String trySimpleStringReplacement(List<String> diffLines, String input)
     {
         List<String> removed = new ArrayList<>();
         List<String> added = new ArrayList<>();
@@ -282,36 +282,24 @@ public final class DiffApplier
             return null;
         }
 
-        // Perform simple replacement
+        // Apply replacements as string operations
         String result = input;
         int maxPairs = Math.min(removed.size(), added.size());
         for (int i = 0; i < maxPairs; i++)
         {
-            String oldLine = removed.get(i);
-            String newLine = added.get(i);
+            String oldStr = removed.get(i);
+            String newStr = added.get(i);
             
             // Try exact match first
-            int index = result.indexOf(oldLine);
+            int index = result.indexOf(oldStr);
             if (index >= 0)
             {
-                result = result.substring(0, index) + newLine + result.substring(index + oldLine.length());
+                result = result.substring(0, index) + newStr + result.substring(index + oldStr.length());
                 continue;
             }
             
-            // Try with flexible whitespace matching
-            String normalizedOld = oldLine.trim();
-            String[] inputLines = result.split("\n", -1);
-            for (int j = 0; j < inputLines.length; j++)
-            {
-                if (inputLines[j].trim().equals(normalizedOld))
-                {
-                    // Preserve original indentation
-                    String indent = getIndent(inputLines[j]);
-                    inputLines[j] = indent + newLine.trim();
-                    result = String.join(newline, inputLines);
-                    break;
-                }
-            }
+            // If no exact match, this diff needs context - return null
+            return null;
         }
 
         return result;
