@@ -58,15 +58,16 @@ public class ApplyPatchTool implements ITool
             TOOL_NAME,
             TOOL_DESCRIPTION,
             List.of(
-                new ToolParameterSchema("type", "string", false,
+                new ToolParameterSchema("type", "string", true,
                     "Operation type: create_file, update_file, delete_file (aliases: create/update/delete)."),
-                new ToolParameterSchema("path", "string", false, "Target file path, relative to workspace when possible."),
+                new ToolParameterSchema("path", "string", true, "Target file path, relative to workspace when possible."),
                 new ToolParameterSchema("diff", "string", false, "Patch diff content for create/update operations."),
-                new ToolParameterSchema("content", "string", false, "Raw file content for create_file when diff is omitted."),
-                new ToolParameterSchema("operation", "object", false,
-                    "Nested operation object alternative: {type, path, diff|content}."),
-                new ToolParameterSchema("raw", "string", false,
-                    "Raw JSON fallback when the model emits a serialized tool payload.")
+                new ToolParameterSchema("content", "string", false, "Raw file content for create_file when diff is omitted.")
+//                ,
+//                new ToolParameterSchema("operation", "object", true,
+//                    "Nested operation object alternative: {type, path, diff|content}."),
+//                new ToolParameterSchema("raw", "string", true,
+//                    "Raw JSON fallback when the model emits a serialized tool payload.")
             )
         );
     }
