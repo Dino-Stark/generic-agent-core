@@ -1,4 +1,4 @@
-# Generic Agent Core (GUNDAM-core)
+# Generic Agent Core (generic-agent-core)
 
 `generic-agent-core` is a Java runtime kernel for building provider-agnostic AI agents with OpenAI-Agents-style execution semantics (multi-turn loop, tool calling, handoff, streaming, and guardrails).
 
@@ -189,8 +189,8 @@ python3 src/main/resources/mcp/simple_mcp_server_streamable_http.py 8766
 
 ## Design/reference docs
 
-- `designs/GUNDAM-core-Architecture.md`
-- `designs/OpenAI-AgentSDK-vs-GUNDAM-core.md`
+- `designs/generic-agent-core-Architecture.md`
+- `designs/OpenAI-AgentSDK-vs-generic-agent-core.md`
 - `designs/` (design discussions and implementation notes)
 - `references/openai-agents-python-main` (OpenAI Agents SDK source used as comparison reference)
 
