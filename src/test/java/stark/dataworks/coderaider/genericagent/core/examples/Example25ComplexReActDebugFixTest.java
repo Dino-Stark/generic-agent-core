@@ -63,6 +63,7 @@ public class Example25ComplexReActDebugFixTest
         toolRegistry.register(new ApplyPatchTool(new FileSystemEditor(workspace), false));
 
         AgentRegistry agentRegistry = new AgentRegistry();
+        // TODO: We need more than 1 agent here.
         agentRegistry.register(createDebuggerAgent(runtimeOs, workspace));
 
         AgentRunner runner = AgentRunner.builder()
