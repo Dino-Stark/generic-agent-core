@@ -10,6 +10,7 @@ import stark.dataworks.coderaider.genericagent.core.editor.ApplyPatchOperation;
 import stark.dataworks.coderaider.genericagent.core.editor.ApplyPatchResult;
 import stark.dataworks.coderaider.genericagent.core.editor.IApplyPatchEditor;
 import stark.dataworks.coderaider.genericagent.core.llmspi.adapter.ModelScopeLlmClient;
+import stark.dataworks.coderaider.genericagent.core.llmspi.adapter.SeedLlmClient;
 import stark.dataworks.coderaider.genericagent.core.runner.AgentRunner;
 import stark.dataworks.coderaider.genericagent.core.runner.RunConfiguration;
 import stark.dataworks.coderaider.genericagent.core.tool.ToolDefinition;
@@ -38,7 +39,11 @@ import java.util.Map;
  */
 public class Example25ComplexReActDebugFixTest
 {
-    private static final String MODEL = "Qwen/Qwen3-4B";
+    public static final String API_KEY_NAME = "VOLCENGINE_API_KEY";
+
+//    private static final String MODEL = "Qwen/Qwen3-4B";
+//    private static final String MODEL = "Qwen/Qwen3-Coder-30B-A3B-Instruct";
+    private static final String MODEL = "doubao-seed-code-preview-251028";
     private static final Path INPUT_FILE = Path.of("src", "test", "resources", "inputs", "InvoiceSummaryEngine.java");
     private static final Path INPUT_VERIFIER_FILE = Path.of("src", "test", "resources", "inputs", "InvoiceSummaryEngineVerifier.java");
     private static final RunConfiguration EXAMPLE_RUN_CONFIGURATION =
@@ -49,10 +54,10 @@ public class Example25ComplexReActDebugFixTest
     {
         long startedAt = System.nanoTime();
         Dotenv env = Dotenv.configure().filename(".env.local").ignoreIfMalformed().ignoreIfMissing().load();
-        String apiKey = env.get("MODEL_SCOPE_API_KEY", System.getenv("MODEL_SCOPE_API_KEY"));
+        String apiKey = env.get(API_KEY_NAME, System.getenv(API_KEY_NAME));
         if (apiKey == null || apiKey.isBlank())
         {
-            System.out.println("Skipping test: MODEL_SCOPE_API_KEY not set");
+            System.out.println("Skipping test: " + API_KEY_NAME + " not set");
             return;
         }
 
@@ -67,7 +72,8 @@ public class Example25ComplexReActDebugFixTest
         AgentRegistry agentRegistry = createAgentRegistry(runtimeOs, workspace);
 
         AgentRunner runner = AgentRunner.builder()
-            .llmClient(new ModelScopeLlmClient(apiKey, MODEL))
+//            .llmClient(new ModelScopeLlmClient(apiKey, MODEL))
+            .llmClient(new SeedLlmClient(apiKey, MODEL))
             .toolRegistry(toolRegistry)
             .agentRegistry(agentRegistry)
             .eventPublisher(ExampleStreamingPublishers.reactThoughtActionObservation())
