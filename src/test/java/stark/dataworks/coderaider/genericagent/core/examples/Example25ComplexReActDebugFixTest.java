@@ -297,14 +297,17 @@ public class Example25ComplexReActDebugFixTest
             Current verification output:
             %s
 
+            Required behavior contract:
+            %s
+
             Require this sequence:
-            - Investigator gathers evidence
-            - Fixer patches and verifies
-            - Reviewer validates
+            - Investigator gathers evidence against the behavior contract
+            - Fixer patches and verifies until BEHAVIOR_OK
+            - Reviewer validates with runtime evidence
 
             Runtime OS: %s
             Workspace: %s
-            """.formatted(behaviorOutput.trim(), runtimeOs.displayName, workspace);
+            """.formatted(behaviorOutput.trim(), expectedBehaviorContract(), runtimeOs.displayName, workspace);
     }
 
     private static String buildInvestigatorPrompt(RuntimeOs runtimeOs, Path workspace, String behaviorOutput)
@@ -315,16 +318,25 @@ public class Example25ComplexReActDebugFixTest
             Current verification output:
             %s
 
+            Required behavior contract:
+            %s
+
+            Known likely bug categories to check explicitly:
+            - Subtotal loop skips first item by starting from index 1.
+            - Food tax rate may be wrong (expected 0.08 for this verifier).
+            - round2 may be rounding to 1 decimal instead of 2 decimals.
+
             Steps:
             1) Print InvoiceSummaryEngine.java
             2) Compile and run verifier
-            3) List each bug with expected correct behavior
+            3) Confirm or reject each likely bug category with evidence
+            4) Produce a concrete fixer checklist
 
             Runtime OS: %s
             Workspace: %s
             File print command: %s
             Verify command: %s
-            """.formatted(behaviorOutput.trim(), runtimeOs.displayName, workspace,
+            """.formatted(behaviorOutput.trim(), expectedBehaviorContract(), runtimeOs.displayName, workspace,
             runtimeOs.printFileCommand(workspace, "InvoiceSummaryEngine.java"), runtimeOs.verifyCommand(workspace));
     }
 
@@ -337,19 +349,33 @@ public class Example25ComplexReActDebugFixTest
             Investigator findings:
             %s
 
+            Required behavior contract:
+            %s
+
             Current verification status:
             %s
-            
+
             Current code:
             %s
-            
+
             Fix all bugs and verify with: %s
             Target: output should contain BEHAVIOR_OK
-            
+            Do not stop at partial fixes. Keep patching until both caseA and caseB pass.
+
             OS: %s
             Workspace: %s
-            """.formatted(attempt, investigationOutput, behaviorOutput.trim(), sourceSnapshot, runtimeOs.verifyCommand(workspace),
-                runtimeOs.displayName, workspace);
+            """.formatted(attempt, investigationOutput, expectedBehaviorContract(), behaviorOutput.trim(), sourceSnapshot,
+            runtimeOs.verifyCommand(workspace), runtimeOs.displayName, workspace);
+    }
+
+
+    private static String expectedBehaviorContract()
+    {
+        return """
+            - caseA: calculateTotal([20.0, 30.0, 50.0], "food", true) must equal 102.6
+            - caseB: calculateTotal([10.0, 40.0], "book", false) must equal 52.0
+            - Verifier must print BEHAVIOR_OK
+            """;
     }
 
     private static String buildReviewerPrompt(RuntimeOs runtimeOs, Path workspace, String fixerOutput, String behaviorOutput)
