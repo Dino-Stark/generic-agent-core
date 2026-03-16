@@ -139,27 +139,18 @@ public class Example25ComplexReActDebugFixTest
 
             WORKFLOW:
             1. Read: %s
-            2. Apply ONE patch fixing ALL 3 bugs
+            2. Apply ONE patch fixing ALL bugs
             3. Verify: %s
             4. Output [Answer] block with summary when BEHAVIOR_OK
 
             THREE BUGS TO FIX IN ONE PATCH:
-            Bug 1: for (int i = 1 -> for (int i = 0
-            Bug 2: return 0.18; -> return 0.08;
-            Bug 3: * 10.0 / 10.0 -> * 100.0 / 100.0
-
-            EXACT DIFF (copy these lines exactly, use spaces not tabs):
-            -        for (int i = 1; i < items.length; i++) {
-            +        for (int i = 0; i < items.length; i++) {
-            -            return 0.18;
-            +            return 0.08;
-            -        return Math.round(value * 10.0) / 10.0;
-            +        return Math.round(value * 100.0) / 100.0;
+            Bug 1: calculateTotal([20.0, 30.0, 50.0], "food", true) must equal 102.6, but now it is 89.7.
+            Bug 2: calculateTotal([10.0, 40.0], "book", false) must equal 52.0, but now it is 41.6.
             """.formatted(runtimeOs.printFileCommand(workspace, "InvoiceSummaryEngine.java"),
             runtimeOs.verifyCommand(workspace)));
         def.setReactInstructions("""
             1. Read file to confirm content
-            2. Apply ONE patch with the EXACT diff above (all 3 fixes)
+            2. Apply ONE patch with the EXACT diff above (all fixes)
             3. Run verification
             4. When BEHAVIOR_OK: output [Answer] with 2-3 sentence summary of what was fixed
             Keep thoughts to 1 line each.
@@ -175,7 +166,7 @@ public class Example25ComplexReActDebugFixTest
         return """
             Attempt %d. Status: %s
 
-            Apply patch to fix all 3 bugs in ONE diff, then verify: %s
+            Apply patch to fix all bugs in ONE diff, then verify: %s
             """.formatted(attempt, behaviorOutput.trim(), runtimeOs.verifyCommand(workspace));
     }
 
