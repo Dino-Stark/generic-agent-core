@@ -1,5 +1,8 @@
 package stark.dataworks.coderaider.genericagent.core.tool.builtin;
 
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
+
 import java.util.List;
 import java.util.Map;
 
@@ -18,23 +21,7 @@ import stark.dataworks.coderaider.genericagent.core.tool.ToolParameterSchema;
 public class ApplyPatchTool implements ITool
 {
     private static final String TOOL_NAME = "apply_patch";
-    private static final String TOOL_DESCRIPTION = """
-        Apply code changes to fix bugs or implement features.
-        
-        Usage: {"type":"update_file","path":"FileName.java","diff":"- old line\\n+ new line"}
-        
-        Types: create_file, update_file, delete_file
-        
-        Diff format:
-        - Lines starting with '-' are removed (must match original exactly)
-        - Lines starting with '+' are added
-        - Each change is one '-' line followed by one '+' line
-        
-        Rules:
-        - Copy '-' lines EXACTLY from the original file (including whitespace)
-        - Multiple changes: list them in order
-        - Keep diffs minimal - only include lines that change
-        """;
+    private static final String TOOL_DESCRIPTION = "Hosted apply_patch tool. Lets the model request file mutations via unified diffs.";
 
     private final IApplyPatchEditor editor;
     private final boolean needsApproval;
@@ -58,16 +45,14 @@ public class ApplyPatchTool implements ITool
             TOOL_NAME,
             TOOL_DESCRIPTION,
             List.of(
-                new ToolParameterSchema("type", "string", true,
-                    "Operation type: create_file, update_file, delete_file (aliases: create/update/delete)."),
-                new ToolParameterSchema("path", "string", true, "Target file path, relative to workspace when possible."),
-                new ToolParameterSchema("diff", "string", false, "Patch diff content for create/update operations."),
-                new ToolParameterSchema("content", "string", false, "Raw file content for create_file when diff is omitted.")
-//                ,
-//                new ToolParameterSchema("operation", "object", true,
-//                    "Nested operation object alternative: {type, path, diff|content}."),
-//                new ToolParameterSchema("raw", "string", true,
-//                    "Raw JSON fallback when the model emits a serialized tool payload.")
+                new ToolParameterSchema("operation", "object", false,
+                    "Apply patch operation object: {\"type\":\"create_file|update_file|delete_file\",\"path\":\"...\",\"diff\":\"...\"}"),
+                new ToolParameterSchema("type", "string", false,
+                    "Fallback flat payload form. Canonical values: create_file, update_file, delete_file."),
+                new ToolParameterSchema("path", "string", false, "Fallback flat payload form."),
+                new ToolParameterSchema("diff", "string", false, "Required for create_file/update_file."),
+                new ToolParameterSchema("raw", "string", false,
+                    "Fallback raw JSON text when model emits serialized tool payloads.")
             )
         );
     }
@@ -81,193 +66,89 @@ public class ApplyPatchTool implements ITool
     @Override
     public String execute(Map<String, Object> input)
     {
-        Object operationObj = input.get("operation");
-        if (operationObj == null)
+        Map<String, Object> operation = extractOperation(input);
+        if (operation == null)
         {
-            operationObj = tryExtractOperation(input);
+            return failedResult("Apply patch call is missing an operation payload.");
         }
 
-        if (operationObj == null)
+        String type = stringify(operation.get("type"));
+        if (!"create_file".equals(type) && !"update_file".equals(type) && !"delete_file".equals(type))
         {
-            return errorResult("Missing patch payload. Provide either {\"type\":\"update_file\",\"path\":\"...\",\"diff\":\"...\"} " +
-                "or {\"operation\":{\"type\":\"update_file\",\"path\":\"...\",\"diff\":\"...\"}}.");
+            return failedResult("Unknown apply_patch operation: " + type);
         }
 
-        if (!(operationObj instanceof Map))
+        Object pathObj = operation.get("path");
+        if (!(pathObj instanceof String) || ((String) pathObj).isEmpty())
         {
-            return errorResult("'operation' must be an object");
+            return failedResult("Apply patch operation is missing a valid path.");
         }
 
-        @SuppressWarnings("unchecked")
-        Map<String, Object> operation = (Map<String, Object>) operationObj;
-
-        String typeStr = getStringValue(operation, "type");
-        if (typeStr == null)
+        String path = (String) pathObj;
+        String diff = null;
+        if ("create_file".equals(type) || "update_file".equals(type))
         {
-            return errorResult("Missing 'type' in operation. Use: create_file, update_file, or delete_file");
+            Object diffObj = operation.get("diff");
+            if (!(diffObj instanceof String) || ((String) diffObj).isEmpty())
+            {
+                return failedResult("Apply patch operation " + type + " is missing the required diff payload.");
+            }
+            diff = (String) diffObj;
         }
-
-        String path = getStringValue(operation, "path");
-        if (path == null || path.isEmpty())
-        {
-            return errorResult("Missing or empty 'path' in operation");
-        }
-
-        String diff = getStringValue(operation, "diff");
-        String content = getStringValue(operation, "content");
-
-        ApplyPatchOperation patchOp;
-        ApplyPatchResult result;
 
         try
         {
-            String normalizedType = normalizeOperationType(typeStr);
-
-            switch (normalizedType)
+            ApplyPatchResult result;
+            switch (type)
             {
                 case "create_file":
-                    String createDiff = diff;
-                    if ((createDiff == null || createDiff.isEmpty()) && content != null && !content.isEmpty())
-                    {
-                        createDiff = buildCreateDiff(path, content);
-                    }
-                    if (createDiff == null || createDiff.isEmpty())
-                    {
-                        return errorResult("Missing 'content' or 'diff' for create_file operation");
-                    }
-                    patchOp = ApplyPatchOperation.createFile(path, createDiff);
-                    result = editor.createFile(patchOp);
+                    result = editor.createFile(ApplyPatchOperation.createFile(path, diff));
                     break;
-
                 case "update_file":
-                    if (diff == null || diff.isEmpty())
-                    {
-                        return errorResult("Missing 'diff' for update_file operation");
-                    }
-                    patchOp = ApplyPatchOperation.updateFile(path, diff);
-                    result = editor.updateFile(patchOp);
+                    result = editor.updateFile(ApplyPatchOperation.updateFile(path, diff));
                     break;
-
                 case "delete_file":
-                    patchOp = ApplyPatchOperation.deleteFile(path);
-                    result = editor.deleteFile(patchOp);
+                    result = editor.deleteFile(ApplyPatchOperation.deleteFile(path));
                     break;
-
                 default:
-                    return errorResult("Unknown operation type: " + typeStr + ". Use: create_file, update_file, or delete_file");
+                    return failedResult("Unknown apply_patch operation: " + type);
             }
 
             if (result == null)
             {
-                return successResult("Operation completed");
+                return completedResult(null);
             }
 
-            return result.getStatus() == ApplyPatchResult.Status.COMPLETED
-                ? successResult(result.getOutput())
-                : errorResult(result.getOutput());
+            boolean completed = result.getStatus() == null || result.getStatus() == ApplyPatchResult.Status.COMPLETED;
+            return completed ? completedResult(result.getOutput()) : failedResult(result.getOutput());
         }
-        catch (Exception e)
+        catch (Exception ex)
         {
-            return errorResult("Exception during patch operation: " + e.getMessage());
+            return failedResult(ex.getMessage());
         }
-    }
-
-    private String normalizeOperationType(String type)
-    {
-        String lower = type.toLowerCase().trim();
-        switch (lower)
-        {
-            case "create":
-            case "create_file":
-            case "add":
-            case "new":
-            case "write":
-                return "create_file";
-
-            case "update":
-            case "update_file":
-            case "modify":
-            case "edit":
-            case "patch":
-                return "update_file";
-
-            case "delete":
-            case "delete_file":
-            case "remove":
-            case "rm":
-                return "delete_file";
-
-            default:
-                return lower;
-        }
-    }
-
-    private String buildCreateDiff(String path, String content)
-    {
-        StringBuilder diff = new StringBuilder();
-        diff.append("diff --git a/").append(path).append(" b/").append(path).append("\n");
-        diff.append("new file mode 100644\n");
-        diff.append("index 0000000..0000000\n");
-        diff.append("--- /dev/null\n");
-        diff.append("+++ b/").append(path).append("\n");
-
-        String[] lines = content.split("\n", -1);
-        diff.append("@@ -0,0 +1,").append(lines.length).append(" @@\n");
-        for (String line : lines)
-        {
-            diff.append("+").append(line).append("\n");
-        }
-
-        return diff.toString();
-    }
-
-    public boolean needsApproval()
-    {
-        return needsApproval;
-    }
-
-    public IApplyPatchEditor getEditor()
-    {
-        return editor;
-    }
-
-    private String getStringValue(Map<String, Object> map, String key)
-    {
-        Object value = map.get(key);
-        if (value == null)
-        {
-            return null;
-        }
-        return String.valueOf(value);
     }
 
     @SuppressWarnings("unchecked")
-    private Map<String, Object> tryExtractOperation(Map<String, Object> input)
+    private Map<String, Object> extractOperation(Map<String, Object> input)
     {
+        Object opObj = input.get("operation");
+        if (opObj instanceof Map)
+        {
+            return (Map<String, Object>) opObj;
+        }
+
         if (input.containsKey("type") && input.containsKey("path"))
         {
             return input;
         }
 
         Object rawObj = input.get("raw");
-        if (rawObj != null)
+        if (rawObj instanceof String)
         {
-            Map<String, Object> op = tryParseRawAsOperation(rawObj.toString());
-            if (op != null)
+            Map<String, Object> parsed = parseOperationFromRaw((String) rawObj);
+            if (parsed != null)
             {
-                return op;
-            }
-        }
-
-        for (Object value : input.values())
-        {
-            if (value instanceof Map)
-            {
-                Map<String, Object> mapValue = (Map<String, Object>) value;
-                if (mapValue.containsKey("type") && mapValue.containsKey("path"))
-                {
-                    return mapValue;
-                }
+                return parsed;
             }
         }
 
@@ -275,10 +156,10 @@ public class ApplyPatchTool implements ITool
         {
             if (value instanceof String)
             {
-                Map<String, Object> op = tryParseRawAsOperation(value.toString());
-                if (op != null)
+                Map<String, Object> parsed = parseOperationFromRaw((String) value);
+                if (parsed != null)
                 {
-                    return op;
+                    return parsed;
                 }
             }
         }
@@ -287,21 +168,21 @@ public class ApplyPatchTool implements ITool
     }
 
     @SuppressWarnings("unchecked")
-    private Map<String, Object> tryParseRawAsOperation(String raw)
+    private Map<String, Object> parseOperationFromRaw(String raw)
     {
         if (raw == null || raw.isBlank())
         {
             return null;
         }
 
+        ObjectMapper mapper = new ObjectMapper();
+        String jsonToParse = raw.trim();
+
         try
         {
-            com.fasterxml.jackson.databind.ObjectMapper mapper = new com.fasterxml.jackson.databind.ObjectMapper();
-            String jsonToParse = raw.trim();
-
-            for (int attempt = 0; attempt < 10; attempt++)
+            for (int attempt = 0; attempt < 8; attempt++)
             {
-                com.fasterxml.jackson.databind.JsonNode node = mapper.readTree(jsonToParse);
+                JsonNode node = mapper.readTree(jsonToParse);
                 Map<String, Object> operation = extractOperationFromNode(mapper, node);
                 if (operation != null)
                 {
@@ -313,31 +194,28 @@ public class ApplyPatchTool implements ITool
                     jsonToParse = node.asText();
                     continue;
                 }
-
                 break;
             }
-
-            return tryExtractOperationBySubstring(mapper, jsonToParse);
         }
-        catch (Exception e)
+        catch (Exception ignored)
         {
-            return tryExtractOperationBySubstring(new com.fasterxml.jackson.databind.ObjectMapper(), raw);
         }
+
+        return null;
     }
 
     @SuppressWarnings("unchecked")
-    private Map<String, Object> extractOperationFromNode(com.fasterxml.jackson.databind.ObjectMapper mapper,
-                                                         com.fasterxml.jackson.databind.JsonNode node)
+    private Map<String, Object> extractOperationFromNode(ObjectMapper mapper, JsonNode node)
     {
         if (node == null || !node.isObject())
         {
             return null;
         }
 
-        if (node.has("operation"))
+        if (node.has("operation") && node.get("operation").isObject())
         {
-            com.fasterxml.jackson.databind.JsonNode opNode = node.get("operation");
-            if (opNode != null && opNode.has("type") && opNode.has("path"))
+            JsonNode opNode = node.get("operation");
+            if (opNode.has("type") && opNode.has("path"))
             {
                 return mapper.convertValue(opNode, Map.class);
             }
@@ -351,111 +229,38 @@ public class ApplyPatchTool implements ITool
         return null;
     }
 
-    @SuppressWarnings("unchecked")
-    private Map<String, Object> tryExtractOperationBySubstring(com.fasterxml.jackson.databind.ObjectMapper mapper,
-                                                               String raw)
+    private String stringify(Object value)
     {
-        if (raw == null)
-        {
-            return null;
-        }
-
-        int searchFrom = 0;
-        while (searchFrom < raw.length())
-        {
-            int operationIndex = raw.indexOf("\"operation\"", searchFrom);
-            if (operationIndex < 0)
-            {
-                break;
-            }
-
-            int objectStart = raw.indexOf('{', operationIndex);
-            if (objectStart < 0)
-            {
-                break;
-            }
-
-            int depth = 0;
-            boolean inString = false;
-            boolean escape = false;
-            int objectEnd = -1;
-
-            for (int i = objectStart; i < raw.length(); i++)
-            {
-                char ch = raw.charAt(i);
-                if (escape)
-                {
-                    escape = false;
-                    continue;
-                }
-                if (ch == '\\' && inString)
-                {
-                    escape = true;
-                    continue;
-                }
-                if (ch == '"')
-                {
-                    inString = !inString;
-                    continue;
-                }
-                if (inString)
-                {
-                    continue;
-                }
-                if (ch == '{')
-                {
-                    depth++;
-                }
-                else if (ch == '}')
-                {
-                    depth--;
-                    if (depth == 0)
-                    {
-                        objectEnd = i;
-                        break;
-                    }
-                }
-            }
-
-            if (objectEnd > 0)
-            {
-                String candidate = raw.substring(objectStart, objectEnd + 1);
-                try
-                {
-                    com.fasterxml.jackson.databind.JsonNode opNode = mapper.readTree(candidate);
-                    if (opNode.has("type") && opNode.has("path"))
-                    {
-                        return mapper.convertValue(opNode, Map.class);
-                    }
-                }
-                catch (Exception ignored)
-                {
-                }
-            }
-
-            searchFrom = operationIndex + 10;
-        }
-
-        return null;
+        return value == null ? "None" : String.valueOf(value);
     }
 
-    private String successResult(String message)
+    private String completedResult(String output)
     {
-        return "{\"status\": \"completed\", \"message\": " + toJsonString(message != null ? message : "OK") + "}";
+        return "{\"status\":\"completed\",\"output\":" + jsonString(output) + "}";
     }
 
-    private String errorResult(String error)
+    private String failedResult(String output)
     {
-        return "{\"status\": \"failed\", \"error\": " + toJsonString(error) + "}";
+        return "{\"status\":\"failed\",\"output\":" + jsonString(output) + "}";
     }
 
-    private String toJsonString(String value)
+    private String jsonString(String value)
     {
         if (value == null)
         {
             return "null";
         }
         return "\"" + value.replace("\\", "\\\\").replace("\"", "\\\"").replace("\n", "\\n").replace("\r", "\\r") + "\"";
+    }
+
+    public boolean needsApproval()
+    {
+        return needsApproval;
+    }
+
+    public IApplyPatchEditor getEditor()
+    {
+        return editor;
     }
 
     public static String applyDiff(String original, String diff)

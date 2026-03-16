@@ -19,7 +19,9 @@ class ApplyPatchToolTest
         ApplyPatchTool tool = new ApplyPatchTool(editor);
 
         assertEquals("apply_patch", tool.definition().getName());
-        assertTrue(tool.definition().getDescription().contains("file"));
+        assertTrue(tool.definition().getDescription().contains("Hosted apply_patch tool"));
+        assertTrue(tool.definition().getParameters().size() >= 1);
+        assertEquals("operation", tool.definition().getParameters().get(0).getName());
         assertFalse(tool.needsApproval());
     }
 
@@ -29,16 +31,15 @@ class ApplyPatchToolTest
         TestEditor editor = new TestEditor();
         ApplyPatchTool tool = new ApplyPatchTool(editor);
 
-        Map<String, Object> input = Map.of(
+        String result = tool.execute(Map.of(
             "operation", Map.of(
                 "type", "create_file",
                 "path", "/test/file.txt",
                 "diff", "+line1\n+line2"
             )
-        );
+        ));
 
-        String result = tool.execute(input);
-        assertTrue(result.contains("completed"));
+        assertEquals("{\"status\":\"completed\",\"output\":\"Created /test/file.txt\"}", result);
         assertEquals(1, editor.getCreateCount());
     }
 
@@ -48,16 +49,15 @@ class ApplyPatchToolTest
         TestEditor editor = new TestEditor();
         ApplyPatchTool tool = new ApplyPatchTool(editor);
 
-        Map<String, Object> input = Map.of(
+        String result = tool.execute(Map.of(
             "operation", Map.of(
                 "type", "update_file",
                 "path", "/test/file.txt",
                 "diff", "-old\n+new"
             )
-        );
+        ));
 
-        String result = tool.execute(input);
-        assertTrue(result.contains("completed"));
+        assertEquals("{\"status\":\"completed\",\"output\":\"Updated /test/file.txt\"}", result);
         assertEquals(1, editor.getUpdateCount());
     }
 
@@ -67,92 +67,93 @@ class ApplyPatchToolTest
         TestEditor editor = new TestEditor();
         ApplyPatchTool tool = new ApplyPatchTool(editor);
 
-        Map<String, Object> input = Map.of(
+        String result = tool.execute(Map.of(
             "operation", Map.of(
                 "type", "delete_file",
                 "path", "/test/file.txt"
             )
-        );
+        ));
 
-        String result = tool.execute(input);
-        assertTrue(result.contains("completed"));
+        assertEquals("{\"status\":\"completed\",\"output\":\"Deleted /test/file.txt\"}", result);
         assertEquals(1, editor.getDeleteCount());
+    }
+
+
+    @Test
+    void testFlatPayloadFallback()
+    {
+        ApplyPatchTool tool = new ApplyPatchTool(new TestEditor());
+        String result = tool.execute(Map.of(
+            "type", "update_file",
+            "path", "a.txt",
+            "diff", "-a\n+b"
+        ));
+        assertEquals("{\"status\":\"completed\",\"output\":\"Updated a.txt\"}", result);
+    }
+
+    @Test
+    void testRawPayloadFallback()
+    {
+        ApplyPatchTool tool = new ApplyPatchTool(new TestEditor());
+        String result = tool.execute(Map.of("raw", "{\"operation\":{\"type\":\"update_file\",\"path\":\"a.txt\",\"diff\":\"-a\\n+b\"}}"));
+        assertEquals("{\"status\":\"completed\",\"output\":\"Updated a.txt\"}", result);
+    }
+
+    @Test
+    void testEscapedRawPayloadFallback()
+    {
+        ApplyPatchTool tool = new ApplyPatchTool(new TestEditor());
+        String raw = "\"{\\\"type\\\":\\\"update_file\\\",\\\"path\\\":\\\"a.txt\\\",\\\"diff\\\":\\\"-a\\\\n+b\\\"}\"";
+        String result = tool.execute(Map.of("raw", raw));
+        assertEquals("{\"status\":\"completed\",\"output\":\"Updated a.txt\"}", result);
     }
 
     @Test
     void testMissingOperation()
     {
-        IApplyPatchEditor editor = new TestEditor();
-        ApplyPatchTool tool = new ApplyPatchTool(editor);
-
+        ApplyPatchTool tool = new ApplyPatchTool(new TestEditor());
         String result = tool.execute(Map.of());
-        assertTrue(result.contains("failed"));
+        assertEquals("{\"status\":\"failed\",\"output\":\"Apply patch call is missing an operation payload.\"}", result);
     }
 
     @Test
-    void testMissingType()
+    void testOperationMustBeObject()
     {
-        IApplyPatchEditor editor = new TestEditor();
-        ApplyPatchTool tool = new ApplyPatchTool(editor);
-
-        Map<String, Object> input = Map.of(
-            "operation", Map.of(
-                "path", "/test/file.txt"
-            )
-        );
-
-        String result = tool.execute(input);
-        assertTrue(result.contains("failed"));
+        ApplyPatchTool tool = new ApplyPatchTool(new TestEditor());
+        String result = tool.execute(Map.of("operation", "bad"));
+        assertEquals("{\"status\":\"failed\",\"output\":\"Apply patch call is missing an operation payload.\"}", result);
     }
 
     @Test
-    void testMissingPath()
+    void testMissingValidPath()
     {
-        IApplyPatchEditor editor = new TestEditor();
-        ApplyPatchTool tool = new ApplyPatchTool(editor);
-
-        Map<String, Object> input = Map.of(
-            "operation", Map.of(
-                "type", "create_file"
-            )
-        );
-
-        String result = tool.execute(input);
-        assertTrue(result.contains("failed"));
+        ApplyPatchTool tool = new ApplyPatchTool(new TestEditor());
+        String result = tool.execute(Map.of("operation", Map.of("type", "create_file")));
+        assertEquals("{\"status\":\"failed\",\"output\":\"Apply patch operation is missing a valid path.\"}", result);
     }
 
     @Test
-    void testMissingDiffForCreate()
+    void testMissingDiffForUpdate()
     {
-        IApplyPatchEditor editor = new TestEditor();
-        ApplyPatchTool tool = new ApplyPatchTool(editor);
-
-        Map<String, Object> input = Map.of(
-            "operation", Map.of(
-                "type", "create_file",
-                "path", "/test/file.txt"
-            )
-        );
-
-        String result = tool.execute(input);
-        assertTrue(result.contains("failed"));
+        ApplyPatchTool tool = new ApplyPatchTool(new TestEditor());
+        String result = tool.execute(Map.of("operation", Map.of("type", "update_file", "path", "a.txt")));
+        assertEquals("{\"status\":\"failed\",\"output\":\"Apply patch operation update_file is missing the required diff payload.\"}", result);
     }
 
     @Test
     void testUnknownOperationType()
     {
-        IApplyPatchEditor editor = new TestEditor();
-        ApplyPatchTool tool = new ApplyPatchTool(editor);
+        ApplyPatchTool tool = new ApplyPatchTool(new TestEditor());
+        String result = tool.execute(Map.of("operation", Map.of("type", "unknown", "path", "a.txt")));
+        assertEquals("{\"status\":\"failed\",\"output\":\"Unknown apply_patch operation: unknown\"}", result);
+    }
 
-        Map<String, Object> input = Map.of(
-            "operation", Map.of(
-                "type", "unknown",
-                "path", "/test/file.txt"
-            )
-        );
-
-        String result = tool.execute(input);
-        assertTrue(result.contains("failed"));
+    @Test
+    void testEditorFailure()
+    {
+        ApplyPatchTool tool = new ApplyPatchTool(new FailingEditor());
+        String result = tool.execute(Map.of("operation", Map.of("type", "update_file", "path", "a.txt", "diff", "-a\n+b")));
+        assertEquals("{\"status\":\"failed\",\"output\":\"boom\"}", result);
     }
 
     @Test
@@ -170,34 +171,6 @@ class ApplyPatchToolTest
         String diff = "+line1\n+line2";
         String result = ApplyPatchTool.applyCreateDiff(diff);
         assertEquals("line1\nline2", result);
-    }
-
-    @Test
-    void testRawFieldWithNestedJson()
-    {
-        TestEditor editor = new TestEditor();
-        ApplyPatchTool tool = new ApplyPatchTool(editor);
-
-        String nestedJson = "{\"operation\": {\"type\": \"update_file\", \"path\": \"/test/file.txt\", \"diff\": \"-old\\n+new\"}}";
-        Map<String, Object> input = Map.of("raw", nestedJson);
-
-        String result = tool.execute(input);
-        assertTrue(result.contains("completed"), "Expected success but got: " + result);
-        assertEquals(1, editor.getUpdateCount());
-    }
-
-    @Test
-    void testRawFieldWithDirectOperation()
-    {
-        TestEditor editor = new TestEditor();
-        ApplyPatchTool tool = new ApplyPatchTool(editor);
-
-        String directJson = "{\"type\": \"update_file\", \"path\": \"/test/file.txt\", \"diff\": \"-old\\n+new\"}";
-        Map<String, Object> input = Map.of("raw", directJson);
-
-        String result = tool.execute(input);
-        assertTrue(result.contains("completed"), "Expected success but got: " + result);
-        assertEquals(1, editor.getUpdateCount());
     }
 
     private static class TestEditor implements IApplyPatchEditor
@@ -240,6 +213,15 @@ class ApplyPatchToolTest
         public int getDeleteCount()
         {
             return deleteCount;
+        }
+    }
+
+    private static class FailingEditor extends TestEditor
+    {
+        @Override
+        public ApplyPatchResult updateFile(ApplyPatchOperation operation)
+        {
+            throw new RuntimeException("boom");
         }
     }
 }

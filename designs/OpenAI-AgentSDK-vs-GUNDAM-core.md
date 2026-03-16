@@ -76,7 +76,7 @@ Legend: ✅ implemented, 🟡 partial, ⚪ not implemented.
 
 ## Recent reliability improvements (ReAct debug examples)
 
-- `ApplyPatchTool` now advertises a **LLM-friendly dual schema**: both flat payload (`{type,path,diff}`) and nested payload (`{operation:{...}}`) are first-class in tool metadata, reducing malformed patch calls.
+- `ApplyPatchTool` now aligns with OpenAI hosted apply_patch validation/output semantics (`create_file|update_file|delete_file` + `{status,output}`), while also accepting flat/raw payload fallbacks to improve model-call robustness in function-call providers.
 - ReAct default prompt instructions were tightened to prefer concise internal reasoning and short final summaries instead of verbose thought transcripts.
 - `Example24`, `Example25`, and `Example33` debug-fix flows now use lower-turn/lower-token configs and stronger patch-call guidance to reduce wasted deliberation while preserving streaming behavior.
 - `Example25` now uses a multi-agent ReAct topology (coordinator/investigator/fixer/reviewer), includes source snapshots, and logs thought/action/observation output and provides explicit behavior-contract bug hints to make root-cause diagnosis and runtime verification traceable.
