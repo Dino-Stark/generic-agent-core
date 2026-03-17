@@ -7,7 +7,7 @@ import stark.dataworks.coderaider.genericagent.core.events.RunEventType;
 import stark.dataworks.coderaider.genericagent.core.streaming.IRunEventListener;
 import stark.dataworks.coderaider.genericagent.core.streaming.RunEventPublisher;
 
-final class ExampleStreamingPublishers
+public final class ExampleStreamingPublishers
 {
     private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper();
 
@@ -43,7 +43,7 @@ final class ExampleStreamingPublishers
         return publisher;
     }
 
-    static RunEventPublisher reactThoughtActionObservation()
+    public static RunEventPublisher reactThoughtActionObservation()
     {
         RunEventPublisher publisher = new RunEventPublisher();
         publisher.subscribe(new ReActTraceListener());

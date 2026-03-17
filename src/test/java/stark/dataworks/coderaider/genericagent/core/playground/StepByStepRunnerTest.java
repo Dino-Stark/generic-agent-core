@@ -1,4 +1,4 @@
-package stark.dataworks.coderaider.genericagent.core.examples;
+package stark.dataworks.coderaider.genericagent.core.playground;
 
 import io.github.cdimascio.dotenv.Dotenv;
 import org.junit.jupiter.api.Assertions;
@@ -9,8 +9,9 @@ import stark.dataworks.coderaider.genericagent.core.context.ContextResult;
 import stark.dataworks.coderaider.genericagent.core.editor.ApplyPatchOperation;
 import stark.dataworks.coderaider.genericagent.core.editor.ApplyPatchResult;
 import stark.dataworks.coderaider.genericagent.core.editor.IApplyPatchEditor;
+import stark.dataworks.coderaider.genericagent.core.examples.ExampleStreamingPublishers;
+import stark.dataworks.coderaider.genericagent.core.examples.ExampleSupport;
 import stark.dataworks.coderaider.genericagent.core.llmspi.adapter.ModelScopeLlmClient;
-import stark.dataworks.coderaider.genericagent.core.llmspi.adapter.SeedLlmClient;
 import stark.dataworks.coderaider.genericagent.core.runner.AgentRunner;
 import stark.dataworks.coderaider.genericagent.core.runner.RunConfiguration;
 import stark.dataworks.coderaider.genericagent.core.tool.ToolDefinition;
@@ -37,13 +38,13 @@ import java.util.Map;
  * - Fixer: patches iteratively and runs verification.
  * - Reviewer: validates verification result and summarizes.
  */
-public class Example25ComplexReActDebugFixTest
+public class StepByStepRunnerTest
 {
     // Switch model.
     public static final String API_KEY_NAME = "MODEL_SCOPE_API_KEY";
-//    public static final String API_KEY_NAME = "VOLCENGINE_API_KEY";
+    //    public static final String API_KEY_NAME = "VOLCENGINE_API_KEY";
     private static final String MODEL = "Qwen/Qwen3-4B";
-//    private static final String MODEL = "doubao-seed-code-preview-251028";
+    //    private static final String MODEL = "doubao-seed-code-preview-251028";
     private static final Path INPUT_FILE = Path.of("src", "test", "resources", "inputs", "InvoiceSummaryEngine.java");
     private static final Path INPUT_VERIFIER_FILE = Path.of("src", "test", "resources", "inputs", "InvoiceSummaryEngineVerifier.java");
     private static final RunConfiguration EXAMPLE_RUN_CONFIGURATION =
@@ -153,10 +154,10 @@ public class Example25ComplexReActDebugFixTest
             "Expected fixer summary output");
         Assertions.assertTrue(reviewerResult.getFinalOutput() != null && !reviewerResult.getFinalOutput().isBlank(),
             "Expected reviewer summary output");
-        
-        Assertions.assertTrue(behaviorOutput.contains("BEHAVIOR_OK"), 
+
+        Assertions.assertTrue(behaviorOutput.contains("BEHAVIOR_OK"),
             "Agent must fix all bugs successfully. Verification output: " + behaviorOutput);
-        
+
         System.out.println("FINAL_VERIFICATION: " + behaviorOutput.trim());
         long elapsedSeconds = (System.nanoTime() - startedAt) / 1_000_000_000L;
         Assertions.assertTrue(elapsedSeconds <= 120, "Expected runtime (<=120s) but took " + elapsedSeconds + "s");

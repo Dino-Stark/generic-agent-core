@@ -9,7 +9,7 @@ import stark.dataworks.coderaider.genericagent.core.session.InMemorySessionStore
 import stark.dataworks.coderaider.genericagent.core.streaming.RunEventPublisher;
 import stark.dataworks.coderaider.genericagent.core.tool.IToolRegistry;
 
-final class ExampleSupport
+public final class ExampleSupport
 {
     private ExampleSupport()
     {
@@ -37,7 +37,7 @@ final class ExampleSupport
     }
 
 
-    static IRunHooks noopHooks()
+    public static IRunHooks noopHooks()
     {
         return new IRunHooks()
         {
