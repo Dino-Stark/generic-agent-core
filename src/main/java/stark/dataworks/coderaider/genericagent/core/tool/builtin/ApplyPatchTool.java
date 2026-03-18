@@ -21,7 +21,32 @@ import stark.dataworks.coderaider.genericagent.core.tool.ToolParameterSchema;
 public class ApplyPatchTool implements ITool
 {
     private static final String TOOL_NAME = "apply_patch";
-    private static final String TOOL_DESCRIPTION = "Hosted apply_patch tool. Lets the model request file mutations via unified diffs.";
+    private static final String TOOL_DESCRIPTION = """
+        Apply patch to create, update, or delete a file.
+
+        CRITICAL: Use simple diff format with '-' and '+' lines only. Do NOT use 'diff --git', '---', '+++', or '@@' markers.
+
+        Example call (update_file):
+        {
+          "operation": {
+            "type": "update_file",
+            "path": "Example.java",
+            "diff": "-    return 0.18;\\n+    return 0.08;"
+          }
+        }
+
+        Or use flat parameters:
+        {
+          "type": "update_file",
+          "path": "Example.java",
+          "diff": "-    return 0.18;\\n+    return 0.08;"
+        }
+
+        Operation types:
+        - create_file: diff contains the full file content (no '-' prefix needed)
+        - update_file: diff must have '-' (old) and '+' (new) lines for each change
+        - delete_file: only path is required
+        """;
 
     private final IApplyPatchEditor editor;
     private final boolean needsApproval;
@@ -46,13 +71,11 @@ public class ApplyPatchTool implements ITool
             TOOL_DESCRIPTION,
             List.of(
                 new ToolParameterSchema("operation", "object", false,
-                    "Apply patch operation object: {\"type\":\"create_file|update_file|delete_file\",\"path\":\"...\",\"diff\":\"...\"}"),
+                    "Required. Object with type, path, and diff fields. Example: {\"type\":\"update_file\",\"path\":\"File.java\",\"diff\":\"-old\\n+new\"}"),
                 new ToolParameterSchema("type", "string", false,
-                    "Fallback flat payload form. Canonical values: create_file, update_file, delete_file."),
-                new ToolParameterSchema("path", "string", false, "Fallback flat payload form."),
-                new ToolParameterSchema("diff", "string", false, "Required for create_file/update_file."),
-                new ToolParameterSchema("raw", "string", false,
-                    "Fallback raw JSON text when model emits serialized tool payloads.")
+                    "Operation type: create_file, update_file, or delete_file."),
+                new ToolParameterSchema("path", "string", false, "Target file path relative to workspace."),
+                new ToolParameterSchema("diff", "string", false, "For update_file: use '-' and '+' lines. For create_file: file content.")
             )
         );
     }
