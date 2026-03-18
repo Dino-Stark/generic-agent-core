@@ -82,7 +82,7 @@ public class StepByStepRunnerTest
             .eventPublisher(ExampleStreamingPublishers.reactThoughtActionObservation())
             .build();
 
-        logSourceSnapshot(targetFile, "INITIAL_SOURCE");
+//        logSourceSnapshot(targetFile, "INITIAL_SOURCE");
 
         for (int attempt = 1; attempt <= 5; attempt++)
         {
@@ -212,7 +212,8 @@ public class StepByStepRunnerTest
 
             Rules:
             - Patch only InvoiceSummaryEngine.java
-            - Fix the root causes from investigator evidence
+            - Output the plan for fixing based on the investigation before
+            - Fix the root causes from investigator evidence based on the plan
             - Run verification after patching
             - Stop only when verification output contains BEHAVIOR_OK
             - Follow the coding style
