@@ -149,6 +149,7 @@ public final class ExampleStreamingPublishers
 
     private static final class ReActTraceListener implements IRunEventListener
     {
+        private String currentAgent;
         private boolean thoughtHeaderPrinted;
         private boolean actionHeaderPrinted;
         private boolean observationHeaderPrinted;
@@ -157,6 +158,13 @@ public final class ExampleStreamingPublishers
         @Override
         public void onEvent(RunEvent event)
         {
+            // Update current agent when present in event attributes
+            String agent = (String) event.getAttributes().get("agent");
+            if (agent != null)
+            {
+                currentAgent = agent;
+            }
+
             if (event.getType() == RunEventType.MODEL_REASONING_DELTA)
             {
                 String delta = (String) event.getAttributes().get("delta");
@@ -164,7 +172,7 @@ public final class ExampleStreamingPublishers
                 {
                     if (!thoughtHeaderPrinted)
                     {
-                        System.out.println("\n[Thought]");
+                        System.out.println("\n[" + agentPrefix() + "Thought]");
                         thoughtHeaderPrinted = true;
                         actionHeaderPrinted = false;
                         observationHeaderPrinted = false;
@@ -181,7 +189,7 @@ public final class ExampleStreamingPublishers
                 Object args = event.getAttributes().get("arguments");
                 if (!actionHeaderPrinted)
                 {
-                    System.out.println("\n\n[Action]");
+                    System.out.println("\n\n[" + agentPrefix() + "Action]");
                     actionHeaderPrinted = true;
                 }
                 System.out.println("tool=" + tool + " args=" + toJsonOrString(args));
@@ -195,7 +203,7 @@ public final class ExampleStreamingPublishers
                 Object result = event.getAttributes().get("result");
                 if (!observationHeaderPrinted)
                 {
-                    System.out.println("[Observation]");
+                    System.out.println("[" + agentPrefix() + "Observation]");
                     observationHeaderPrinted = true;
                 }
                 System.out.println("tool=" + tool + " result=" + toJsonOrString(result));
@@ -210,13 +218,18 @@ public final class ExampleStreamingPublishers
                 {
                     if (!answerHeaderPrinted)
                     {
-                        System.out.println("\n\n[Answer]");
+                        System.out.println("\n\n[" + agentPrefix() + "Answer]");
                         answerHeaderPrinted = true;
                     }
                     System.out.print(delta);
                     System.out.flush();
                 }
             }
+        }
+
+        private String agentPrefix()
+        {
+            return currentAgent != null ? currentAgent + " " : "";
         }
     }
 

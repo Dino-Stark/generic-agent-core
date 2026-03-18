@@ -509,7 +509,8 @@ public class AgentRunner
             {
                 streamCapture.content.append(delta);
                 hookManager.onModelResponseDelta(context, delta);
-                emit(context, runHooks, RunEventType.MODEL_RESPONSE_DELTA, Map.of("delta", delta));
+                String agentId = context.getCurrentAgent().definition().getId();
+                emit(context, runHooks, RunEventType.MODEL_RESPONSE_DELTA, Map.of("agent", agentId, "delta", delta));
             }
 
             @Override
@@ -529,7 +530,8 @@ public class AgentRunner
                     return;
                 }
                 streamCapture.reasoning.append(reasoningDelta);
-                emit(context, runHooks, RunEventType.MODEL_REASONING_DELTA, Map.of("delta", reasoningDelta));
+                String agentId = context.getCurrentAgent().definition().getId();
+                emit(context, runHooks, RunEventType.MODEL_REASONING_DELTA, Map.of("agent", agentId, "delta", reasoningDelta));
             }
 
             @Override
@@ -707,10 +709,11 @@ public class AgentRunner
 
     private void executeToolCallsInParallel(AgentRunnerContext context, IRunHooks runHooks, List<ToolCall> toolCalls, RunConfiguration config, MemoryLifecyclePolicy memoryPolicy)
     {
+        String agentId = context.getCurrentAgent().definition().getId();
         List<ToolCall> approvedCalls = new ArrayList<>();
         for (ToolCall call : toolCalls)
         {
-            emit(context, runHooks, RunEventType.TOOL_CALL_REQUESTED, Map.of("tool", call.getToolName(), "arguments", call.getArguments()));
+            emit(context, runHooks, RunEventType.TOOL_CALL_REQUESTED, Map.of("agent", agentId, "tool", call.getToolName(), "arguments", call.getArguments()));
             if (context.getCurrentAgent().definition().isRequireToolApproval())
             {
                 ToolApprovalDecision decision = toolApprovalPolicy.decide(
@@ -785,7 +788,7 @@ public class AgentRunner
             appendToMemory(context, runHooks, new ContextItem(Role.TOOL, outcome.result(), call.getToolCallId()), config.getSessionId(), memoryPolicy, true);
             context.getItems().add(new ContextItem(ContextItemType.TOOL_CALL, call.getToolName(), call.getArguments()));
             context.getItems().add(new ContextItem(ContextItemType.TOOL_RESULT, outcome.result(), Map.of("tool", call.getToolName())));
-            emit(context, runHooks, RunEventType.TOOL_CALL_COMPLETED, Map.of("tool", call.getToolName(), "result", outcome.result()));
+            emit(context, runHooks, RunEventType.TOOL_CALL_COMPLETED, Map.of("agent", agentId, "tool", call.getToolName(), "result", outcome.result()));
         }
     }
 
