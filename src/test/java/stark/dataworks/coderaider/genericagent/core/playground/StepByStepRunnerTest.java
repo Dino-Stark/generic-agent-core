@@ -28,13 +28,23 @@ import java.util.Locale;
 import java.util.Map;
 
 /**
- * 33) Planner-first ReAct debug workflow with 4 agents: understand -> plan -> execute -> summarize.
+ * 33) Planner-first ReAct debug workflow with 3 agents: planner -> executor -> summarizer.
+ * 
+ * Inspired by Trae, Cursor, Antigravity design:
+ * - Planner: Creates a high-level execution plan (2-8 steps), does NOT identify bugs
+ * - Executor: Follows the plan, analyzes code, identifies bugs, generates patches, verifies
+ * - Summarizer: Summarizes what was done (files modified, changes made, outcome)
+ * 
+ * Key design principles:
+ * - Planner gives coarse-grained guidance, not specific bug locations
+ * - Executor does the actual work: read, analyze, fix, verify
+ * - Summarizer reports actions taken, not just results
  */
 public class StepByStepRunnerTest
 {
     private static final String MODEL = "Qwen/Qwen3-4B";
-    private static final Path INPUT_FILE_1 = Path.of("src", "test", "resources", "inputs", "BuggyCalcService.java");
-    private static final Path INPUT_FILE_2 = Path.of("src", "test", "resources", "inputs", "BuggyOrderTotalApp.java");
+    private static final Path INPUT_FILE_1 = Path.of("src", "test", "resources", "inputs", "FinancialCalculator.py");
+    private static final Path INPUT_FILE_2 = Path.of("src", "test", "resources", "inputs", "OrderProcessor.py");
     private static final RunConfiguration EXAMPLE_RUN_CONFIGURATION =
         new RunConfiguration(4, null, 0.0, 900, "auto", "text", Map.of());
 
@@ -59,7 +69,6 @@ public class StepByStepRunnerTest
         toolRegistry.register(new ApplyPatchTool(new FileSystemEditor(workspace), false));
 
         AgentRegistry agentRegistry = new AgentRegistry();
-        agentRegistry.register(createUnderstandingAgent(runtimeOs, workspace));
         agentRegistry.register(createPlannerAgent(runtimeOs, workspace));
         agentRegistry.register(createExecutorAgent(runtimeOs, workspace));
         agentRegistry.register(createSummarizerAgent(runtimeOs, workspace));
@@ -72,12 +81,9 @@ public class StepByStepRunnerTest
             .build();
 
         // TODO: Need to describe the bugs in detail, otherwise, the agent will not even understand the problem.
-        String userRequest = "Fix both Java files quickly and provide a short summary at the end.";
-        ContextResult understanding = runner.chatClient("react30-understanding").prompt().stream(true).user(userRequest)
-            .runConfiguration(EXAMPLE_RUN_CONFIGURATION).runHooks(ExampleSupport.noopHooks()).call().contextResult();
-
-        ContextResult planning = runner.chatClient("react30-planner").prompt().stream(true)
-            .user(understanding.getFinalOutput())
+        String userRequest = "Fix both Python files quickly and provide a short summary at the end.";
+        
+        ContextResult planning = runner.chatClient("react30-planner").prompt().stream(true).user(userRequest)
             .runConfiguration(EXAMPLE_RUN_CONFIGURATION).runHooks(ExampleSupport.noopHooks()).call().contextResult();
 
         String verifyOutput = runBehaviorVerification(runtimeOs, workspace);
@@ -104,7 +110,6 @@ public class StepByStepRunnerTest
 
         Assertions.assertTrue(verifyOutput.contains("BEHAVIOR_OK"),
             "Agent must fix the bugs successfully. Verification output: " + verifyOutput);
-        Assertions.assertNotNull(understanding.getFinalOutput());
         Assertions.assertNotNull(planning.getFinalOutput());
         Assertions.assertNotNull(execution.getFinalOutput());
 
@@ -112,7 +117,7 @@ public class StepByStepRunnerTest
         {
             String summaryText = summary.getFinalOutput();
             Assertions.assertFalse(summaryText.isBlank());
-            Assertions.assertTrue(summaryText.contains("Problem") || summaryText.contains("Fix") || summaryText.contains("Verification"),
+            Assertions.assertTrue(summaryText.contains("Files") || summaryText.contains("Changes") || summaryText.contains("Outcome"),
                 "Expected summary with relevant sections. Got: " + summaryText);
         }
 
@@ -120,70 +125,71 @@ public class StepByStepRunnerTest
         Assertions.assertTrue(elapsedSeconds <= 150, "Expected runtime (<=150s) but took " + elapsedSeconds + "s");
     }
 
-    private static String buildExecutorPrompt(RuntimeOs runtimeOs, Path workspace, String plan, String verifyOutput, int attempt)
+    private static String buildExecutorPrompt(RuntimeOs runtimeOs, Path workspace, String executionPlan, String verifyOutput, int attempt)
     {
         return """
             Attempt %d to fix the bugs.
             
-            Fix plan:
+            Execution plan from planner:
             %s
             
             Current verification status:
             %s
             
-            Verify command: %s
-            Target: output should contain BEHAVIOR_OK
+            Your task:
+            1. Follow the execution plan
+            2. Read and analyze the code to identify bugs
+            3. Generate and apply patches
+            4. Verify with: %s
+            5. Target: output should contain BEHAVIOR_OK
             
             OS: %s
             Workspace: %s
-            """.formatted(attempt, plan, verifyOutput.trim(), runtimeOs.verifyCommand(workspace),
+            """.formatted(attempt, executionPlan, verifyOutput.trim(), runtimeOs.verifyCommand(workspace),
             runtimeOs.displayName, workspace);
-    }
-
-    private static AgentDefinition createUnderstandingAgent(RuntimeOs runtimeOs, Path workspace)
-    {
-        AgentDefinition def = new AgentDefinition();
-        def.setId("react30-understanding");
-        def.setName("Task Understanding Agent");
-        def.setModel(MODEL);
-        def.setReactEnabled(true);
-        def.setSystemPrompt("""
-            You are a task analyzer. Quickly understand the debugging task.
-            
-            Identify:
-            - Which files need to be fixed
-            - What the expected behavior is
-            - How to verify the fix
-            
-            OS: %s
-            Workspace: %s
-            """.formatted(runtimeOs.displayName, workspace));
-        def.setReactInstructions("Briefly state: files, expected behavior, verification method. Keep it under 4 lines.");
-        def.setToolNames(List.of("local_shell"));
-        def.setModelProviderOptions(Map.of("working_directory", workspace.toString()));
-        def.setModelReasoning(Map.of("effort", "low"));
-        return def;
     }
 
     private static AgentDefinition createPlannerAgent(RuntimeOs runtimeOs, Path workspace)
     {
         AgentDefinition def = new AgentDefinition();
         def.setId("react30-planner");
-        def.setName("Step Planner Agent");
+        def.setName("Planning Agent");
         def.setModel(MODEL);
         def.setReactEnabled(true);
         def.setSystemPrompt("""
-            You are a debugging planner. Create a concise fix plan.
+            You are a debugging planner. Create a high-level execution plan (2-8 steps).
             
-            Process:
-            1. Read the buggy files
-            2. Identify the bugs by analyzing code logic
-            3. List the fixes needed
+            Your plan should be COARSE-GRAINED, like:
+            1. Read FinancialCalculator.py to understand the calculation logic
+            2. Read OrderProcessor.py to understand the order processing flow
+            3. Run the verification to see the current error
+            4. Analyze the percentage calculation in FinancialCalculator
+            5. Analyze the tax calculation in OrderProcessor
+            6. Fix the bugs and verify
+            
+            DO NOT:
+            - Identify specific bugs or line numbers
+            - Generate patches
+            - Provide exact code fixes
+            
+            Just give a rough plan of what steps to take.
             
             OS: %s
             Workspace: %s
+            Files: FinancialCalculator.py, OrderProcessor.py
+            Verify command: python OrderProcessor.py
             """.formatted(runtimeOs.displayName, workspace));
-        def.setReactInstructions("Read files → Identify bugs → List fixes in numbered steps. Keep plan under 6 steps.");
+        def.setReactInstructions("""
+            Create a simple execution plan with 2-8 steps.
+            
+            Format:
+            ## Execution Plan
+            1. [Step description]
+            2. [Step description]
+            ...
+            
+            Keep it simple and high-level.
+            """);
         def.setToolNames(List.of("local_shell"));
         def.setModelProviderOptions(Map.of("working_directory", workspace.toString()));
         def.setModelReasoning(Map.of("effort", "low"));
@@ -194,22 +200,47 @@ public class StepByStepRunnerTest
     {
         AgentDefinition def = new AgentDefinition();
         def.setId("react30-executor");
-        def.setName("Step Executor Agent");
+        def.setName("Executor Agent");
         def.setModel(MODEL);
         def.setReactEnabled(true);
         def.setSystemPrompt("""
-            You are a code fixer. Execute the fix plan and verify it works.
+            You are a code executor. Follow the planner's execution plan and fix the bugs.
             
-            Process:
-            1. Apply patches to fix the bugs
-            2. Verify the fixes work correctly
-            3. Iterate if needed
+            Your responsibilities:
+            1. Follow the execution plan from the planner
+            2. Read and analyze the code to identify bugs
+            3. Generate patches to fix the bugs
+            4. Apply patches using apply_patch tool
+            5. Verify the fixes work
+            6. Iterate if verification fails
+            
+            EXECUTION LOOP:
+            Read code → Identify bugs → Generate patches → Apply → Verify → If fails, retry
+            
+            IMPORTANT: 
+            - You are responsible for analyzing code and identifying bugs
+            - You are responsible for generating patches
+            - You are responsible for verification
+            - The planner only gives a rough plan, you do the actual work
             
             OS: %s
             Workspace: %s
-            Verify: %s
+            Verify command: %s
+            Target: output should contain BEHAVIOR_OK
             """.formatted(runtimeOs.displayName, workspace, runtimeOs.verifyCommand(workspace)));
-        def.setReactInstructions("Apply patches → Verify → Retry if fails → Done. No explanations until verification passes.");
+        def.setReactInstructions("""
+            Execute the plan step by step:
+            1. Read the files mentioned in the plan
+            2. Analyze the code to find bugs
+            3. For each bug, generate a patch:
+               - file: the file path
+               - old_content: exact current code (must match file exactly)
+               - new_content: the fixed code
+            4. Apply patches using apply_patch tool
+            5. Run verification: python OrderProcessor.py
+            6. If BEHAVIOR_BAD, analyze the error and retry
+            7. Continue until BEHAVIOR_OK
+            """);
         def.setToolNames(List.of("apply_patch", "local_shell"));
         def.setModelProviderOptions(Map.of("working_directory", workspace.toString()));
         def.setModelReasoning(Map.of("effort", "low"));
@@ -220,16 +251,30 @@ public class StepByStepRunnerTest
     {
         AgentDefinition def = new AgentDefinition();
         def.setId("react30-summarizer");
-        def.setName("Task Summary Agent");
+        def.setName("Summary Agent");
         def.setModel(MODEL);
         def.setReactEnabled(true);
         def.setSystemPrompt("""
-            You are a result summarizer. Briefly report the debugging outcome.
+            You are a task summarizer. Summarize what was done during the debugging process.
+            
+            Your summary should include:
+            1. What files were modified
+            2. What changes were made
+            3. What the outcome was
+            
+            Keep it concise and informative.
             
             OS: %s
             Workspace: %s
             """.formatted(runtimeOs.displayName, workspace));
-        def.setReactInstructions("Summarize in 2-3 lines: Problem, Fix, Verification result.");
+        def.setReactInstructions("""
+            Summarize the work done:
+            
+            ## Summary
+            - Files modified: [list files]
+            - Changes made: [brief description of changes]
+            - Outcome: [success/failure and final result]
+            """);
         def.setToolNames(List.of("local_shell"));
         def.setModelProviderOptions(Map.of("working_directory", workspace.toString()));
         def.setModelReasoning(Map.of("effort", "low"));
@@ -255,8 +300,8 @@ public class StepByStepRunnerTest
                 });
         }
         Files.createDirectories(workspace);
-        Files.writeString(workspace.resolve("BuggyCalcService.java"), Files.readString(INPUT_FILE_1));
-        Files.writeString(workspace.resolve("BuggyOrderTotalApp.java"), Files.readString(INPUT_FILE_2));
+        Files.writeString(workspace.resolve("FinancialCalculator.py"), Files.readString(INPUT_FILE_1));
+        Files.writeString(workspace.resolve("OrderProcessor.py"), Files.readString(INPUT_FILE_2));
     }
 
     private static LocalShellTool createShellTool()
@@ -272,9 +317,9 @@ public class StepByStepRunnerTest
         ProcessBuilder builder = switch (runtimeOs)
         {
             case WINDOWS -> new ProcessBuilder("cmd", "/c",
-                "cd /d \"" + workspace + "\" && javac BuggyCalcService.java BuggyOrderTotalApp.java && java BuggyOrderTotalApp");
+                "cd /d \"" + workspace + "\" && python OrderProcessor.py");
             case MACOS, LINUX -> new ProcessBuilder("bash", "-lc",
-                "cd '" + workspace + "' && javac BuggyCalcService.java BuggyOrderTotalApp.java && java BuggyOrderTotalApp");
+                "cd '" + workspace + "' && python OrderProcessor.py");
         };
         builder.redirectErrorStream(true);
         try
@@ -319,7 +364,7 @@ public class StepByStepRunnerTest
 
         private String verifyCommand(Path workspace)
         {
-            return "javac BuggyCalcService.java BuggyOrderTotalApp.java && java BuggyOrderTotalApp";
+            return "python OrderProcessor.py";
         }
     }
 
