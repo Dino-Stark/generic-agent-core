@@ -22,7 +22,7 @@ public final class ExampleStreamingPublishers
         return publisher;
     }
 
-    static RunEventPublisher textWithToolLifecycle(String toolPrefix)
+    public static RunEventPublisher textWithToolLifecycle(String toolPrefix)
     {
         RunEventPublisher publisher = textOnly();
         publisher.subscribe(new ToolLifecycleListener(toolPrefix));
