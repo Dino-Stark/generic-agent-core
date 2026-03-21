@@ -29,12 +29,12 @@ import java.util.Map;
 
 /**
  * 33) Planner-first ReAct debug workflow with 3 agents: planner -> executor -> summarizer.
- * 
+ * <p>
  * Inspired by Trae, Cursor, Antigravity design:
  * - Planner: Creates a high-level execution plan (2-8 steps), does NOT identify bugs
  * - Executor: Follows the plan, analyzes code, identifies bugs, generates patches, verifies
  * - Summarizer: Summarizes what was done (files modified, changes made, outcome)
- * 
+ * <p>
  * Key design principles:
  * - Planner gives coarse-grained guidance, not specific bug locations
  * - Executor does the actual work: read, analyze, fix, verify
