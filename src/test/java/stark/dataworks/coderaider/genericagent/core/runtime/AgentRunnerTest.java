@@ -17,6 +17,7 @@ import org.junit.jupiter.api.Test;
 import stark.dataworks.coderaider.genericagent.core.agent.AgentDefinition;
 import stark.dataworks.coderaider.genericagent.core.agent.AgentRegistry;
 import stark.dataworks.coderaider.genericagent.core.approval.AllowAllToolApprovalPolicy;
+import stark.dataworks.coderaider.genericagent.core.approval.ToolApprovalDecision;
 import stark.dataworks.coderaider.genericagent.core.context.DefaultContextBuilder;
 import stark.dataworks.coderaider.genericagent.core.events.RunEventType;
 import stark.dataworks.coderaider.genericagent.core.guardrail.GuardrailDecision;
@@ -545,6 +546,70 @@ class AgentRunnerTest
         });
 
         assertEquals("qwen-ok", result.getFinalOutput());
+    }
+
+
+    @Test
+    void deniedToolCallAddsToolResultWithoutExecutingTool()
+    {
+        AgentDefinition def = baseDef("denied-tool");
+        def.setToolNames(List.of("echo"));
+        def.setRequireToolApproval(true);
+
+        AgentRegistry agents = new AgentRegistry();
+        agents.register(def);
+
+        AtomicBoolean executed = new AtomicBoolean(false);
+        ToolRegistry tools = new ToolRegistry();
+        tools.register(new ITool()
+        {
+            @Override
+            public ToolDefinition definition()
+            {
+                return new ToolDefinition("echo", "", List.of());
+            }
+
+            @Override
+            public String execute(Map<String, Object> input)
+            {
+                executed.set(true);
+                return "should-not-run";
+            }
+        });
+
+        AgentRunner runner = new AgentRunner(
+            request ->
+            {
+                boolean hasToolResponse = request.getMessages().stream()
+                    .anyMatch(message -> message.getRole() == Role.TOOL && message.getContent().contains("Tool call denied"));
+                if (!hasToolResponse)
+                {
+                    return new LlmResponse("", List.of(new ToolCall("echo", Map.of("text", "blocked"))), null, new TokenUsage(1, 1));
+                }
+                return new LlmResponse("denial handled", List.of(), null, new TokenUsage(1, 1));
+            },
+            tools,
+            agents,
+            new DefaultContextBuilder(),
+            new HookManager(),
+            new GuardrailEngine(),
+            new HandoffRouter(),
+            new InMemorySessionStore(),
+            new NoopTraceProvider(),
+            request -> ToolApprovalDecision.deny("operator rejected"),
+            new OutputSchemaRegistry(),
+            new OutputValidator(),
+            new RunEventPublisher());
+
+        ContextResult result = runner.run(def, "go", RunConfiguration.defaults(), new IRunHooks()
+        {
+        });
+
+        assertEquals("denial handled", result.getFinalOutput());
+        assertFalse(executed.get());
+        assertTrue(result.getItems().stream().anyMatch(item ->
+            item.getType() == ContextItemType.TOOL_RESULT
+                && item.getContent().contains("operator rejected")));
     }
 
 

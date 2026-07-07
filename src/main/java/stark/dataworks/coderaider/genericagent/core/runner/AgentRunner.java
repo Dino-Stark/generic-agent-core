@@ -720,8 +720,12 @@ public class AgentRunner
                     new ToolApprovalRequest(context.getCurrentAgent().definition().getId(), call.getToolName(), call.getArguments()));
                 if (!decision.isApproved())
                 {
+                    String deniedResult = "Tool call denied: " + decision.getReason();
+                    appendToMemory(context, runHooks, new ContextItem(Role.TOOL, deniedResult, call.getToolCallId()), config.getSessionId(), memoryPolicy, true);
                     context.getItems().add(new ContextItem(ContextItemType.SYSTEM_EVENT,
-                        "Tool call denied: " + decision.getReason(), Map.of("tool", call.getToolName())));
+                        deniedResult, Map.of("tool", call.getToolName())));
+                    context.getItems().add(new ContextItem(ContextItemType.TOOL_RESULT,
+                        deniedResult, Map.of("tool", call.getToolName(), "approved", false)));
                     continue;
                 }
             }
